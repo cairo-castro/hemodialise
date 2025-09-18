@@ -36,7 +36,7 @@ return new class extends Migration
             $table->timestamps();
 
             // Índice único para evitar duplicatas
-            $table->unique(['patient_id', 'machine_id', 'session_date', 'shift']);
+            $table->unique(['patient_id', 'machine_id', 'session_date', 'shift'], 'safety_checklist_unique');
         });
     }
 

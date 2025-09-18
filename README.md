@@ -77,9 +77,21 @@ Este sistema foi desenvolvido para digitalizar e modernizar o controle de proced
 - PHP 8.3 ou superior
 - Composer
 - Node.js & NPM
-- Extensões PHP: `intl`, `pdo_sqlite`, `mbstring`, `xml`
+- MariaDB/MySQL
+- Extensões PHP: `intl`, `pdo_mysql`, `mbstring`, `xml`
 
-### Passo a passo
+### 🚀 Instalação Automática (Recomendada)
+
+```bash
+# Clone o repositório
+git clone https://github.com/cairo-castro/hemodialise.git
+cd hemodialise
+
+# Execute o script de instalação
+./setup.sh
+```
+
+### 🔧 Instalação Manual
 
 1. **Clone o repositório**
 ```bash
@@ -87,13 +99,18 @@ git clone https://github.com/cairo-castro/hemodialise.git
 cd hemodialise
 ```
 
-2. **Instale as dependências PHP**
-```bash
-composer install
+2. **Configure o banco de dados MariaDB**
+```sql
+-- Conecte no MariaDB como root
+mysql -u root -pqualidade123
+
+-- Crie o banco de dados
+CREATE DATABASE hemodialise CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-3. **Instale as dependências Node.js**
+3. **Instale as dependências**
 ```bash
+composer install
 npm install
 ```
 
@@ -103,25 +120,22 @@ cp .env.example .env
 php artisan key:generate
 ```
 
-5. **Configure o banco de dados**
-```bash
-# O arquivo .env já está configurado para SQLite
-# Certifique-se que o arquivo database/database.sqlite existe
-touch database/database.sqlite
-```
-
-6. **Execute as migrations e seeders**
+5. **Execute migrations e seeders**
 ```bash
 php artisan migrate --seed
 ```
 
-7. **Compile os assets**
+6. **Compile os assets**
 ```bash
 npm run build
 ```
 
-8. **Inicie o servidor**
+7. **Inicie o servidor**
 ```bash
+# Opção 1: Script automático
+./run.sh
+
+# Opção 2: Manual
 php artisan serve
 ```
 
@@ -180,6 +194,16 @@ O sistema pode ser instalado como um app no smartphone:
 
 ## 🔧 Scripts Úteis
 
+### Scripts Automatizados
+```bash
+# Instalação completa automatizada
+./setup.sh
+
+# Executar servidor (mata processos existentes automaticamente)
+./run.sh
+```
+
+### Comandos Laravel
 ```bash
 # Resetar banco de dados com dados de exemplo
 php artisan migrate:fresh --seed
@@ -223,7 +247,7 @@ npm run build
 ```
 
 ### Banco de Dados de Produção
-Para produção, recomenda-se MySQL ou PostgreSQL:
+O sistema já está configurado para MariaDB/MySQL:
 
 ```env
 DB_CONNECTION=mysql
@@ -231,8 +255,10 @@ DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_DATABASE=hemodialise
 DB_USERNAME=root
-DB_PASSWORD=
+DB_PASSWORD=qualidade123
 ```
+
+Para ambientes diferentes, ajuste as credenciais no arquivo `.env`
 
 ### Servidor Web
 Configure o document root para apontar para a pasta `public/`
