@@ -1,0 +1,40 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Carbon\Carbon;
+
+class Patient extends Model
+{
+    protected $fillable = [
+        'full_name',
+        'birth_date',
+        'medical_record',
+        'blood_type',
+        'allergies',
+        'observations',
+        'active',
+    ];
+
+    protected $casts = [
+        'birth_date' => 'date',
+        'active' => 'boolean',
+    ];
+
+    public function safetyChecklists(): HasMany
+    {
+        return $this->hasMany(SafetyChecklist::class);
+    }
+
+    public function getAgeAttribute(): int
+    {
+        return Carbon::parse($this->birth_date)->age;
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('active', true);
+    }
+}
