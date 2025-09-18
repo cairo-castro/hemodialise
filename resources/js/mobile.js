@@ -1,99 +1,3 @@
-import './bootstrap';
-
-// Login App Logic
-window.loginApp = function() {
-    return {
-        loading: false,
-        error: '',
-
-        loginForm: {
-            email: '',
-            password: '',
-            remember: false
-        },
-
-        init() {
-            // Verificar se já está logado
-            this.checkAuth();
-        },
-
-        async checkAuth() {
-            // Verificar se é um logout (parâmetro na URL)
-            const urlParams = new URLSearchParams(window.location.search);
-            if (urlParams.get('logout') === 'true') {
-                // Se é logout, não verificar token
-                localStorage.removeItem('token');
-                document.cookie = 'jwt_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-                return;
-            }
-
-            const token = localStorage.getItem('token');
-            if (token) {
-                try {
-                    const response = await fetch('/api/me', {
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Accept': 'application/json',
-                        }
-                    });
-
-                    if (response.ok) {
-                        const data = await response.json();
-                        this.redirectUser(data.user);
-                    } else {
-                        localStorage.removeItem('token');
-                    }
-                } catch (error) {
-                    localStorage.removeItem('token');
-                }
-            }
-        },
-
-        async login() {
-            this.loading = true;
-            this.error = '';
-
-            try {
-                const response = await fetch('/api/login', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json',
-                    },
-                    body: JSON.stringify(this.loginForm)
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    localStorage.setItem('token', data.token);
-                    // Definir cookie para facilitar acesso pelo backend
-                    document.cookie = `jwt_token=${data.token}; path=/; max-age=86400`;
-                    this.redirectUser(data.user);
-                } else {
-                    this.error = data.error || 'Erro no login';
-                }
-            } catch (error) {
-                this.error = 'Erro de conexão';
-                console.error('Login failed:', error);
-            }
-
-            this.loading = false;
-        },
-
-        redirectUser(user) {
-            // Redirecionar baseado no role
-            if (user.role === 'field_user') {
-                window.location.href = '/mobile';
-            } else {
-                // Para admin/manager, passar pelo bridge para fazer JWT->Session
-                window.location.href = '/admin-bridge';
-            }
-        }
-    }
-};
-
-// Mobile App Logic
 window.mobileApp = function() {
     return {
         loading: true,
@@ -184,26 +88,23 @@ window.mobileApp = function() {
 
         async logout() {
             try {
-                // Limpar localStorage
-                localStorage.removeItem('token');
-
-                // Limpar cookie
-                document.cookie = 'jwt_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-
-                // Logout via sessão web (limpa sessão Laravel)
-                await fetch('/logout', {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-                        'Content-Type': 'application/json'
-                    }
-                });
+                const token = localStorage.getItem('token');
+                if (token) {
+                    await fetch('/api/logout', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Accept': 'application/json',
+                        }
+                    });
+                }
             } catch (error) {
                 console.error('Logout failed:', error);
             }
 
-            // Forçar redirecionamento com parâmetro de logout
-            window.location.href = '/login?logout=true';
+            localStorage.removeItem('token');
+            this.user = null;
+            this.currentView = 'dashboard';
         },
 
         async submitChecklist() {

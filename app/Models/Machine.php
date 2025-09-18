@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Machine extends Model
 {
@@ -12,6 +13,7 @@ class Machine extends Model
         'identifier',
         'description',
         'active',
+        'unit_id',
     ];
 
     protected $casts = [
@@ -31,6 +33,11 @@ class Machine extends Model
     public function chemicalDisinfections(): HasMany
     {
         return $this->hasMany(ChemicalDisinfection::class);
+    }
+
+    public function unit(): BelongsTo
+    {
+        return $this->belongsTo(Unit::class);
     }
 
     public function scopeActive($query)
