@@ -116,6 +116,19 @@ window.mobileApp = function() {
             observations: ''
         },
 
+        patientForm: {
+            full_name: '',
+            birth_date: '',
+            medical_record: '',
+            blood_type: '',
+            allergies: '',
+            observations: ''
+        },
+
+        searchResult: null,
+        showPatientForm: false,
+        patientSearched: false,
+
         init() {
             this.checkAuth();
             this.setupOfflineHandlers();
@@ -204,6 +217,103 @@ window.mobileApp = function() {
 
             // Forçar redirecionamento com parâmetro de logout
             window.location.href = '/login?logout=true';
+        },
+
+        async searchPatient() {
+            if (!this.patientForm.full_name || !this.patientForm.birth_date) {
+                alert('Por favor, preencha o nome completo e a data de nascimento.');
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/patients/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        full_name: this.patientForm.full_name,
+                        birth_date: this.patientForm.birth_date
+                    })
+                });
+
+                const data = await response.json();
+                this.patientSearched = true;
+
+                if (data.found) {
+                    this.searchResult = data.patient;
+                    this.showPatientForm = false;
+                    // Preencher o formulário com os dados encontrados
+                    this.patientForm = {
+                        full_name: data.patient.full_name,
+                        birth_date: data.patient.birth_date,
+                        medical_record: data.patient.medical_record,
+                        blood_type: data.patient.blood_type || '',
+                        allergies: '',
+                        observations: ''
+                    };
+                    // Usar o paciente encontrado no checklist
+                    this.checklistForm.patient_id = data.patient.id;
+                } else {
+                    this.searchResult = null;
+                    this.showPatientForm = true;
+                }
+            } catch (error) {
+                console.error('Patient search failed:', error);
+                alert('Erro de conexão ao buscar paciente');
+            }
+        },
+
+        async savePatient() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch('/api/patients', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                    body: JSON.stringify(this.patientForm)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    this.searchResult = data.patient;
+                    this.showPatientForm = false;
+                    this.checklistForm.patient_id = data.patient.id;
+                    alert('Paciente cadastrado com sucesso!');
+                } else {
+                    if (data.errors) {
+                        const errorMessages = Object.values(data.errors).flat().join('\n');
+                        alert('Erro de validação:\n' + errorMessages);
+                    } else {
+                        alert('Erro: ' + (data.message || 'Falha ao cadastrar paciente'));
+                    }
+                }
+            } catch (error) {
+                console.error('Patient save failed:', error);
+                alert('Erro de conexão ao cadastrar paciente');
+            }
+        },
+
+        startNewPatientSearch() {
+            this.patientForm = {
+                full_name: '',
+                birth_date: '',
+                medical_record: '',
+                blood_type: '',
+                allergies: '',
+                observations: ''
+            };
+            this.searchResult = null;
+            this.showPatientForm = false;
+            this.patientSearched = false;
+            this.checklistForm.patient_id = '';
         },
 
         async submitChecklist() {

@@ -94,8 +94,110 @@
 
                 <!-- Checklist Form -->
                 <div x-show="currentView === 'checklist'" class="space-y-4">
+                    <!-- Busca/Cadastro de Paciente -->
                     <div class="bg-white rounded-lg shadow p-4">
-                        <h2 class="text-lg font-bold mb-4">Novo Checklist</h2>
+                        <h2 class="text-lg font-bold mb-4">Buscar/Cadastrar Paciente</h2>
+
+                        <!-- Busca por Nome e Data de Nascimento -->
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Nome Completo</label>
+                                <input type="text" x-model="patientForm.full_name"
+                                       class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                       placeholder="Digite o nome completo do paciente" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Data de Nascimento</label>
+                                <input type="date" x-model="patientForm.birth_date"
+                                       class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                            </div>
+                            <button @click="searchPatient()"
+                                    class="w-full bg-green-600 text-white p-3 rounded-lg font-semibold hover:bg-green-700">
+                                Buscar Paciente
+                            </button>
+                        </div>
+
+                        <!-- Paciente Encontrado -->
+                        <div x-show="searchResult" class="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                            <h3 class="font-semibold text-green-800 mb-2">✓ Paciente Encontrado</h3>
+                            <div class="text-sm text-gray-700">
+                                <p><strong>Nome:</strong> <span x-text="searchResult?.full_name"></span></p>
+                                <p><strong>Data de Nascimento:</strong> <span x-text="searchResult?.birth_date"></span></p>
+                                <p><strong>Idade:</strong> <span x-text="searchResult?.age"></span> anos</p>
+                                <p><strong>Tipo Sanguíneo:</strong> <span x-text="searchResult?.blood_type || 'Não informado'"></span></p>
+                            </div>
+                            <button @click="startNewPatientSearch()"
+                                    class="mt-2 text-sm text-blue-600 hover:text-blue-800">
+                                Buscar outro paciente
+                            </button>
+                        </div>
+
+                        <!-- Paciente Não Encontrado - Formulário de Cadastro -->
+                        <div x-show="patientSearched && !searchResult && !showPatientForm" class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                            <h3 class="font-semibold text-yellow-800 mb-2">⚠ Paciente não encontrado</h3>
+                            <p class="text-sm text-gray-700 mb-3">
+                                Não foi encontrado um paciente com o nome "<span x-text="patientForm.full_name"></span>"
+                                e data de nascimento "<span x-text="patientForm.birth_date"></span>".
+                            </p>
+                            <button @click="showPatientForm = true"
+                                    class="w-full bg-blue-600 text-white p-2 rounded-lg font-semibold hover:bg-blue-700">
+                                Cadastrar Novo Paciente
+                            </button>
+                        </div>
+
+                        <!-- Formulário de Cadastro -->
+                        <div x-show="showPatientForm" class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                            <h3 class="font-semibold text-blue-800 mb-3">Cadastrar Novo Paciente</h3>
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Prontuário Médico</label>
+                                    <input type="text" x-model="patientForm.medical_record"
+                                           class="w-full p-2 border rounded-lg text-sm"
+                                           placeholder="Número do prontuário" required>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Tipo Sanguíneo</label>
+                                    <select x-model="patientForm.blood_type" class="w-full p-2 border rounded-lg text-sm">
+                                        <option value="">Selecione</option>
+                                        <option value="A+">A+</option>
+                                        <option value="A-">A-</option>
+                                        <option value="B+">B+</option>
+                                        <option value="B-">B-</option>
+                                        <option value="AB+">AB+</option>
+                                        <option value="AB-">AB-</option>
+                                        <option value="O+">O+</option>
+                                        <option value="O-">O-</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Alergias</label>
+                                    <textarea x-model="patientForm.allergies"
+                                              class="w-full p-2 border rounded-lg text-sm h-20"
+                                              placeholder="Descreva alergias conhecidas (opcional)"></textarea>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Observações</label>
+                                    <textarea x-model="patientForm.observations"
+                                              class="w-full p-2 border rounded-lg text-sm h-20"
+                                              placeholder="Observações gerais (opcional)"></textarea>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button @click="savePatient()"
+                                            class="flex-1 bg-green-600 text-white p-2 rounded-lg font-semibold hover:bg-green-700">
+                                        Cadastrar Paciente
+                                    </button>
+                                    <button @click="showPatientForm = false"
+                                            class="flex-1 bg-gray-500 text-white p-2 rounded-lg font-semibold hover:bg-gray-600">
+                                        Cancelar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Formulário do Checklist -->
+                    <div x-show="searchResult" class="bg-white rounded-lg shadow p-4">
+                        <h2 class="text-lg font-bold mb-4">Checklist de Segurança</h2>
                         <form @submit.prevent="submitChecklist()" class="space-y-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-1">Máquina</label>
@@ -103,14 +205,6 @@
                                     <option value="">Selecione uma máquina</option>
                                     <option value="1">Máquina 01</option>
                                     <option value="2">Máquina 02</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Paciente</label>
-                                <select x-model="checklistForm.patient_id" class="w-full p-3 border rounded-lg" required>
-                                    <option value="">Selecione um paciente</option>
-                                    <option value="1">João Silva</option>
-                                    <option value="2">Maria Santos</option>
                                 </select>
                             </div>
                             <div>
