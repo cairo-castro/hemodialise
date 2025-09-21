@@ -49,7 +49,10 @@
 
                     <div class="mt-6 text-center">
                         <p class="text-sm text-gray-500">Credenciais de teste:</p>
-                        <p class="text-xs text-gray-400">tecnico.joao@hemodialise.com / tecnico123</p>
+                        <div class="text-xs text-gray-400 space-y-1">
+                            <p><strong>Técnico:</strong> tecnico.joao@hemodialise.com / tecnico123</p>
+                            <p><strong>Supervisor:</strong> supervisor@hemodialise.com / super123</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -113,7 +116,9 @@
                             <p class="text-sm text-gray-500 mb-2">Credenciais de teste:</p>
                             <div class="text-xs text-gray-400 space-y-1">
                                 <p><strong>Admin:</strong> admin@hemodialise.com / admin123</p>
-                                <p><strong>Gerente:</strong> gerente.sl@hemodialise.com / gerente123</p>
+                                <p><strong>Gestor:</strong> gestor@hemodialise.com / gestor123</p>
+                                <p><strong>Coordenador:</strong> coordenador@hemodialise.com / coord123</p>
+                                <p><strong>Supervisor:</strong> supervisor@hemodialise.com / super123</p>
                             </div>
                         </div>
                     </div>

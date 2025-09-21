@@ -18,12 +18,22 @@ window.loginApp = function() {
         },
 
         async checkAuth() {
-            // Verificar se é um logout (parâmetro na URL)
+            // Verificar parâmetros na URL
             const urlParams = new URLSearchParams(window.location.search);
+
+            // Se é um logout, não verificar token
             if (urlParams.get('logout') === 'true') {
-                // Se é logout, não verificar token
                 localStorage.removeItem('token');
                 document.cookie = 'jwt_token=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+                return;
+            }
+
+            // Se veio de redirecionamento de uma view, não verificar auth automaticamente
+            if (urlParams.get('from') === 'mobile' ||
+                urlParams.get('from') === 'desktop' ||
+                urlParams.get('from') === 'admin-bridge' ||
+                urlParams.get('retry') === 'true') {
+                localStorage.removeItem('token'); // Limpar token inválido se houver
                 return;
             }
 
@@ -82,12 +92,23 @@ window.loginApp = function() {
         },
 
         redirectUser(user) {
-            // Redirecionar baseado no role
-            if (user.role === 'field_user') {
+            // Redirecionar baseado no role e view preferida
+            if (user.role === 'tecnico') {
+                // Técnicos sempre vão para mobile
                 window.location.href = '/mobile';
-            } else {
-                // Para admin/manager, passar pelo bridge para fazer JWT->Session
+            } else if (user.role === 'admin') {
+                // Admin sempre vai para sistema Filament
                 window.location.href = '/admin-bridge';
+            } else {
+                // Gestores, coordenadores e supervisores vão para view padrão
+                const defaultView = user.default_view || 'desktop';
+                if (defaultView === 'mobile') {
+                    window.location.href = '/mobile';
+                } else if (defaultView === 'admin') {
+                    window.location.href = '/admin-bridge';
+                } else {
+                    window.location.href = '/desktop';
+                }
             }
         }
     }

@@ -8,6 +8,6 @@ class MobileController extends Controller
 {
     public function index()
     {
-        return view('mobile.index');
+        return view('mobile-home');
     }
 }

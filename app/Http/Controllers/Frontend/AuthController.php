@@ -26,14 +26,17 @@ class AuthController extends Controller
 
             $user = Auth::user();
 
-            // Lógica simples baseada no role
-            if ($user->isFieldUser()) {
+            // Lógica baseada no role
+            if ($user->isTecnico()) {
                 // Técnicos SEMPRE mobile
                 return redirect('/mobile');
+            } else if ($user->canAccessAdmin()) {
+                // Usuários com permissão admin vão para Filament
+                return redirect('/admin');
+            } else {
+                // Fallback para desktop
+                return redirect('/desktop');
             }
-
-            // Admin e Manager SEMPRE Filament
-            return redirect('/admin');
         }
 
         throw ValidationException::withMessages([

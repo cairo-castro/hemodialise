@@ -12,7 +12,8 @@ class ChecklistController extends Controller
     {
         $query = SafetyChecklist::with(['machine', 'patient']);
 
-        if ($request->user()->isFieldUser()) {
+        // Técnicos só veem máquinas da sua unidade
+        if ($request->user()->isTecnico()) {
             $query->whereHas('machine', function($q) use ($request) {
                 $q->where('unit_id', $request->user()->unit_id);
             });

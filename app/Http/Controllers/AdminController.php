@@ -21,20 +21,58 @@ class AdminController extends Controller
         }
 
         try {
+            // Validar formato do token
+            if (!$token || !is_string($token) || strlen($token) < 10) {
+                return response()->json(['error' => 'Formato de token inválido'], 400);
+            }
+
             \JWTAuth::setToken($token);
             $user = \JWTAuth::authenticate();
 
-            if (!$user || $user->isFieldUser()) {
-                return response()->json(['error' => 'Acesso negado'], 403);
+            if (!$user) {
+                return response()->json(['error' => 'Usuário não encontrado'], 401);
+            }
+
+            \Log::info('Admin bridge attempt', [
+                'user_id' => $user->id,
+                'user_role' => $user->role,
+                'can_access_admin' => $user->canAccessAdmin()
+            ]);
+
+            // Verificar se tem permissão para acessar admin
+            if (!$user->canAccessAdmin()) {
+                return response()->json([
+                    'error' => 'Acesso negado - permissões insuficientes',
+                    'user_role' => $user->role,
+                    'required_roles' => ['gestor', 'coordenador', 'supervisor', 'admin']
+                ], 403);
             }
 
             // Fazer login via sessão para o Filament
-            auth()->login($user);
+            auth()->login($user, true); // remember = true
+
+            \Log::info('Admin bridge success', [
+                'user_id' => $user->id,
+                'session_id' => session()->getId()
+            ]);
 
             return response()->json(['success' => true, 'redirect' => '/admin']);
 
-        } catch (\Exception $e) {
+        } catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
+            \Log::warning('Admin bridge: Token expired', ['token' => substr($token, 0, 20) . '...']);
+            return response()->json(['error' => 'Token expirado'], 401);
+        } catch (\Tymon\JWTAuth\Exceptions\TokenInvalidException $e) {
+            \Log::warning('Admin bridge: Token invalid', ['token' => substr($token, 0, 20) . '...']);
             return response()->json(['error' => 'Token inválido'], 401);
+        } catch (\Tymon\JWTAuth\Exceptions\JWTException $e) {
+            \Log::error('Admin bridge: JWT Exception', ['message' => $e->getMessage()]);
+            return response()->json(['error' => 'Falha na autenticação JWT'], 401);
+        } catch (\Exception $e) {
+            \Log::error('Admin bridge: General error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json(['error' => 'Erro interno do servidor'], 500);
         }
     }
 }

@@ -21,6 +21,9 @@ Route::get('/', function () {
 // Rota mobile PWA - autenticação via JavaScript
 Route::get('/mobile', [MobileController::class, 'index']);
 
+// Rota desktop - interface de gestão
+Route::get('/desktop', [App\Http\Controllers\DesktopController::class, 'index']);
+
 // Rotas de autenticação
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::get('/auth/check', [JwtAuthController::class, 'check']);

@@ -18,10 +18,14 @@ class FilamentAccessMiddleware
             return redirect('/login');
         }
 
-        // Apenas admin e manager podem acessar o Filament
-        if ($user->isFieldUser()) {
-            // Redireciona field_users para mobile
-            return redirect('/mobile');
+        // Verificar se tem permissão para acessar o Filament
+        if (!$user->canAccessAdmin()) {
+            // Redireciona técnicos para mobile, outros para desktop
+            if ($user->isTecnico()) {
+                return redirect('/mobile');
+            } else {
+                return redirect('/desktop');
+            }
         }
 
         return $next($request);

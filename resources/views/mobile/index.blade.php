@@ -48,18 +48,12 @@
             </div>
         </div>
 
-        <!-- Main App -->
+        <!-- Main App - Nova Home Screen -->
         <div x-show="user && !loading" class="min-h-screen">
-            <!-- Header -->
-            <header class="bg-blue-600 text-white p-4 shadow-lg">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <h1 class="text-xl font-bold">Hemodiálise</h1>
-                        <p class="text-blue-100 text-sm" x-text="user?.name"></p>
-                    </div>
-                    <button @click="logout()" class="bg-blue-700 px-3 py-1 rounded text-sm">Sair</button>
-                </div>
-            </header>
+            <script>
+                // Redirecionar para nova home após autenticação
+                window.location.href = '/mobile/home';
+            </script>
 
             <!-- Navigation -->
             <nav class="bg-white border-b border-gray-200 p-4">

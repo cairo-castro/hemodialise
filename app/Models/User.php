@@ -23,6 +23,7 @@ class User extends Authenticatable implements JWTSubject
         'password',
         'role',
         'unit_id',
+        'default_view',
     ];
 
     /**
@@ -58,6 +59,7 @@ class User extends Authenticatable implements JWTSubject
         return [
             'role' => $this->role,
             'unit_id' => $this->unit_id,
+            'default_view' => $this->default_view,
         ];
     }
 
@@ -71,13 +73,49 @@ class User extends Authenticatable implements JWTSubject
         return $this->role === 'admin';
     }
 
-    public function isManager(): bool
+    public function isGestor(): bool
     {
-        return $this->role === 'manager';
+        return $this->role === 'gestor';
     }
 
-    public function isFieldUser(): bool
+    public function isCoordenador(): bool
     {
-        return $this->role === 'field_user';
+        return $this->role === 'coordenador';
+    }
+
+    public function isSupervisor(): bool
+    {
+        return $this->role === 'supervisor';
+    }
+
+    public function isTecnico(): bool
+    {
+        return $this->role === 'tecnico';
+    }
+
+    public function canToggleViews(): bool
+    {
+        return in_array($this->role, ['gestor', 'coordenador', 'supervisor', 'admin']);
+    }
+
+    public function canAccessMobile(): bool
+    {
+        return in_array($this->role, ['tecnico', 'gestor', 'coordenador', 'supervisor']);
+    }
+
+    public function canAccessDesktop(): bool
+    {
+        return in_array($this->role, ['gestor', 'coordenador', 'supervisor', 'admin']);
+    }
+
+    public function canAccessAdmin(): bool
+    {
+        $canAccess = in_array($this->role, ['gestor', 'coordenador', 'supervisor', 'admin']);
+        \Log::info('User canAccessAdmin check', [
+            'user_id' => $this->id,
+            'role' => $this->role,
+            'can_access' => $canAccess
+        ]);
+        return $canAccess;
     }
 }

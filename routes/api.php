@@ -7,11 +7,44 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login']);
 
+// Rota para debug de token (remover em produção)
+Route::get('/debug-token', function() {
+    $token = request()->bearerToken();
+
+    if (!$token) {
+        return response()->json(['error' => 'Token não fornecido'], 400);
+    }
+
+    try {
+        $user = \Tymon\JWTAuth\Facades\JWTAuth::setToken($token)->authenticate();
+        return response()->json([
+            'valid' => true,
+            'user' => $user,
+            'token_payload' => \Tymon\JWTAuth\Facades\JWTAuth::setToken($token)->getPayload()
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'valid' => false,
+            'error' => $e->getMessage(),
+            'error_class' => get_class($e)
+        ]);
+    }
+});
+
 Route::middleware('auth:api')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    Route::middleware('role:field_user,manager,admin')->group(function () {
+    // Rotas para toggle de views
+    Route::prefix('view-toggle')->group(function () {
+        Route::get('/user-views', [App\Http\Controllers\ViewToggleController::class, 'getUserViews']);
+        Route::post('/switch-to-mobile', [App\Http\Controllers\ViewToggleController::class, 'switchToMobile']);
+        Route::post('/switch-to-desktop', [App\Http\Controllers\ViewToggleController::class, 'switchToDesktop']);
+        Route::post('/switch-to-admin', [App\Http\Controllers\ViewToggleController::class, 'switchToAdmin']);
+        Route::post('/set-default', [App\Http\Controllers\ViewToggleController::class, 'setDefaultView']);
+    });
+
+    Route::middleware('role:tecnico,gestor,coordenador,supervisor,admin')->group(function () {
         Route::apiResource('checklists', ChecklistController::class);
 
         Route::post('/patients/search', [PatientController::class, 'search']);
