@@ -12,6 +12,14 @@ class InterfaceSwitcherWidget extends Widget
 
     protected static ?int $sort = -10; // High priority to show at top
 
+    public static function canView(): bool
+    {
+        $user = auth()->user();
+
+        // Só mostrar para usuários que podem alternar interfaces
+        return $user && in_array($user->role, ['admin', 'gestor', 'coordenador', 'supervisor']);
+    }
+
     public function getViewData(): array
     {
         $user = auth()->user();

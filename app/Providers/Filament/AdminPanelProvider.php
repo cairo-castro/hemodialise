@@ -41,7 +41,6 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
-                \App\Filament\Widgets\InterfaceSwitcherWidget::class,
                 \App\Filament\Widgets\StatsOverview::class,
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
@@ -60,6 +59,10 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
                 \App\Http\Middleware\FilamentAccessMiddleware::class,
-            ]);
+            ])
+            ->renderHook(
+                'panels::user-menu.before',
+                fn (): string => view('filament.interface-switcher')->render(),
+            );
     }
 }

@@ -27,10 +27,14 @@ Route::prefix('api/smart-route')->name('smart-route.')->group(function () {
     Route::post('/reset', [SmartRouteController::class, 'resetPreferences'])->name('reset');
 });
 
-// Specific interface routes (bypassing smart routing for direct access)
+// Mobile/Ionic interface - única interface mobile
 Route::prefix('mobile')->name('mobile.')->group(function () {
-    // Mobile/Ionic interface - autenticação via JavaScript
-    Route::get('/', [MobileController::class, 'index'])->name('index');
+    // Redirecionar /mobile para /mobile/ionic
+    Route::get('/', function () {
+        return redirect('/mobile/ionic');
+    })->name('index');
+
+    // Interface Ionic principal
     Route::get('/ionic', [MobileController::class, 'ionic'])->name('ionic');
 });
 

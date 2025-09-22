@@ -21,10 +21,20 @@
 
       <div class="flex items-center space-x-4">
         <!-- Interface Switcher -->
-        <InterfaceSwitcher 
-          :user="user"
-          @interface-switch="handleInterfaceSwitch"
-        />
+        <div v-if="user && ['admin', 'gestor', 'coordenador', 'supervisor'].includes(user.role)" class="flex items-center space-x-2">
+          <label for="desktop-interface-switcher" class="text-sm font-medium text-gray-700">
+            Interface:
+          </label>
+          <select
+            id="desktop-interface-switcher"
+            @change="switchInterface($event.target.value)"
+            class="block w-32 text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
+          >
+            <option value="admin">🛠️ Admin</option>
+            <option value="desktop" selected>🖥️ Desktop</option>
+            <option value="mobile">📱 Mobile</option>
+          </select>
+        </div>
 
         <!-- Real-time Status -->
         <div class="flex items-center space-x-2">
@@ -79,20 +89,24 @@
 </template>
 
 <script setup>
-import InterfaceSwitcher from './InterfaceSwitcher.vue';
-
 defineProps({
   user: Object,
   viewTitle: String,
   viewSubtitle: String
 });
 
-const emit = defineEmits(['logout', 'interface-switch']);
+const emit = defineEmits(['logout']);
 
-const handleInterfaceSwitch = (data) => {
-  console.log('Interface switching to:', data.interface);
-  // Emit para o componente pai (DesktopApp)
-  emit('interface-switch', data);
+const switchInterface = (interface) => {
+  const urls = {
+    'admin': '/admin',
+    'desktop': '/desktop/preline',
+    'mobile': '/mobile/ionic'
+  };
+
+  if (urls[interface]) {
+    window.location.href = urls[interface];
+  }
 };
 </script>
 

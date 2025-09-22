@@ -175,6 +175,13 @@
             if (checkbox) {
                 checkbox.checked = autoDetection;
             }
+
+            // Debug: verificar se CSRF está disponível
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            console.log('Interface Switcher Widget loaded', {
+                csrf_available: !!csrfToken,
+                csrf_token: csrfToken ? csrfToken.substring(0, 10) + '...' : 'not found'
+            });
         });
     </script>
 </x-filament-widgets::widget>

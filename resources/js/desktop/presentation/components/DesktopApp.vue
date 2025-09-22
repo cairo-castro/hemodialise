@@ -36,12 +36,11 @@
       <!-- Main Content Area -->
       <div class="w-full lg:ps-64">
         <!-- Top Header -->
-        <DesktopHeader 
+        <DesktopHeader
           :user="user"
           :view-title="getViewTitle()"
           :view-subtitle="getViewSubtitle()"
           @logout="handleLogout"
-          @interface-switch="handleInterfaceSwitch"
         />
 
         <!-- Main Content -->
@@ -157,19 +156,6 @@ const handleViewChange = (view) => {
   appStore.setCurrentView(view);
 };
 
-const handleInterfaceSwitch = async (data) => {
-  try {
-    console.log('Switching to interface:', data.interface, 'URL:', data.url);
-    // O InterfaceSwitcher já faz o redirecionamento
-    // Aqui podemos adicionar lógica adicional se necessário
-  } catch (error) {
-    console.error('Error switching interface:', error);
-    appStore.addNotification({
-      type: 'error',
-      message: 'Erro ao alternar interface'
-    });
-  }
-};
 
 const handleLogout = async () => {
   try {
