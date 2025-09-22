@@ -31,8 +31,30 @@ Route::get('/debug-token', function() {
     }
 });
 
+// Endpoint that works with both JWT and session authentication
+Route::get('/me', function() {
+    // Try JWT first
+    try {
+        $token = request()->bearerToken();
+        if ($token) {
+            $user = \Tymon\JWTAuth\Facades\JWTAuth::setToken($token)->authenticate();
+            if ($user) {
+                return response()->json(['user' => $user]);
+            }
+        }
+    } catch (\Exception $e) {
+        // JWT failed, try session
+    }
+
+    // Try session authentication
+    if (auth()->check()) {
+        return response()->json(['user' => auth()->user()]);
+    }
+
+    return response()->json(['error' => 'Unauthenticated'], 401);
+});
+
 Route::middleware('auth:api')->group(function () {
-    Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
 
     // Rotas para toggle de views

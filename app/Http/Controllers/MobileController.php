@@ -10,4 +10,13 @@ class MobileController extends Controller
     {
         return view('mobile-home');
     }
+
+    public function ionic()
+    {
+        // Ionic Vue interface for mobile devices
+        return view('mobile.ionic', [
+            'title' => 'Sistema de Hemodiálise - Mobile',
+            'interface_type' => 'ionic'
+        ]);
+    }
 }

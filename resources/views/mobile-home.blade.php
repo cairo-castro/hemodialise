@@ -327,12 +327,11 @@
 
         <header class="header">
             <div class="user-info" style="position: absolute; top: 20px; right: 24px; display: flex; gap: 8px; align-items: center;">
-                <div id="viewToggle" style="display: none;">
-                    <select onchange="switchView(this.value)" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 16px; padding: 6px 12px; color: white; font-size: 11px; outline: none;">
-                        <option value="mobile">📱 Mobile</option>
-                        <option value="desktop">🖥️ Desktop</option>
-                        <option value="admin">⚙️ Admin</option>
-                    </select>
+                <!-- Interface Switcher Component -->
+                <div id="interfaceSwitcher" style="display: none;">
+                    @auth
+                        <x-interface-switcher currentInterface="ionic" :userRole="auth()->user()->role" position="inline" />
+                    @endauth
                 </div>
                 <button onclick="logout()" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; padding: 8px 16px; color: white; font-size: 12px; font-weight: 500;">
                     Sair
@@ -577,9 +576,9 @@
                 welcomeElement.textContent = `Bem-vindo, ${user.name}`;
             }
 
-            // Mostrar toggle de views se não for técnico
+            // Mostrar interface switcher se não for técnico
             if (user.role !== 'tecnico') {
-                document.getElementById('viewToggle').style.display = 'block';
+                document.getElementById('interfaceSwitcher').style.display = 'block';
             }
 
             // Esconder loading e mostrar app

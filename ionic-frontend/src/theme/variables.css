@@ -1,0 +1,139 @@
+/* For information on how to create your own theme, please see:
+http://ionicframework.com/docs/theming/ */
+
+/* Mobile-only app styles */
+:root {
+  /* Primary color - Blue theme for hemodialysis */
+  --ion-color-primary: #2563eb;
+  --ion-color-primary-rgb: 37, 99, 235;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #2148ce;
+  --ion-color-primary-tint: #3b72ed;
+
+  /* Secondary color - Teal for medical theme */
+  --ion-color-secondary: #0d9488;
+  --ion-color-secondary-rgb: 13, 148, 136;
+  --ion-color-secondary-contrast: #ffffff;
+  --ion-color-secondary-contrast-rgb: 255, 255, 255;
+  --ion-color-secondary-shade: #0b8277;
+  --ion-color-secondary-tint: #259d94;
+
+  /* Success color - Green */
+  --ion-color-success: #059669;
+  --ion-color-success-rgb: 5, 150, 105;
+  --ion-color-success-contrast: #ffffff;
+  --ion-color-success-contrast-rgb: 255, 255, 255;
+  --ion-color-success-shade: #05855d;
+  --ion-color-success-tint: #1ea478;
+
+  /* Warning color - Orange */
+  --ion-color-warning: #ea580c;
+  --ion-color-warning-rgb: 234, 88, 12;
+  --ion-color-warning-contrast: #ffffff;
+  --ion-color-warning-contrast-rgb: 255, 255, 255;
+  --ion-color-warning-shade: #ce4e0b;
+  --ion-color-warning-tint: #ec6924;
+
+  /* Danger color - Red */
+  --ion-color-danger: #dc2626;
+  --ion-color-danger-rgb: 220, 38, 38;
+  --ion-color-danger-contrast: #ffffff;
+  --ion-color-danger-contrast-rgb: 255, 255, 255;
+  --ion-color-danger-shade: #c22121;
+  --ion-color-danger-tint: #e03c3c;
+}
+
+/* Mobile-first responsive breakpoints */
+@media (min-width: 768px) {
+  body {
+    display: flex;
+    justify-content: center;
+    background: #1f2937;
+  }
+
+  ion-app {
+    max-width: 414px;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 20px;
+  }
+}
+
+/* Prevent desktop usage - show mobile-only message */
+@media (min-width: 1024px) {
+  .desktop-warning {
+    display: flex !important;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #1f2937;
+    color: white;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    text-align: center;
+    padding: 2rem;
+  }
+
+  .desktop-warning h1 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  .desktop-warning p {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* Mobile optimization */
+* {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Custom styles for better mobile experience */
+.mobile-input {
+  --background: #f9fafb;
+  --border-color: #d1d5db;
+  --border-radius: 8px;
+  --padding: 16px;
+  margin-bottom: 16px;
+}
+
+.mobile-button {
+  --border-radius: 8px;
+  --padding: 16px;
+  margin: 8px 0;
+  height: 48px;
+  font-weight: 600;
+}
+
+.safety-checklist-item {
+  --background: #ffffff;
+  --border-color: #e5e7eb;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.patient-card {
+  --background: #ffffff;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.status-online {
+  --color: #059669;
+}
+
+.status-offline {
+  --color: #dc2626;
+}

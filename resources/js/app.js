@@ -1,5 +1,271 @@
 import './bootstrap';
 
+// Import Preline components
+import 'preline/preline';
+
+// Enhanced Client-Side Device Detection
+window.deviceDetection = function() {
+    return {
+        deviceInfo: null,
+        performanceMetrics: {},
+
+        init() {
+            this.detectDevice();
+            this.measurePerformance();
+            this.setupDetectionListeners();
+        },
+
+        detectDevice() {
+            const screenWidth = window.screen.width;
+            const screenHeight = window.screen.height;
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+            const devicePixelRatio = window.devicePixelRatio || 1;
+            const touchSupport = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+            // Enhanced connection detection
+            const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            const connectionType = connection ? connection.effectiveType : 'unknown';
+            const downlink = connection ? connection.downlink : null;
+
+            // Memory and hardware detection
+            const deviceMemory = navigator.deviceMemory || null;
+            const hardwareConcurrency = navigator.hardwareConcurrency || null;
+
+            // Platform and OS detection
+            const platform = navigator.platform;
+            const userAgent = navigator.userAgent;
+            const isIOS = /iPad|iPhone|iPod/.test(userAgent);
+            const isAndroid = /Android/.test(userAgent);
+            const isMacOS = /Mac/.test(platform);
+            const isWindows = /Win/.test(platform);
+
+            // Advanced mobile detection
+            const isMobile = screenWidth <= 768 ||
+                           (touchSupport && screenWidth <= 1024) ||
+                           /Mobi|Android/i.test(userAgent);
+
+            const isTablet = (screenWidth > 768 && screenWidth <= 1024 && touchSupport) ||
+                           /iPad/.test(userAgent) ||
+                           (isAndroid && !/Mobile/.test(userAgent));
+
+            const isDesktop = screenWidth > 1024 && !touchSupport;
+
+            // Battery status (if available)
+            let batteryLevel = null;
+            let isCharging = null;
+            if ('getBattery' in navigator) {
+                navigator.getBattery().then(battery => {
+                    batteryLevel = battery.level;
+                    isCharging = battery.charging;
+                    this.updateBatteryInfo(batteryLevel, isCharging);
+                });
+            }
+
+            // Enhanced interface recommendation
+            const recommendedInterface = this.getSmartRecommendation({
+                screenWidth,
+                viewportWidth,
+                touchSupport,
+                connectionType,
+                downlink,
+                deviceMemory,
+                isMobile,
+                isTablet,
+                isDesktop,
+                isIOS,
+                isAndroid
+            });
+
+            this.deviceInfo = {
+                screen: {
+                    width: screenWidth,
+                    height: screenHeight,
+                    viewport_width: viewportWidth,
+                    viewport_height: viewportHeight,
+                    pixel_ratio: devicePixelRatio,
+                    orientation: screen.orientation ? screen.orientation.type : 'unknown'
+                },
+                device: {
+                    is_mobile: isMobile,
+                    is_tablet: isTablet,
+                    is_desktop: isDesktop,
+                    touch_support: touchSupport,
+                    platform: platform,
+                    is_ios: isIOS,
+                    is_android: isAndroid,
+                    is_macos: isMacOS,
+                    is_windows: isWindows
+                },
+                capabilities: {
+                    device_memory: deviceMemory,
+                    hardware_concurrency: hardwareConcurrency,
+                    online: navigator.onLine,
+                    local_storage: typeof(Storage) !== 'undefined',
+                    service_worker: 'serviceWorker' in navigator,
+                    web_assembly: typeof WebAssembly === 'object'
+                },
+                network: {
+                    connection_type: connectionType,
+                    downlink: downlink,
+                    rtt: connection ? connection.rtt : null,
+                    save_data: connection ? connection.saveData : false
+                },
+                battery: {
+                    level: batteryLevel,
+                    charging: isCharging
+                },
+                recommended_interface: recommendedInterface,
+                detection_timestamp: Date.now(),
+                user_agent: userAgent
+            };
+
+            return this.deviceInfo;
+        },
+
+        getSmartRecommendation(info) {
+            // Priority 1: Screen size and touch
+            if (info.screenWidth < 768) {
+                return 'ionic'; // Always Ionic for small screens
+            }
+
+            // Priority 2: Touch-enabled tablets
+            if (info.isTablet && info.touchSupport) {
+                return 'ionic'; // Tablets get Ionic for better touch experience
+            }
+
+            // Priority 3: Connection quality
+            if (info.connectionType && ['slow-2g', '2g'].includes(info.connectionType)) {
+                return 'blade'; // Lighter interface for slow connections
+            }
+
+            // Priority 4: Device performance
+            if (info.deviceMemory && info.deviceMemory < 4) {
+                return 'blade'; // Less memory-intensive for low-end devices
+            }
+
+            // Priority 5: Mobile browsers on desktop
+            if (info.isMobile && info.screenWidth > 1024) {
+                return 'ionic'; // Mobile browser on large screen
+            }
+
+            // Priority 6: Desktop without touch
+            if (info.isDesktop && !info.touchSupport) {
+                return 'preline'; // Desktop interface for non-touch
+            }
+
+            // Fallback: Smart hybrid decision
+            return info.touchSupport ? 'ionic' : 'preline';
+        },
+
+        measurePerformance() {
+            const startTime = performance.now();
+
+            // Measure JavaScript execution time
+            setTimeout(() => {
+                const jsExecutionTime = performance.now() - startTime;
+
+                this.performanceMetrics = {
+                    js_execution_time: jsExecutionTime,
+                    dom_ready_time: performance.timing.domContentLoadedEventEnd - performance.timing.navigationStart,
+                    page_load_time: performance.timing.loadEventEnd - performance.timing.navigationStart,
+                    dns_lookup_time: performance.timing.domainLookupEnd - performance.timing.domainLookupStart,
+                    tcp_connect_time: performance.timing.connectEnd - performance.timing.connectStart,
+                    first_byte_time: performance.timing.responseStart - performance.timing.requestStart,
+                    memory_used: performance.memory ? performance.memory.usedJSHeapSize : null,
+                    memory_limit: performance.memory ? performance.memory.jsHeapSizeLimit : null,
+                    timestamp: Date.now()
+                };
+            }, 0);
+        },
+
+        setupDetectionListeners() {
+            // Listen for orientation changes
+            window.addEventListener('orientationchange', () => {
+                setTimeout(() => this.detectDevice(), 100);
+            });
+
+            // Listen for viewport changes
+            window.addEventListener('resize', this.debounce(() => {
+                this.detectDevice();
+            }, 250));
+
+            // Listen for connection changes
+            if (navigator.connection) {
+                navigator.connection.addEventListener('change', () => {
+                    this.detectDevice();
+                });
+            }
+
+            // Listen for online/offline changes
+            window.addEventListener('online', () => this.detectDevice());
+            window.addEventListener('offline', () => this.detectDevice());
+        },
+
+        updateBatteryInfo(level, charging) {
+            if (this.deviceInfo) {
+                this.deviceInfo.battery.level = level;
+                this.deviceInfo.battery.charging = charging;
+            }
+        },
+
+        debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        },
+
+        async sendToServer(endpoint = '/api/device-detection') {
+            if (!this.deviceInfo) return null;
+
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'Authorization': token ? `Bearer ${token}` : ''
+                    },
+                    body: JSON.stringify({
+                        device_info: this.deviceInfo,
+                        performance_metrics: this.performanceMetrics
+                    })
+                });
+
+                return response.ok ? await response.json() : null;
+            } catch (error) {
+                console.error('Device detection sync failed:', error);
+                return null;
+            }
+        },
+
+        getRecommendation() {
+            return this.deviceInfo?.recommended_interface || 'preline';
+        },
+
+        shouldUseIonic() {
+            return this.getRecommendation() === 'ionic';
+        },
+
+        shouldUsePreline() {
+            return this.getRecommendation() === 'preline';
+        },
+
+        isLowPerformanceDevice() {
+            return (this.deviceInfo?.capabilities.device_memory || 8) < 4 ||
+                   (this.deviceInfo?.network.connection_type &&
+                    ['slow-2g', '2g', '3g'].includes(this.deviceInfo.network.connection_type));
+        }
+    };
+};
+
 // Login App Logic
 window.loginApp = function() {
     return {
@@ -13,6 +279,10 @@ window.loginApp = function() {
         },
 
         init() {
+            // Initialize device detection
+            this.deviceDetector = window.deviceDetection();
+            this.deviceDetector.init();
+
             // Verificar se já está logado
             this.checkAuth();
         },
@@ -92,22 +362,42 @@ window.loginApp = function() {
         },
 
         redirectUser(user) {
-            // Redirecionar baseado no role e view preferida
-            if (user.role === 'tecnico') {
-                // Técnicos sempre vão para mobile
-                window.location.href = '/mobile';
+            // Get device recommendation from client-side detection
+            const deviceRecommendation = this.deviceDetector?.getRecommendation() || 'preline';
+
+            // Send device info to server for enhanced decision making
+            if (this.deviceDetector) {
+                this.deviceDetector.sendToServer('/api/smart-route/detect').then(serverResponse => {
+                    console.log('Device detection synced with server:', serverResponse);
+                });
+            }
+
+            // Enhanced redirection logic combining user role, preferences, and device detection
+            if (user.role === 'tecnico' || user.role === 'field_user') {
+                // Field users always go to mobile/ionic interface
+                window.location.href = '/mobile/ionic';
             } else if (user.role === 'admin') {
-                // Admin sempre vai para sistema Filament
+                // Admins go to admin panel (Filament)
                 window.location.href = '/admin-bridge';
             } else {
-                // Gestores, coordenadores e supervisores vão para view padrão
-                const defaultView = user.default_view || 'desktop';
-                if (defaultView === 'mobile') {
-                    window.location.href = '/mobile';
-                } else if (defaultView === 'admin') {
+                // Gestores, coordenadores, supervisores: smart routing based on device
+                const userPreference = user.default_view || 'auto';
+
+                if (userPreference === 'auto') {
+                    // Automatic detection based on device capabilities
+                    if (deviceRecommendation === 'ionic' ||
+                        this.deviceDetector?.shouldUseIonic()) {
+                        window.location.href = '/mobile/ionic';
+                    } else {
+                        window.location.href = '/desktop/preline';
+                    }
+                } else if (userPreference === 'mobile') {
+                    window.location.href = '/mobile/ionic';
+                } else if (userPreference === 'admin') {
                     window.location.href = '/admin-bridge';
                 } else {
-                    window.location.href = '/desktop';
+                    // Default to desktop/preline
+                    window.location.href = '/desktop/preline';
                 }
             }
         }
@@ -151,9 +441,14 @@ window.mobileApp = function() {
         patientSearched: false,
 
         init() {
+            // Initialize device detection for mobile app
+            this.deviceDetector = window.deviceDetection();
+            this.deviceDetector.init();
+
             this.checkAuth();
             this.setupOfflineHandlers();
             this.registerServiceWorker();
+            this.setupDeviceOptimizations();
 
             setTimeout(() => {
                 this.loading = false;
@@ -390,6 +685,95 @@ window.mobileApp = function() {
                 } catch (error) {
                     console.error('Service Worker registration failed:', error);
                 }
+            }
+        },
+
+        setupDeviceOptimizations() {
+            if (!this.deviceDetector) return;
+
+            // Optimize for low-performance devices
+            if (this.deviceDetector.isLowPerformanceDevice()) {
+                console.log('Low performance device detected, applying optimizations...');
+
+                // Reduce animation duration
+                document.documentElement.style.setProperty('--animation-duration', '0.1s');
+
+                // Disable complex animations
+                document.documentElement.classList.add('reduce-motion');
+
+                // Implement lazy loading for images
+                this.enableLazyLoading();
+            }
+
+            // Optimize for battery-powered devices
+            const batteryInfo = this.deviceDetector.deviceInfo?.battery;
+            if (batteryInfo && batteryInfo.level !== null && batteryInfo.level < 0.2 && !batteryInfo.charging) {
+                console.log('Low battery detected, enabling power saving mode...');
+                this.enablePowerSavingMode();
+            }
+
+            // Adapt interface for touch devices
+            if (this.deviceDetector.deviceInfo?.device.touch_support) {
+                document.documentElement.classList.add('touch-device');
+            }
+
+            // Send comprehensive device info to server
+            this.syncDeviceInfoWithServer();
+        },
+
+        enableLazyLoading() {
+            // Implement intersection observer for lazy loading
+            if ('IntersectionObserver' in window) {
+                const imageObserver = new IntersectionObserver((entries, observer) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const img = entry.target;
+                            img.src = img.dataset.src;
+                            img.classList.remove('lazy');
+                            observer.unobserve(img);
+                        }
+                    });
+                });
+
+                document.querySelectorAll('img[data-src]').forEach(img => {
+                    imageObserver.observe(img);
+                });
+            }
+        },
+
+        enablePowerSavingMode() {
+            // Reduce frequency of automatic updates
+            this.powerSavingMode = true;
+
+            // Disable non-essential animations
+            document.documentElement.classList.add('power-saving');
+
+            // Reduce background sync frequency
+            if (this.backgroundSyncInterval) {
+                clearInterval(this.backgroundSyncInterval);
+                this.backgroundSyncInterval = setInterval(() => {
+                    this.syncPendingData();
+                }, 30000); // Sync every 30 seconds instead of 10
+            }
+        },
+
+        async syncDeviceInfoWithServer() {
+            try {
+                const result = await this.deviceDetector.sendToServer('/api/smart-route/detect');
+                if (result && result.recommended_url) {
+                    console.log('Server recommended interface:', result.recommended_url);
+
+                    // Check if we're on the wrong interface
+                    const currentPath = window.location.pathname;
+                    const recommendedPath = new URL(result.recommended_url).pathname;
+
+                    if (currentPath !== recommendedPath && !currentPath.includes(recommendedPath)) {
+                        console.log('Interface mismatch detected, consider redirecting...');
+                        // Could show a non-intrusive suggestion to switch interfaces
+                    }
+                }
+            } catch (error) {
+                console.error('Failed to sync device info with server:', error);
             }
         }
     }

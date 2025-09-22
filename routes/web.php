@@ -9,20 +9,37 @@ use App\Http\Controllers\Frontend\AuthController;
 use App\Http\Controllers\MobileController;
 use App\Http\Controllers\JwtAuthController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\SmartRouteController;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
-// Página principal - sempre mostra login
-Route::get('/', function () {
-    // Não verificar auth aqui, apenas redirecionar para login
-    return redirect()->route('login');
+// Smart Route System - Intelligent Device Detection and Redirection
+Route::middleware(['device.detection', 'smart.redirect'])->group(function () {
+    // Main entry point with intelligent routing
+    Route::get('/', [SmartRouteController::class, 'home'])->name('home');
 });
 
-// Rota mobile PWA - autenticação via JavaScript
-Route::get('/mobile', [MobileController::class, 'index']);
+// Smart Route API endpoints
+Route::prefix('api/smart-route')->name('smart-route.')->group(function () {
+    Route::post('/detect', [SmartRouteController::class, 'detectDevice'])->name('detect');
+    Route::post('/switch', [SmartRouteController::class, 'switchInterface'])->name('switch');
+    Route::get('/preferences', [SmartRouteController::class, 'getUserPreferences'])->name('preferences');
+    Route::post('/reset', [SmartRouteController::class, 'resetPreferences'])->name('reset');
+});
 
-// Rota desktop - interface de gestão
-Route::get('/desktop', [App\Http\Controllers\DesktopController::class, 'index']);
+// Specific interface routes (bypassing smart routing for direct access)
+Route::prefix('mobile')->name('mobile.')->group(function () {
+    // Mobile/Ionic interface - autenticação via JavaScript
+    Route::get('/', [MobileController::class, 'index'])->name('index');
+    Route::get('/ionic', [MobileController::class, 'ionic'])->name('ionic');
+});
+
+Route::prefix('desktop')->name('desktop.')->group(function () {
+    // Desktop/Preline interface - gestão
+    Route::get('/', [App\Http\Controllers\DesktopController::class, 'index'])->name('index');
+    Route::get('/preline', [App\Http\Controllers\DesktopController::class, 'preline'])->name('preline');
+    Route::get('/simple', [App\Http\Controllers\DesktopController::class, 'simple'])->name('simple');
+});
 
 // Rotas de autenticação
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -66,6 +83,22 @@ Route::post('/admin/logout', function(Request $request) {
     $request->session()->regenerateToken();
     return redirect('/login?logout=true');
 })->name('filament.admin.auth.logout');
+
+// Interface performance testing route
+Route::get('/performance-test', function() {
+    return view('test.performance', [
+        'timestamp' => microtime(true),
+        'memory' => memory_get_usage(true),
+        'peak_memory' => memory_get_peak_usage(true)
+    ]);
+})->name('performance.test');
+
+// Offline fallback page
+Route::get('/offline', function() {
+    return view('offline', [
+        'title' => 'Sistema Offline'
+    ]);
+})->name('offline');
 
 // Rotas protegidas (frontend público para operadores)
 Route::middleware(['auth'])->group(function () {

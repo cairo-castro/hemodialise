@@ -30,4 +30,22 @@ class DesktopController extends Controller
     {
         return view('desktop.settings');
     }
+
+    public function preline()
+    {
+        // Preline-enhanced desktop interface
+        return view('desktop.preline', [
+            'title' => 'Sistema de Hemodiálise - Desktop',
+            'interface_type' => 'preline'
+        ]);
+    }
+
+    public function simple()
+    {
+        // Simple desktop interface for testing
+        return view('desktop.simple', [
+            'title' => 'Sistema de Hemodiálise - Desktop (Teste)',
+            'interface_type' => 'simple'
+        ]);
+    }
 }

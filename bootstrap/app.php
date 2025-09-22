@@ -15,6 +15,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'jwt.auth' => \App\Http\Middleware\JwtAuthMiddleware::class,
+            'device.detection' => \App\Http\Middleware\DeviceDetectionMiddleware::class,
+            'smart.redirect' => \App\Http\Middleware\SmartRedirectMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
