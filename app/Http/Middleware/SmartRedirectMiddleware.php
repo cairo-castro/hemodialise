@@ -57,6 +57,8 @@ class SmartRedirectMiddleware
             'login',
             'logout',
             'admin-bridge',
+            'desktop/', // Permitir acesso direto às interfaces desktop
+            'mobile/',  // Permitir acesso direto às interfaces mobile
             '_debugbar',
             'livewire',
             'assets/',

@@ -26,17 +26,47 @@ class AuthController extends Controller
 
             $user = Auth::user();
 
-            // Lógica baseada no role
+            // Determinar redirecionamento baseado no role
+            $redirectUrl = '/dashboard'; // fallback
+            
             if ($user->isTecnico()) {
                 // Técnicos SEMPRE mobile
-                return redirect('/mobile');
+                $redirectUrl = '/mobile';
             } else if ($user->canAccessAdmin()) {
                 // Usuários com permissão admin vão para Filament
-                return redirect('/admin');
+                $redirectUrl = '/admin';
             } else {
                 // Fallback para desktop
-                return redirect('/desktop');
+                $redirectUrl = '/desktop/preline';
             }
+
+            // Retornar JSON para Vue.js
+            if ($request->expectsJson() || $request->header('Content-Type') === 'application/json') {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Login realizado com sucesso',
+                    'redirect' => $redirectUrl,
+                    'user' => [
+                        'name' => $user->name,
+                        'email' => $user->email,
+                        'role' => $user->role
+                    ]
+                ]);
+            }
+
+            // Fallback para redirect tradicional
+            return redirect($redirectUrl);
+        }
+
+        // Login falhou
+        if ($request->expectsJson() || $request->header('Content-Type') === 'application/json') {
+            return response()->json([
+                'success' => false,
+                'message' => 'As credenciais fornecidas não conferem com nossos registros.',
+                'errors' => [
+                    'email' => ['As credenciais fornecidas não conferem com nossos registros.']
+                ]
+            ], 422);
         }
 
         throw ValidationException::withMessages([

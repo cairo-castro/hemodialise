@@ -34,7 +34,8 @@ Route::prefix('mobile')->name('mobile.')->group(function () {
     Route::get('/ionic', [MobileController::class, 'ionic'])->name('ionic');
 });
 
-Route::prefix('desktop')->name('desktop.')->group(function () {
+// Desktop interface routes - without smart redirect middleware to avoid loops
+Route::prefix('desktop')->name('desktop.')->middleware(['device.detection'])->group(function () {
     // Desktop/Preline interface - gestão
     Route::get('/', [App\Http\Controllers\DesktopController::class, 'index'])->name('index');
     Route::get('/preline', [App\Http\Controllers\DesktopController::class, 'preline'])->name('preline');
@@ -43,6 +44,7 @@ Route::prefix('desktop')->name('desktop.')->group(function () {
 
 // Rotas de autenticação
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
+Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::get('/auth/check', [JwtAuthController::class, 'check']);
 Route::get('/admin-bridge', [AdminController::class, 'bridge']);
 Route::post('/admin-login', [AdminController::class, 'login']);
