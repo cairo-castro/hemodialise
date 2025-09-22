@@ -17,6 +17,7 @@ const ESSENTIAL_CACHE = [
 // Resources to cache on demand
 const RUNTIME_CACHE = [
     '/mobile',
+    '/mobile/app',
     '/mobile/ionic',
     '/desktop',
     '/desktop/preline',

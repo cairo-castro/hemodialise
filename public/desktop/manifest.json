@@ -1,0 +1,35 @@
+{
+  "__plugin-vue_export-helper-KPjDqJKQ.js": {
+    "file": "assets/_plugin-vue_export-helper-KPjDqJKQ.js",
+    "name": "_plugin-vue_export-helper"
+  },
+  "resources/css/app.css": {
+    "file": "assets/app-Ce2GGWC2.css",
+    "src": "resources/css/app.css",
+    "isEntry": true
+  },
+  "resources/js/app.js": {
+    "file": "assets/app-Be7sCWWU.js",
+    "name": "app",
+    "src": "resources/js/app.js",
+    "isEntry": true,
+    "imports": [
+      "__plugin-vue_export-helper-KPjDqJKQ.js"
+    ],
+    "css": [
+      "assets/app-BqyXaTEQ.css"
+    ]
+  },
+  "resources/js/auth/login.js": {
+    "file": "assets/login-KbAAZDBc.js",
+    "name": "login",
+    "src": "resources/js/auth/login.js",
+    "isEntry": true,
+    "imports": [
+      "__plugin-vue_export-helper-KPjDqJKQ.js"
+    ],
+    "css": [
+      "assets/login-0r-b7L6t.css"
+    ]
+  }
+}

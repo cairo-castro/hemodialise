@@ -97,15 +97,15 @@ defineProps({
 
 const emit = defineEmits(['logout']);
 
-const switchInterface = (interface) => {
+const switchInterface = (interfaceType) => {
   const urls = {
     'admin': '/admin',
     'desktop': '/desktop/preline',
-    'mobile': '/mobile/ionic'
+    'mobile': '/mobile/app'
   };
 
-  if (urls[interface]) {
-    window.location.href = urls[interface];
+  if (urls[interfaceType]) {
+    window.location.href = urls[interfaceType];
   }
 };
 </script>

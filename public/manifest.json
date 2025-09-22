@@ -1,22 +1,53 @@
 {
-  "name": "Sistema Hemodiálise",
-  "short_name": "Hemodiálise",
-  "description": "Sistema Mobile para Controle de Hemodiálise",
-  "start_url": "/mobile",
+  "name": "Sistema de Hemodiálise - Estado do Maranhão",
+  "short_name": "Hemodiálise MA",
+  "description": "Sistema Mobile de Controle de Qualidade para Centros de Hemodiálise",
+  "start_url": "/mobile/app",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "background_color": "#2563eb",
   "theme_color": "#2563eb",
-  "orientation": "portrait",
+  "orientation": "portrait-primary",
+  "scope": "/mobile/",
+  "lang": "pt-BR",
+  "categories": ["medical", "health", "productivity"],
   "icons": [
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Nova Checklist",
+      "short_name": "Checklist",
+      "description": "Criar nova checklist de segurança",
+      "url": "/mobile/app#/checklist/new",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "short_name": "Dashboard",
+      "description": "Ver dashboard principal",
+      "url": "/mobile/app#/dashboard",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     }
   ]
 }

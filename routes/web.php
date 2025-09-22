@@ -29,13 +29,20 @@ Route::prefix('api/smart-route')->name('smart-route.')->group(function () {
 
 // Mobile/Ionic interface - única interface mobile
 Route::prefix('mobile')->name('mobile.')->group(function () {
-    // Redirecionar /mobile para /mobile/ionic
+    // Redirecionar /mobile para /mobile/app
     Route::get('/', function () {
-        return redirect('/mobile/ionic');
+        return redirect('/mobile/app');
     })->name('index');
 
-    // Interface Ionic principal
-    Route::get('/ionic', [MobileController::class, 'ionic'])->name('ionic');
+    // Interface Ionic principal integrada
+    Route::get('/app', function () {
+        return view('mobile.app');
+    })->name('app');
+
+    // Manter compatibilidade com rota antiga
+    Route::get('/ionic', function () {
+        return redirect('/mobile/app');
+    })->name('ionic');
 });
 
 // Desktop interface routes - without smart redirect middleware to avoid loops
@@ -110,7 +117,8 @@ Route::get('/offline', function() {
 Route::middleware(['auth'])->group(function () {
 
     // Dashboard principal
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('frontend.dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/frontend/dashboard', [DashboardController::class, 'index'])->name('frontend.dashboard');
 
     // Checklist de Segurança
     Route::prefix('safety')->name('frontend.safety.')->group(function () {
