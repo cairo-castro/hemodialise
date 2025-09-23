@@ -220,6 +220,18 @@
 
               <!-- Action Buttons -->
               <div class="action-buttons">
+                <!-- Pause and Return Button -->
+                <ion-button
+                  expand="block"
+                  color="warning"
+                  fill="outline"
+                  @click="pauseAndReturn"
+                  class="pause-button"
+                >
+                  <ion-icon :icon="pauseOutline" slot="start"></ion-icon>
+                  Pausar e Voltar ao Dashboard
+                </ion-button>
+
                 <!-- Emergency Interrupt Button -->
                 <ion-button
                   expand="block"
@@ -396,7 +408,8 @@ import {
   closeOutline,
   lockClosedOutline,
   calendarOutline,
-  timeOutline
+  timeOutline,
+  pauseOutline
 } from 'ionicons/icons';
 
 import { Container } from '@mobile/core/di/Container';
@@ -915,6 +928,52 @@ const interruptChecklist = async () => {
 
 const returnToDashboard = () => {
   router.replace('/dashboard');
+};
+
+const pauseAndReturn = async () => {
+  if (!activeChecklist.value) return;
+
+  const loading = await loadingController.create({
+    message: 'Pausando checklist...',
+  });
+  await loading.present();
+
+  try {
+    const response = await fetch(`/api/checklists/${activeChecklist.value.id}/pause`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+      }
+    });
+
+    const data = await response.json();
+    if (data.success) {
+      const toast = await toastController.create({
+        message: 'Checklist pausado com sucesso. Você pode retomá-lo a qualquer momento.',
+        duration: 3000,
+        color: 'success',
+        position: 'top'
+      });
+      await toast.present();
+
+      // Return to dashboard
+      router.replace('/dashboard');
+    } else {
+      throw new Error(data.message || 'Erro ao pausar checklist');
+    }
+  } catch (error) {
+    console.error('Erro ao pausar checklist:', error);
+    const toast = await toastController.create({
+      message: 'Erro ao pausar checklist. Tente novamente.',
+      duration: 3000,
+      color: 'danger',
+      position: 'top'
+    });
+    await toast.present();
+  } finally {
+    await loading.dismiss();
+  }
 };
 
 const updatePhaseCompletion = () => {

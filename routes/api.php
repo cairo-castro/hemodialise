@@ -69,14 +69,20 @@ Route::middleware('auth:api')->group(function () {
     });
 
     Route::middleware('role:tecnico,gestor,coordenador,supervisor,admin')->group(function () {
-        Route::apiResource('checklists', ChecklistController::class);
+        // Rotas específicas devem vir ANTES do apiResource para evitar conflitos
+        Route::get('/checklists/active', [ChecklistController::class, 'active']);
         Route::patch('/checklists/{checklist}/phase', [ChecklistController::class, 'updatePhase']);
         Route::post('/checklists/{checklist}/advance', [ChecklistController::class, 'advancePhase']);
         Route::post('/checklists/{checklist}/interrupt', [ChecklistController::class, 'interrupt']);
+        Route::post('/checklists/{checklist}/pause', [ChecklistController::class, 'pause']);
+        Route::post('/checklists/{checklist}/resume', [ChecklistController::class, 'resume']);
+
+        Route::apiResource('checklists', ChecklistController::class);
 
         Route::post('/patients/search', [PatientController::class, 'search']);
         Route::post('/patients', [PatientController::class, 'store']);
 
+        Route::get('/machines', [MachineController::class, 'index']);
         Route::get('/machines/available', [MachineController::class, 'available']);
     });
 });

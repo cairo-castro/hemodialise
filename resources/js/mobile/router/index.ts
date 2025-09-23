@@ -47,10 +47,26 @@ const routes: Array<RouteRecordRaw> = [
     beforeEnter: requiresAuth
   },
   {
-    path: '/checklist',
+    path: '/checklists',
+    name: 'ChecklistList',
+    component: () => import('@mobile/views/ChecklistListPage.vue'),
+    beforeEnter: requiresAuth
+  },
+  {
+    path: '/checklist/new',
+    name: 'NewChecklist',
+    component: () => import('@mobile/views/ChecklistPage.vue'),
+    beforeEnter: requiresAuth
+  },
+  {
+    path: '/checklist/:id',
     name: 'Checklist',
     component: () => import('@mobile/views/ChecklistPage.vue'),
     beforeEnter: requiresAuth
+  },
+  {
+    path: '/checklist',
+    redirect: '/checklists'
   },
   {
     path: '/patients',

@@ -142,4 +142,71 @@ class ChecklistController extends Controller
     {
         return response()->json($checklist->load(['machine', 'patient', 'user']));
     }
+
+    public function active(Request $request)
+    {
+        // Include both active and paused checklists (all in-progress checklists)
+        $query = SafetyChecklist::whereNotIn('current_phase', ['completed', 'interrupted'])
+            ->where('is_interrupted', false)
+            ->with(['machine', 'patient', 'user'])
+            ->orderBy('created_at', 'desc');
+
+        // Técnicos só veem checklists da sua unidade
+        if ($request->user()->isTecnico()) {
+            $query->whereHas('machine', function($q) use ($request) {
+                $q->where('unit_id', $request->user()->unit_id);
+            });
+        }
+
+        $activeChecklists = $query->get();
+
+        return response()->json([
+            'success' => true,
+            'checklists' => $activeChecklists,
+            'total' => $activeChecklists->count(),
+        ]);
+    }
+
+    public function pause(SafetyChecklist $checklist)
+    {
+        if ($checklist->isPaused()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Checklist já está pausado.'
+            ], 422);
+        }
+
+        if (!$checklist->isActive()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Checklist não pode ser pausado no estado atual.'
+            ], 422);
+        }
+
+        $checklist->pauseSession();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Checklist pausado com sucesso.',
+            'checklist' => $checklist->fresh()->load(['machine', 'patient']),
+        ]);
+    }
+
+    public function resume(SafetyChecklist $checklist)
+    {
+        if (!$checklist->isPaused()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Checklist não está pausado.'
+            ], 422);
+        }
+
+        $checklist->resumeSession();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Checklist retomado com sucesso.',
+            'checklist' => $checklist->fresh()->load(['machine', 'patient']),
+        ]);
+    }
 }

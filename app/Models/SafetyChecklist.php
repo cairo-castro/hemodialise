@@ -44,6 +44,8 @@ class SafetyChecklist extends Model
         'equipment_cleaned',
         'observations',
         'incidents',
+        'paused_at',
+        'resumed_at',
     ];
 
     protected $casts = [
@@ -56,6 +58,8 @@ class SafetyChecklist extends Model
         'post_dialysis_completed_at' => 'datetime',
         'is_interrupted' => 'boolean',
         'interrupted_at' => 'datetime',
+        'paused_at' => 'datetime',
+        'resumed_at' => 'datetime',
         // Pré-diálise
         'machine_disinfected' => 'boolean',
         'capillary_lines_identified' => 'boolean',
@@ -200,6 +204,72 @@ class SafetyChecklist extends Model
         $this->interrupted_at = now();
         $this->interruption_reason = $reason;
         $this->current_phase = 'interrupted';
+
+        // Liberar máquina quando sessão é interrompida
+        $this->machine->markAsAvailable();
+
         $this->save();
+    }
+
+    public function pauseSession(): void
+    {
+        $this->paused_at = now();
+        $this->save();
+    }
+
+    public function resumeSession(): void
+    {
+        $this->resumed_at = now();
+        $this->paused_at = null;
+        $this->save();
+    }
+
+    public function isPaused(): bool
+    {
+        return !is_null($this->paused_at);
+    }
+
+    public function isActive(): bool
+    {
+        return !$this->isPaused() &&
+               !$this->is_interrupted &&
+               !in_array($this->current_phase, ['completed', 'interrupted']);
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->whereNull('paused_at')
+                    ->where('is_interrupted', false)
+                    ->whereNotIn('current_phase', ['completed', 'interrupted']);
+    }
+
+    public function scopePaused($query)
+    {
+        return $query->whereNotNull('paused_at');
+    }
+
+    protected static function booted()
+    {
+        static::created(function ($checklist) {
+            // Marcar máquina como reservada quando checklist é criado
+            $checklist->machine->markAsReserved();
+        });
+
+        static::updated(function ($checklist) {
+            // Gerenciar status da máquina baseado na fase
+            if ($checklist->isDirty('current_phase')) {
+                switch ($checklist->current_phase) {
+                    case 'during_session':
+                        $checklist->machine->markAsOccupied();
+                        break;
+                    case 'completed':
+                        $checklist->machine->markAsAvailable();
+                        break;
+                    case 'interrupted':
+                        $checklist->machine->markAsAvailable();
+                        break;
+                }
+            }
+        });
     }
 }

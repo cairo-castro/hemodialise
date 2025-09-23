@@ -46,7 +46,17 @@
             <ion-card-content>
               <ion-icon :icon="clipboardOutline" class="action-icon"></ion-icon>
               <h3>Novo Checklist</h3>
-              <p>Verificação de segurança</p>
+              <p>Iniciar verificação</p>
+              <ion-badge v-if="availableMachinesCount > 0" color="success" class="badge-overlay">{{ availableMachinesCount }}</ion-badge>
+            </ion-card-content>
+          </ion-card>
+
+          <ion-card button class="action-card active-checklists" @click="showActiveChecklists" v-if="activeChecklistsCount > 0">
+            <ion-card-content>
+              <ion-icon :icon="timeOutline" class="action-icon"></ion-icon>
+              <h3>Checklists Ativos</h3>
+              <p>{{ activeChecklistsCount }} em andamento</p>
+              <ion-badge color="warning" class="badge-overlay">{{ activeChecklistsCount }}</ion-badge>
             </ion-card-content>
           </ion-card>
 
@@ -58,19 +68,11 @@
             </ion-card-content>
           </ion-card>
 
-          <ion-card button class="action-card reports" @click="showComingSoon">
+          <ion-card button class="action-card machines" @click="showMachineStatus">
             <ion-card-content>
-              <ion-icon :icon="barChartOutline" class="action-icon"></ion-icon>
-              <h3>Relatórios</h3>
-              <p>Visualizar dados</p>
-            </ion-card-content>
-          </ion-card>
-
-          <ion-card button class="action-card settings" @click="showComingSoon">
-            <ion-card-content>
-              <ion-icon :icon="settingsOutline" class="action-icon"></ion-icon>
-              <h3>Configurações</h3>
-              <p>Ajustes do app</p>
+              <ion-icon :icon="medicalSharp" class="action-icon"></ion-icon>
+              <h3>Máquinas</h3>
+              <p>Status e controle</p>
             </ion-card-content>
           </ion-card>
         </div>
@@ -95,6 +97,21 @@
             <div class="stat-number">{{ userRole }}</div>
             <div class="stat-label">Perfil</div>
           </div>
+        </div>
+      </div>
+
+      <!-- Active Checklists Section -->
+      <div class="checklists-container" v-if="activeChecklists.length > 0">
+        <h2>Checklists em Andamento</h2>
+        <div class="checklists-grid">
+          <ActiveChecklistCard
+            v-for="checklist in activeChecklists"
+            :key="checklist.id"
+            :checklist="checklist"
+            @continue="continueChecklist"
+            @pause="pauseChecklist"
+            @resume="resumeChecklist"
+          />
         </div>
       </div>
 
@@ -126,6 +143,7 @@ import {
   IonCardContent,
   IonChip,
   IonLabel,
+  IonBadge,
   IonRefresher,
   IonRefresherContent,
   alertController,
@@ -142,11 +160,14 @@ import {
   wifiOutline,
   swapHorizontalOutline,
   moonOutline,
-  sunnyOutline
+  sunnyOutline,
+  timeOutline,
+  medicalSharp
 } from 'ionicons/icons';
 
 import { Container } from '@mobile/core/di/Container';
 import { User } from '@mobile/core/domain/entities/User';
+import ActiveChecklistCard from '../components/ActiveChecklistCard.vue';
 
 const router = useRouter();
 const container = Container.getInstance();
@@ -164,6 +185,11 @@ const totalMachines = ref(3); // Default fallback
 const loading = ref(false);
 const isDarkMode = ref(false);
 
+// New state for active checklists and machines
+const activeChecklists = ref([]);
+const availableMachines = ref([]);
+const machines = ref([]);
+
 // Computed properties
 const userRole = computed(() => {
   if (!user.value) return 'Usuário';
@@ -178,6 +204,17 @@ const userRole = computed(() => {
 
   return roleMap[user.value.role] || 'Usuário';
 });
+
+// New computed properties
+const activeChecklistsCount = computed(() =>
+  activeChecklists.value.filter((c: any) => !c.paused_at).length
+);
+
+const pausedChecklistsCount = computed(() =>
+  activeChecklists.value.filter((c: any) => c.paused_at).length
+);
+
+const availableMachinesCount = computed(() => availableMachines.value.length);
 
 // Methods
 const loadUserData = async () => {
@@ -205,17 +242,72 @@ const loadUserData = async () => {
 
 const loadStats = async () => {
   try {
-    // Simulate loading stats - in real app would call APIs
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Load real data from APIs
+    await Promise.all([
+      loadActiveChecklists(),
+      loadAvailableMachines(),
+      loadMachines()
+    ]);
 
-    todayCount.value = Math.floor(Math.random() * 10) + 1;
-    totalMachines.value = 3;
+    todayCount.value = activeChecklists.value.length;
+    totalMachines.value = machines.value.length;
     statsLoaded.value = true;
 
     console.log('Stats loaded');
   } catch (error) {
     console.error('Error loading stats:', error);
     statsLoaded.value = true; // Show anyway with defaults
+  }
+};
+
+const loadActiveChecklists = async () => {
+  try {
+    const response = await fetch('/api/checklists/active', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+      }
+    });
+
+    const data = await response.json();
+    if (data.success) {
+      activeChecklists.value = data.checklists;
+    }
+  } catch (error) {
+    console.error('Erro ao carregar checklists ativos:', error);
+  }
+};
+
+const loadAvailableMachines = async () => {
+  try {
+    const response = await fetch('/api/machines/available', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+      }
+    });
+
+    const data = await response.json();
+    if (data.success) {
+      availableMachines.value = data.machines;
+    }
+  } catch (error) {
+    console.error('Erro ao carregar máquinas disponíveis:', error);
+  }
+};
+
+const loadMachines = async () => {
+  try {
+    const response = await fetch('/api/machines', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+      }
+    });
+
+    const data = await response.json();
+    if (data.success) {
+      machines.value = data.machines;
+    }
+  } catch (error) {
+    console.error('Erro ao carregar máquinas:', error);
   }
 };
 
@@ -276,13 +368,104 @@ const handleLogout = async () => {
 };
 
 const navigateToChecklist = () => {
-  console.log('Navigating to checklist...');
-  router.push('/checklist');
+  console.log('Navigating to checklist list...');
+  router.push('/checklists');
 };
 
 const navigateToPatients = () => {
   console.log('Navigating to patients...');
   router.push('/patients');
+};
+
+const showActiveChecklists = () => {
+  router.push('/checklists/active');
+};
+
+const showMachineStatus = () => {
+  router.push('/machines');
+};
+
+const continueChecklist = (checklist: any) => {
+  router.push(`/checklist/${checklist.id}`);
+};
+
+const pauseChecklist = async (checklist: any) => {
+  const alert = await alertController.create({
+    header: 'Pausar Checklist',
+    message: `Deseja pausar o checklist da máquina ${checklist.machine.name}?`,
+    buttons: [
+      {
+        text: 'Cancelar',
+        role: 'cancel'
+      },
+      {
+        text: 'Pausar',
+        handler: async () => {
+          try {
+            const response = await fetch(`/api/checklists/${checklist.id}/pause`, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+              }
+            });
+
+            const data = await response.json();
+            if (data.success) {
+              const toast = await toastController.create({
+                message: 'Checklist pausado com sucesso.',
+                duration: 3000,
+                color: 'success'
+              });
+              await toast.present();
+              await loadStats(); // Refresh data
+            } else {
+              throw new Error(data.message);
+            }
+          } catch (error) {
+            const toast = await toastController.create({
+              message: 'Erro ao pausar checklist.',
+              duration: 3000,
+              color: 'danger'
+            });
+            await toast.present();
+          }
+        }
+      }
+    ]
+  });
+
+  await alert.present();
+};
+
+const resumeChecklist = async (checklist: any) => {
+  try {
+    const response = await fetch(`/api/checklists/${checklist.id}/resume`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+      }
+    });
+
+    const data = await response.json();
+    if (data.success) {
+      const toast = await toastController.create({
+        message: 'Checklist retomado com sucesso.',
+        duration: 3000,
+        color: 'success'
+      });
+      await toast.present();
+      await loadStats(); // Refresh data
+    } else {
+      throw new Error(data.message);
+    }
+  } catch (error) {
+    const toast = await toastController.create({
+      message: 'Erro ao retomar checklist.',
+      duration: 3000,
+      color: 'danger'
+    });
+    await toast.present();
+  }
 };
 
 const showComingSoon = async () => {
@@ -494,6 +677,7 @@ onMounted(async () => {
 .action-card ion-card-content {
   text-align: center;
   padding: 1.5rem 1rem;
+  position: relative;
 }
 
 .action-icon {
@@ -529,6 +713,42 @@ onMounted(async () => {
 
 .action-card.settings .action-icon {
   color: var(--ion-color-medium);
+}
+
+.action-card.active-checklists .action-icon {
+  color: var(--ion-color-warning);
+}
+
+.action-card.machines .action-icon {
+  color: var(--ion-color-tertiary);
+}
+
+/* Badge overlay for action cards */
+.badge-overlay {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  min-width: 20px;
+  height: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Checklists Container */
+.checklists-container {
+  padding: 0 1rem 1.5rem;
+}
+
+.checklists-container h2 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+  color: var(--ion-color-dark);
+}
+
+.checklists-grid {
+  display: grid;
+  gap: 16px;
 }
 
 /* Stats Container */
