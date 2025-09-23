@@ -364,7 +364,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import {
   IonPage,
   IonHeader,
@@ -419,6 +419,7 @@ import { Machine } from '@mobile/core/domain/entities/Machine';
 import { AuthService } from '@shared/auth';
 
 const router = useRouter();
+const route = useRoute();
 const container = Container.getInstance();
 
 // Use cases
@@ -431,6 +432,7 @@ const currentDate = ref('');
 const showInterruptModal = ref(false);
 const interruptReason = ref('');
 const currentPhaseCompletion = ref(0);
+const currentPhase = ref<'machine-patient' | 'pre-dialysis' | 'during-session' | 'post-dialysis'>('machine-patient');
 
 const patientForm = ref<PatientSearchCriteria>({
   full_name: '',
@@ -440,6 +442,8 @@ const patientForm = ref<PatientSearchCriteria>({
 const selectedPatient = ref<Patient | null>(null);
 const selectedMachine = ref<Machine | null>(null);
 const availableMachines = ref<Machine[]>([]);
+const existingChecklistId = ref<number | null>(null);
+const isEditingExisting = ref<boolean>(false);
 const activeChecklist = ref<any>(null);
 
 const checklistForm = ref({
@@ -746,6 +750,12 @@ const searchPatient = async () => {
 };
 
 const startChecklist = async () => {
+  // Se já estamos editando um checklist existente, não criar novo
+  if (isEditingExisting.value) {
+    currentPhase.value = 'pre-dialysis';
+    return;
+  }
+
   const loading = await loadingController.create({
     message: 'Iniciando checklist...',
     spinner: 'crescent'
@@ -990,6 +1000,88 @@ const loadMachines = async () => {
   }
 };
 
+const loadExistingChecklist = async () => {
+  const checklistId = route.params.id;
+  if (checklistId && checklistId !== 'new') {
+    try {
+      const response = await fetch(`/api/checklists/${checklistId}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+          'Accept': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        activeChecklist.value = data;
+        existingChecklistId.value = data.id;
+        isEditingExisting.value = true;
+
+        // Carregar dados do checklist existente
+        selectedMachine.value = data.machine;
+        selectedPatient.value = data.patient;
+
+        // Definir a fase atual baseada no checklist
+        switch (data.current_phase) {
+          case 'pre_dialysis':
+            currentPhase.value = 'pre-dialysis';
+            break;
+          case 'during_session':
+            currentPhase.value = 'during-session';
+            break;
+          case 'post_dialysis':
+            currentPhase.value = 'post-dialysis';
+            break;
+          default:
+            currentPhase.value = 'pre-dialysis';
+        }
+
+        // Se checklist estava pausado, retomar automaticamente
+        if (data.paused_at && !data.resumed_at) {
+          await resumeChecklist();
+        }
+
+        // Atualizar os dados do formulário com os valores do checklist
+        updateFormFromChecklist(data);
+        updatePhaseCompletion();
+
+        console.log('Checklist carregado:', data);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar checklist:', error);
+    }
+  }
+};
+
+const resumeChecklist = async () => {
+  if (!existingChecklistId.value) return;
+
+  try {
+    const response = await fetch(`/api/checklists/${existingChecklistId.value}/resume`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+        'Accept': 'application/json'
+      }
+    });
+
+    if (response.ok) {
+      console.log('Checklist retomado com sucesso');
+    }
+  } catch (error) {
+    console.error('Erro ao retomar checklist:', error);
+  }
+};
+
+const updateFormFromChecklist = (checklist: any) => {
+  // Atualizar checklistForm com os dados do checklist carregado
+  Object.keys(checklistForm.value).forEach(key => {
+    if (checklist[key] !== undefined) {
+      (checklistForm.value as any)[key] = checklist[key];
+    }
+  });
+};
+
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('pt-BR');
 };
@@ -1050,6 +1142,7 @@ const setItemObservation = (key: string, observation: string) => {
 // Lifecycle
 onMounted(() => {
   loadMachines();
+  loadExistingChecklist();
   updateTime();
   timeInterval = setInterval(updateTime, 1000);
 });
