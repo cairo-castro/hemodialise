@@ -13,7 +13,7 @@ export class AuthRepositoryImpl implements AuthRepository {
 
   async login(credentials: LoginCredentials): Promise<AuthToken> {
     const response = await this.apiDataSource.post<AuthToken>('/login', credentials);
-    return response as unknown as AuthToken;
+    return response.data || response as unknown as AuthToken;
   }
 
   async getCurrentUser(): Promise<User> {
@@ -24,7 +24,7 @@ export class AuthRepositoryImpl implements AuthRepository {
 
     const response = await this.apiDataSource.get<any>('/me', token);
     // API returns { "user": {...} }, extract the user object
-    return (response as any).user || response;
+    return (response as any).data?.user || (response as any).user || response;
   }
 
   async logout(): Promise<void> {

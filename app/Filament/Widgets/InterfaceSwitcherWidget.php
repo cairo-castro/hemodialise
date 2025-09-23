@@ -41,7 +41,7 @@ class InterfaceSwitcherWidget extends Widget
                 'description' => 'Otimizada para dispositivos móveis e trabalho de campo',
                 'icon' => '📱',
                 'color' => 'success',
-                'url' => '/mobile/ionic'
+                'url' => '/mobile'
             ],
             [
                 'key' => 'preline',
@@ -49,7 +49,7 @@ class InterfaceSwitcherWidget extends Widget
                 'description' => 'Interface executiva para análise e gestão',
                 'icon' => '🖥️',
                 'color' => 'primary',
-                'url' => '/desktop/preline'
+                'url' => '/desktop'
             ]
         ];
 

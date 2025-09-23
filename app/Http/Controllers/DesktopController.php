@@ -8,7 +8,10 @@ class DesktopController extends Controller
 {
     public function index()
     {
-        return view('desktop.index');
+        return view('desktop.preline', [
+            'title' => 'Sistema de Hemodiálise - Desktop',
+            'interface_type' => 'preline'
+        ]);
     }
 
     public function dashboard()

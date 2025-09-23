@@ -99,9 +99,9 @@ const emit = defineEmits(['logout']);
 
 const switchInterface = (interfaceType) => {
   const urls = {
-    'admin': '/admin',
-    'desktop': '/desktop/preline',
-    'mobile': '/mobile/app'
+    'admin': '/admin-bridge',
+    'desktop': '/desktop',
+    'mobile': '/mobile'
   };
 
   if (urls[interfaceType]) {

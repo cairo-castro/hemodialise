@@ -37,7 +37,18 @@ export class MachineRepositoryImpl implements MachineRepository {
 
   async getAvailable(): Promise<Machine[]> {
     const token = this.getToken();
-    const response = await this.apiDataSource.get<Machine[]>('/machines/available', token);
-    return response.data;
+    const response = await this.apiDataSource.get<{ success: boolean; machines: Machine[] }>('/machines/available', token);
+
+    // Try to access machines from different possible structures
+    if ((response as any).data?.machines) {
+      return (response as any).data.machines;
+    }
+
+    if ((response as any).machines) {
+      return (response as any).machines;
+    }
+
+    // Fallback for direct array response
+    return (response as any).data || response as any;
   }
 }

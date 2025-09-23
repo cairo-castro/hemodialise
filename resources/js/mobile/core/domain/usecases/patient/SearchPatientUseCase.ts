@@ -19,9 +19,9 @@ export class SearchPatientUseCase {
       throw new Error('Data de nascimento deve estar no formato válido');
     }
 
-    // Normalize search data
+    // Normalize search data (keep original case for names)
     const normalizedCriteria: PatientSearchCriteria = {
-      full_name: criteria.full_name.trim().toLowerCase(),
+      full_name: criteria.full_name.trim(),
       birth_date: criteria.birth_date
     };
 

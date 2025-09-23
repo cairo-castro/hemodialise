@@ -17,6 +17,7 @@ class PatientController extends Controller
             'birth_date' => 'required|date_format:Y-m-d',
         ]);
 
+        // First, try to find existing patient
         $patient = Patient::where('full_name', $request->full_name)
             ->where('birth_date', $request->birth_date)
             ->where('active', true)
@@ -36,7 +37,38 @@ class PatientController extends Controller
             ]);
         }
 
-        return response()->json(['found' => false]);
+        // Patient not found, create new one automatically
+        try {
+            // Generate medical record number
+            $medicalRecord = 'PAC' . str_pad(Patient::count() + 1, 6, '0', STR_PAD_LEFT);
+
+            $newPatient = Patient::create([
+                'full_name' => $request->full_name,
+                'birth_date' => $request->birth_date,
+                'medical_record' => $medicalRecord,
+                'active' => true,
+            ]);
+
+            return response()->json([
+                'found' => true,
+                'created' => true,
+                'patient' => [
+                    'id' => $newPatient->id,
+                    'full_name' => $newPatient->full_name,
+                    'birth_date' => $newPatient->birth_date->format('Y-m-d'),
+                    'medical_record' => $newPatient->medical_record,
+                    'blood_type' => $newPatient->blood_type,
+                    'age' => $newPatient->age,
+                ]
+            ], 201);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'found' => false,
+                'error' => 'Erro ao cadastrar paciente automaticamente.',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function store(Request $request): JsonResponse

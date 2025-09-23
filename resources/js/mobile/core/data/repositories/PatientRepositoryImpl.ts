@@ -19,20 +19,25 @@ export class PatientRepositoryImpl implements PatientRepository {
 
   async search(criteria: PatientSearchCriteria): Promise<Patient | null> {
     const token = this.getToken();
-    const params = new URLSearchParams({
-      full_name: criteria.full_name,
-      birth_date: criteria.birth_date
-    });
 
     try {
-      const response = await this.apiDataSource.get<Patient>(
-        `/patients/search?${params.toString()}`,
+      const response = await this.apiDataSource.post<{ found: boolean; patient?: Patient }>(
+        '/patients/search',
+        {
+          full_name: criteria.full_name,
+          birth_date: criteria.birth_date
+        },
         token
       );
-      return response.data;
+
+      if (response.data.found && response.data.patient) {
+        return response.data.patient;
+      }
+
+      return null; // Patient not found
     } catch (error: any) {
-      if (error.status === 404) {
-        return null; // Patient not found
+      if (error.status === 404 || error.status === 422) {
+        return null; // Patient not found or validation error
       }
       throw error;
     }

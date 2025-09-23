@@ -30,11 +30,11 @@ import '@ionic/vue/css/display.css';
  * https://ionicframework.com/docs/theming/dark-mode
  */
 
-/* Enable system dark mode (respects device preference) */
+/*
+ * Ionic 8 Dark Mode - System preference based theming
+ * Automatically detects system preference and applies appropriate theme
+ */
 import '@ionic/vue/css/palettes/dark.system.css';
-
-/* Enable class-based dark mode (allows manual toggle) */
-import '@ionic/vue/css/palettes/dark.class.css';
 
 /* Theme variables */
 import './theme/variables.css';

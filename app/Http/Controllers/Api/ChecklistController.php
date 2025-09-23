@@ -27,17 +27,115 @@ class ChecklistController extends Controller
         $data = $request->validate([
             'machine_id' => 'required|exists:machines,id',
             'patient_id' => 'required|exists:patients,id',
-            'checklist_data' => 'required|array',
-            'shift' => 'required|string',
+            'shift' => 'required|in:matutino,vespertino,noturno',
             'observations' => 'nullable|string',
         ]);
 
+        // Verificar se já existe um checklist para o mesmo paciente, máquina, data e turno
+        $existingChecklist = SafetyChecklist::where([
+            'patient_id' => $data['patient_id'],
+            'machine_id' => $data['machine_id'],
+            'session_date' => now()->toDateString(),
+            'shift' => $data['shift']
+        ])->first();
+
+        if ($existingChecklist) {
+            // Se já existe, retornar o checklist existente
+            return response()->json([
+                'success' => true,
+                'message' => 'Checklist já existe para esta sessão. Continuando checklist existente.',
+                'checklist' => $existingChecklist->load(['machine', 'patient']),
+                'current_time' => now()->format('H:i:s'),
+                'current_date' => now()->format('d/m/Y'),
+                'resumed' => true
+            ], 200);
+        }
+
         $data['user_id'] = $request->user()->id;
         $data['session_date'] = now()->toDateString();
+        $data['current_phase'] = 'pre_dialysis';
+        $data['pre_dialysis_started_at'] = now();
 
         $checklist = SafetyChecklist::create($data);
 
-        return response()->json($checklist->load(['machine', 'patient']), 201);
+        return response()->json([
+            'success' => true,
+            'message' => 'Novo checklist criado com sucesso.',
+            'checklist' => $checklist->load(['machine', 'patient']),
+            'current_time' => now()->format('H:i:s'),
+            'current_date' => now()->format('d/m/Y'),
+            'resumed' => false
+        ], 201);
+    }
+
+    public function updatePhase(Request $request, SafetyChecklist $checklist)
+    {
+        $data = $request->validate([
+            'phase_data' => 'required|array',
+            'observations' => 'nullable|string',
+        ]);
+
+        // Update checklist items
+        foreach ($data['phase_data'] as $key => $value) {
+            if (in_array($key, $checklist->getFillable())) {
+                $checklist->{$key} = $value;
+            }
+        }
+
+        if (isset($data['observations'])) {
+            $checklist->observations = $data['observations'];
+        }
+
+        $checklist->save();
+
+        // Check if phase can be advanced
+        $canAdvance = $checklist->canAdvanceToNextPhase();
+
+        return response()->json([
+            'success' => true,
+            'checklist' => $checklist->fresh()->load(['machine', 'patient']),
+            'can_advance' => $canAdvance,
+            'phase_completion' => $checklist->getPhaseCompletionPercentage($checklist->current_phase),
+            'current_time' => now()->format('H:i:s'),
+        ]);
+    }
+
+    public function advancePhase(SafetyChecklist $checklist)
+    {
+        if (!$checklist->canAdvanceToNextPhase()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Complete todos os itens da fase atual para continuar.'
+            ], 422);
+        }
+
+        $oldPhase = $checklist->current_phase;
+        $checklist->advanceToNextPhase();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Fase avançada com sucesso!',
+            'previous_phase' => $oldPhase,
+            'current_phase' => $checklist->current_phase,
+            'checklist' => $checklist->fresh()->load(['machine', 'patient']),
+            'current_time' => now()->format('H:i:s'),
+        ]);
+    }
+
+    public function interrupt(Request $request, SafetyChecklist $checklist)
+    {
+        $data = $request->validate([
+            'reason' => 'required|string|max:500',
+        ]);
+
+        $checklist->interruptSession($data['reason']);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Checklist interrompido com sucesso.',
+            'checklist' => $checklist->fresh()->load(['machine', 'patient']),
+            'interrupted_at' => $checklist->interrupted_at->format('d/m/Y H:i:s'),
+        ]);
     }
 
     public function show(SafetyChecklist $checklist)

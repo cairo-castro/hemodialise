@@ -36,7 +36,7 @@ export const API_CONFIG = {
 // Development proxy configuration for Vite
 export const VITE_PROXY_CONFIG = {
   '/api': {
-    target: 'http://localhost:8000',
+    target: 'http://localhost:8002',
     changeOrigin: true,
     secure: false,
     rewrite: (path: string) => path

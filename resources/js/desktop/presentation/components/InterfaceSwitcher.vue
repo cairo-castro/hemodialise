@@ -97,9 +97,9 @@ export default {
     // Filtrar apenas interfaces disponíveis para o usuário
     const availableInterfaces = computed(() => {
       const interfaces = [
-        { value: 'admin', label: '🛠️ Admin', url: '/admin' },
-        { value: 'desktop', label: '🖥️ Desktop', url: '/desktop/preline' },
-        { value: 'mobile', label: '📱 Mobile', url: '/mobile/ionic' }
+        { value: 'admin', label: '🛠️ Admin', url: '/admin-bridge' },
+        { value: 'desktop', label: '🖥️ Desktop', url: '/desktop' },
+        { value: 'mobile', label: '📱 Mobile', url: '/mobile' }
       ]
       
       return interfaces.filter(iface => canAccessInterface(iface.value))

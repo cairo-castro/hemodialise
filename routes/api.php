@@ -3,9 +3,11 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ChecklistController;
 use App\Http\Controllers\Api\PatientController;
+use App\Http\Controllers\Api\MachineController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/refresh', [AuthController::class, 'refresh'])->middleware('auth:api');
 
 // Rota para debug de token (remover em produção)
 Route::get('/debug-token', function() {
@@ -68,8 +70,13 @@ Route::middleware('auth:api')->group(function () {
 
     Route::middleware('role:tecnico,gestor,coordenador,supervisor,admin')->group(function () {
         Route::apiResource('checklists', ChecklistController::class);
+        Route::patch('/checklists/{checklist}/phase', [ChecklistController::class, 'updatePhase']);
+        Route::post('/checklists/{checklist}/advance', [ChecklistController::class, 'advancePhase']);
+        Route::post('/checklists/{checklist}/interrupt', [ChecklistController::class, 'interrupt']);
 
         Route::post('/patients/search', [PatientController::class, 'search']);
         Route::post('/patients', [PatientController::class, 'store']);
+
+        Route::get('/machines/available', [MachineController::class, 'available']);
     });
 });

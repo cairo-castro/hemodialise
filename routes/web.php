@@ -56,12 +56,13 @@ Route::prefix('mobile')->name('mobile.')->group(function () {
 });
 
 // Desktop interface routes - without smart redirect middleware to avoid loops
-Route::prefix('desktop')->name('desktop.')->middleware(['device.detection'])->group(function () {
+Route::prefix('desktop')->name('desktop.')->group(function () {
     // Desktop/Preline interface - gestão
     Route::get('/', [App\Http\Controllers\DesktopController::class, 'index'])->name('index');
     Route::get('/preline', [App\Http\Controllers\DesktopController::class, 'preline'])->name('preline');
     Route::get('/simple', [App\Http\Controllers\DesktopController::class, 'simple'])->name('simple');
 });
+
 
 // Rotas de autenticação
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');

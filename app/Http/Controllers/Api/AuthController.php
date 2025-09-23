@@ -49,6 +49,28 @@ class AuthController extends Controller
         ]);
     }
 
+    public function refresh()
+    {
+        try {
+            $newToken = auth('api')->refresh();
+            $user = auth('api')->user();
+
+            return response()->json([
+                'token' => $newToken,
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                    'unit_id' => $user->unit_id,
+                    'unit' => $user->unit,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Token inválido ou expirado'], 401);
+        }
+    }
+
     public function logout()
     {
         auth('api')->logout();

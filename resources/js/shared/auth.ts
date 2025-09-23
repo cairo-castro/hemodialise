@@ -96,6 +96,10 @@ export class AuthService {
         const user = await response.json();
         this.setUser(user);
         return true;
+      } else if (response.status === 401) {
+        // Token expired, try to refresh
+        console.log('Token expired, attempting refresh...');
+        return await this.refreshToken();
       } else {
         // Token is invalid
         this.removeToken();
@@ -103,6 +107,31 @@ export class AuthService {
       }
     } catch (error) {
       console.error('Auth check error:', error);
+      this.removeToken();
+      return false;
+    }
+  }
+
+  static async refreshToken(): Promise<boolean> {
+    try {
+      const response = await fetch('/api/refresh', {
+        method: 'POST',
+        headers: this.getAuthHeaders(),
+      });
+
+      if (response.ok) {
+        const authData = await response.json();
+        this.setToken(authData.token);
+        this.setUser(authData.user);
+        console.log('Token refreshed successfully');
+        return true;
+      } else {
+        console.log('Token refresh failed, redirecting to login');
+        this.removeToken();
+        return false;
+      }
+    } catch (error) {
+      console.error('Token refresh error:', error);
       this.removeToken();
       return false;
     }

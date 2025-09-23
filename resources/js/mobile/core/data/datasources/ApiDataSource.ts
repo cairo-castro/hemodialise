@@ -74,7 +74,16 @@ export class ApiDataSource {
         throw error;
       }
 
-      return responseData;
+      // If responseData already has a 'data' property, return as is
+      // Otherwise, wrap the response in the expected format
+      if (responseData && typeof responseData === 'object' && 'data' in responseData) {
+        return responseData;
+      }
+
+      return {
+        data: responseData,
+        success: true
+      };
     } catch (error) {
       if (error instanceof Error && error.name === 'TypeError') {
         throw {

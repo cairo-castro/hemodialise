@@ -84,7 +84,7 @@
         }
     </style>
 
-    @vite(['resources/js/mobile/main.ts', 'resources/css/app.css'], 'mobile')
+    @vite(['resources/js/mobile/main.ts', 'resources/css/app.css'], 'mobile-assets')
 </head>
 <body>
     <!-- Desktop Warning -->

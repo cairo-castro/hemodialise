@@ -18,9 +18,9 @@
 <script>
 function switchInterface(interface) {
     const urls = {
-        'admin': '/admin',
-        'desktop': '/desktop/preline',
-        'mobile': '/mobile/ionic'
+        'admin': '/admin-bridge',
+        'desktop': '/desktop',
+        'mobile': '/mobile'
     };
 
     if (urls[interface]) {

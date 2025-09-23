@@ -41,7 +41,7 @@ export default defineConfig(({ mode }) => {
                     'resources/css/app.css',
                 ],
                 refresh: true,
-                buildDirectory: 'mobile',
+                buildDirectory: 'mobile-assets',
             }),
             legacy({
                 targets: ['defaults', 'not IE 11']
@@ -49,7 +49,7 @@ export default defineConfig(({ mode }) => {
         );
 
         config.build = {
-            outDir: 'public/mobile',
+            outDir: 'public/mobile-assets',
             emptyOutDir: true,
             rollupOptions: {
                 output: {
