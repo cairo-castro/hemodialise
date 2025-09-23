@@ -15,13 +15,16 @@ export class ErrorHandler extends IErrorHandler {
      * @param {Error} error
      */
     handleAuthError(error) {
-        this.logger.warn('Auth error:', error.message);
-        
+        // Só logga se não for erro 401 esperado (usuário não logado)
+        if (!error.message.includes('401')) {
+            this.logger.warn('Auth error:', error.message);
+        }
+
         // Estratégias específicas para erros de auth
         if (error.message.includes('401')) {
             localStorage.removeItem('token');
         }
-        
+
         // Não redireciona automaticamente, deixa o componente decidir
     }
 

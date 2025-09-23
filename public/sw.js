@@ -8,10 +8,10 @@ const DEVICE_CACHE_NAME = 'hemodialise-device-cache-v1';
 const ESSENTIAL_CACHE = [
     '/',
     '/login',
-    '/css/app.css',
-    '/js/app.js',
     '/offline',
-    '/manifest.json'
+    '/manifest.json',
+    '/hemodialise_logo.png',
+    '/icon-192.png'
 ];
 
 // Resources to cache on demand
@@ -39,7 +39,15 @@ self.addEventListener('install', event => {
         caches.open(CACHE_NAME)
             .then(cache => {
                 console.log('Caching essential resources');
-                return cache.addAll(ESSENTIAL_CACHE);
+                // Cache resources individually to avoid failing on missing files
+                return Promise.allSettled(
+                    ESSENTIAL_CACHE.map(url =>
+                        cache.add(url).catch(err => {
+                            console.warn(`Failed to cache ${url}:`, err);
+                            return null;
+                        })
+                    )
+                );
             })
             .then(() => {
                 // Force activation
@@ -120,8 +128,8 @@ async function networkFirst(request) {
     try {
         const networkResponse = await fetch(request);
 
-        if (networkResponse.ok) {
-            // Cache successful responses
+        // Only cache GET requests
+        if (networkResponse.ok && request.method === 'GET') {
             const cache = await caches.open(CACHE_NAME);
             cache.put(request, networkResponse.clone());
         }

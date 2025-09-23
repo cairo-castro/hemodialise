@@ -8,10 +8,11 @@ export interface User {
 }
 
 export interface AuthResponse {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
+  token: string;
   user: User;
+  access_token?: string; // Legacy compatibility
+  token_type?: string;
+  expires_in?: number;
 }
 
 export class AuthService {
@@ -124,8 +125,8 @@ export class AuthService {
 
     const authData: AuthResponse = await response.json();
 
-    // Store token and user data
-    this.setToken(authData.access_token);
+    // Store token and user data (API returns 'token', not 'access_token')
+    this.setToken(authData.token || authData.access_token!);
     this.setUser(authData.user);
 
     return authData;

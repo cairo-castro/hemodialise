@@ -13,7 +13,7 @@ export class AuthRepositoryImpl implements AuthRepository {
 
   async login(credentials: LoginCredentials): Promise<AuthToken> {
     const response = await this.apiDataSource.post<AuthToken>('/login', credentials);
-    return response.data;
+    return response as unknown as AuthToken;
   }
 
   async getCurrentUser(): Promise<User> {
@@ -22,8 +22,9 @@ export class AuthRepositoryImpl implements AuthRepository {
       throw new Error('Token não encontrado');
     }
 
-    const response = await this.apiDataSource.get<User>('/me', token);
-    return response.data;
+    const response = await this.apiDataSource.get<any>('/me', token);
+    // API returns { "user": {...} }, extract the user object
+    return (response as any).user || response;
   }
 
   async logout(): Promise<void> {

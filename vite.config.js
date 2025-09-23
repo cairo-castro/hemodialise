@@ -49,7 +49,7 @@ export default defineConfig(({ mode }) => {
         );
 
         config.build = {
-            outDir: 'public/build/mobile',
+            outDir: 'public/mobile',
             emptyOutDir: true,
             rollupOptions: {
                 output: {

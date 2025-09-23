@@ -7,6 +7,11 @@ import 'preline/preline';
 // Main desktop app
 import DesktopApp from './desktop/presentation/components/DesktopApp.vue';
 
+// Import dependencies for desktop app
+import { AuthService } from './desktop/core/data/services/AuthService.js';
+import { ErrorHandler } from './desktop/core/data/handlers/ErrorHandler.js';
+import { HttpClient } from './desktop/core/data/http/HttpClient.js';
+
 console.log('App.js carregado - iniciando Vue.js...');
 
 // Initialize Vue app for desktop if we're on desktop pages
@@ -16,9 +21,17 @@ function initializeDesktopApp() {
     
     if (desktopAppElement) {
         console.log('Elemento encontrado, criando app Vue.js...');
-        
+
         try {
-            const app = createApp(DesktopApp);
+            // Create dependencies
+            const httpClient = new HttpClient();
+            const errorHandler = new ErrorHandler();
+            const authService = new AuthService(httpClient, errorHandler);
+
+            const app = createApp(DesktopApp, {
+                authService,
+                errorHandler
+            });
             app.mount('#desktop-app');
             console.log('Vue.js app montado com sucesso!');
             

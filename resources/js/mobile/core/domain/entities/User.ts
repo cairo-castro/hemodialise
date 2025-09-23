@@ -2,7 +2,7 @@ export interface User {
   id: number;
   name: string;
   email: string;
-  role: 'admin' | 'manager' | 'field_user';
+  role: 'admin' | 'gestor' | 'coordenador' | 'supervisor' | 'tecnico';
   unit: {
     id: number;
     name: string;
@@ -17,7 +17,9 @@ export interface LoginCredentials {
 }
 
 export interface AuthToken {
-  access_token: string;
-  token_type: string;
-  expires_in: number;
+  token: string;
+  user: User;
+  access_token?: string; // Legacy compatibility
+  token_type?: string;
+  expires_in?: number;
 }

@@ -1,21 +1,30 @@
 import { createRouter, createWebHistory } from '@ionic/vue-router';
 import { RouteRecordRaw } from 'vue-router';
-import { AuthService } from '@shared/auth';
+import { Container } from '@mobile/core/di/Container';
+
+const container = Container.getInstance();
+const authRepository = container.getAuthRepository();
 
 // Route guard to check authentication
 const requiresAuth = (to: any, from: any, next: any) => {
-  if (AuthService.isAuthenticated()) {
+  console.log('requiresAuth guard - checking authentication...');
+  if (authRepository.isAuthenticated()) {
+    console.log('User is authenticated, allowing access to:', to.path);
     next();
   } else {
+    console.log('User not authenticated, redirecting to login');
     next('/login');
   }
 };
 
 // Route guard to redirect authenticated users away from login
 const redirectIfAuthenticated = (to: any, from: any, next: any) => {
-  if (AuthService.isAuthenticated()) {
+  console.log('redirectIfAuthenticated guard - checking authentication...');
+  if (authRepository.isAuthenticated()) {
+    console.log('User is authenticated, redirecting to dashboard');
     next('/dashboard');
   } else {
+    console.log('User not authenticated, allowing access to login');
     next();
   }
 };
@@ -57,7 +66,7 @@ const routes: Array<RouteRecordRaw> = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHistory('/mobile/'),
   routes
 })
 

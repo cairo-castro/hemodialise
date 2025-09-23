@@ -30,9 +30,11 @@ import '@ionic/vue/css/display.css';
  * https://ionicframework.com/docs/theming/dark-mode
  */
 
-/* @import '@ionic/vue/css/palettes/dark.always.css'; */
-/* @import '@ionic/vue/css/palettes/dark.class.css'; */
+/* Enable system dark mode (respects device preference) */
 import '@ionic/vue/css/palettes/dark.system.css';
+
+/* Enable class-based dark mode (allows manual toggle) */
+import '@ionic/vue/css/palettes/dark.class.css';
 
 /* Theme variables */
 import './theme/variables.css';

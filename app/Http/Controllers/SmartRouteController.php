@@ -203,26 +203,27 @@ class SmartRouteController extends Controller
             }
         }
 
-        // Lógica automática baseada em role
+        // NOVA LÓGICA: Priorizar dispositivo sobre role
+        // Se é mobile, TODOS vão para mobile (exceto se especificamente requisitaram admin)
+        if ($deviceInfo['is_mobile'] && !$deviceInfo['is_tablet']) {
+            return 'mobile';
+        }
+
+        // Se é tablet ou desktop, verificar role para determinar interface padrão
         switch ($user->role) {
+            case 'admin':
+                // Admin no desktop vai para admin panel por padrão
+                return $deviceInfo['is_desktop'] ? 'admin' : 'desktop';
+
             case 'field_user':
             case 'tecnico':
-                return 'mobile'; // Sempre mobile
-
-            case 'admin':
-                // Admin pode ir para qualquer lugar, preferir admin panel
-                if ($deviceInfo['is_desktop']) {
-                    return 'admin';
-                }
-                return $deviceInfo['is_mobile'] ? 'mobile' : 'desktop';
+                // Técnicos preferem mobile mesmo em tablet/desktop
+                return 'mobile';
 
             case 'gestor':
             case 'coordenador':
             case 'supervisor':
-                // Baseado no device
-                if ($deviceInfo['is_mobile'] && !$deviceInfo['is_tablet']) {
-                    return 'mobile';
-                }
+                // Gestores preferem desktop em tablets/desktops
                 return 'desktop';
 
             default:
@@ -239,16 +240,15 @@ class SmartRouteController extends Controller
         switch ($interface) {
             case 'ionic':
             case 'mobile':
-                return true; // Todos podem acessar mobile
+                return true; // TODOS podem acessar mobile
 
             case 'preline':
             case 'desktop':
-                // Técnicos não podem acessar desktop (apenas mobile)
-                return !in_array($user->role, ['field_user', 'tecnico']);
+                return true; // TODOS podem acessar desktop também (não há restrição)
 
             case 'admin':
                 // Apenas admins, gestores e coordenadores podem acessar admin panel
-                return in_array($user->role, ['admin', 'gestor', 'coordenador']);
+                return in_array($user->role, ['admin', 'gestor', 'coordenador', 'supervisor']);
 
             default:
                 return false;
@@ -285,7 +285,7 @@ class SmartRouteController extends Controller
         switch ($interface) {
             case 'ionic':
             case 'mobile':
-                return url('/mobile/ionic');
+                return url('/mobile/app');
             case 'preline':
             case 'desktop':
                 return url('/desktop/preline');

@@ -21,7 +21,7 @@
 
       <div class="flex items-center space-x-4">
         <!-- Interface Switcher -->
-        <div v-if="user && ['admin', 'gestor', 'coordenador', 'supervisor'].includes(user.role)" class="flex items-center space-x-2">
+        <div class="flex items-center space-x-2">
           <label for="desktop-interface-switcher" class="text-sm font-medium text-gray-700">
             Interface:
           </label>

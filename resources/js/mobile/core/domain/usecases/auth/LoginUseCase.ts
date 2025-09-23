@@ -17,8 +17,8 @@ export class LoginUseCase {
     // Perform login
     const token = await this.authRepository.login(credentials);
 
-    // Store token
-    this.authRepository.storeToken(token.access_token);
+    // Store token (API returns 'token', not 'access_token')
+    this.authRepository.storeToken(token.token || token.access_token);
 
     return token;
   }

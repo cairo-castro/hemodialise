@@ -124,31 +124,44 @@ const isFormValid = computed(() => {
 
 // Methods
 const handleLogin = async () => {
+  console.log('Starting login process...');
   isLoading.value = true;
 
   try {
+    console.log('Executing login use case...');
     // Execute login use case
     await loginUseCase.execute(credentials.value);
+    console.log('Login use case completed successfully');
 
+    console.log('Getting current user...');
     // Get user info
     const user = await getCurrentUserUseCase.execute();
+    console.log('Current user:', user);
 
-    // Check if user is field_user (mobile only)
-    if (user.role !== 'field_user') {
+    // Check if user is tecnico (mobile only)
+    if (user.role !== 'tecnico') {
       throw new Error('Este aplicativo é destinado apenas para usuários de campo. Use o sistema web para acessar a área administrativa.');
     }
+
+    console.log('User role validation passed');
 
     // Show success message
     const toast = await toastController.create({
       message: `Bem-vindo, ${user.name}!`,
-      duration: 2000,
+      duration: 1500,
       color: 'success',
       position: 'top'
     });
     await toast.present();
+    console.log('Toast presented');
 
-    // Navigate to dashboard
-    router.replace('/dashboard');
+    // Navigate to dashboard after a short delay
+    console.log('About to navigate to dashboard...');
+    setTimeout(() => {
+      console.log('Executing router.replace to /dashboard');
+      router.replace('/dashboard');
+      console.log('Router.replace called');
+    }, 100);
 
   } catch (error: any) {
     console.error('Login error:', error);
@@ -168,7 +181,7 @@ const checkExistingAuth = async () => {
     if (authRepository.isAuthenticated()) {
       const user = await getCurrentUserUseCase.execute();
 
-      if (user.role === 'field_user') {
+      if (user.role === 'tecnico') {
         router.replace('/dashboard');
       } else {
         // Clear invalid token for non-field users

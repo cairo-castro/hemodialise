@@ -11,17 +11,6 @@
 
     <!-- Main Application -->
     <div v-show="!loading" class="h-full">
-      <!-- Login notification for guests -->
-      <div v-if="isGuest" class="fixed top-4 right-4 z-50 bg-yellow-100 border border-yellow-400 text-yellow-800 px-4 py-3 rounded-lg shadow-lg">
-        <div class="flex items-center space-x-2">
-          <svg class="w-5 h-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92z"/>
-          </svg>
-          <span class="text-sm font-medium">
-            Faça <a href="/login" class="underline hover:no-underline">login</a> para acesso completo
-          </span>
-        </div>
-      </div>
 
       <!-- Sidebar -->
       <DesktopSidebar 
@@ -89,11 +78,9 @@ const props = defineProps({
 const loading = ref(true);
 
 // Computed properties
-const { 
-  user, 
-  isAuthenticated, 
-  isGuest, 
-  canToggleInterfaces 
+const {
+  user,
+  canToggleInterfaces
 } = authStore;
 
 const { 
@@ -129,16 +116,6 @@ const checkAuth = async () => {
     
     if (user) {
       authStore.setUser(user);
-      
-      // Verificar se pode acessar desktop
-      if (user.isFieldUser()) {
-        console.log('Field user detected, redirecting to mobile...');
-        setTimeout(() => {
-          window.location.href = '/mobile/ionic';
-        }, 500);
-        return;
-      }
-      
       console.log('Auth successful, user:', user.name);
     } else {
       console.log('Not authenticated, showing guest mode');
@@ -156,6 +133,20 @@ const handleViewChange = (view) => {
   appStore.setCurrentView(view);
 };
 
+const handleInterfaceSwitch = (interfaceType) => {
+  console.log('Switching to interface:', interfaceType);
+
+  switch (interfaceType) {
+    case 'mobile':
+      window.location.href = '/mobile/app';
+      break;
+    case 'admin':
+      window.location.href = '/admin';
+      break;
+    default:
+      console.warn('Unknown interface type:', interfaceType);
+  }
+};
 
 const handleLogout = async () => {
   try {

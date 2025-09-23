@@ -39,10 +39,20 @@ Route::prefix('mobile')->name('mobile.')->group(function () {
         return view('mobile.app');
     })->name('app');
 
+    // Rota de login mobile (redireciona para SPA)
+    Route::get('/login', function () {
+        return redirect('/mobile/app');
+    })->name('login');
+
     // Manter compatibilidade com rota antiga
     Route::get('/ionic', function () {
         return redirect('/mobile/app');
     })->name('ionic');
+
+    // Catch-all route for SPA navigation (Vue Router handles internal routes)
+    Route::get('/{any}', function () {
+        return view('mobile.app');
+    })->where('any', '.*')->name('spa');
 });
 
 // Desktop interface routes - without smart redirect middleware to avoid loops
