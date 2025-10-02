@@ -22,105 +22,144 @@
       </ion-toolbar>
     </ion-header>
 
-    <ion-content :fullscreen="true">
+    <ion-content :fullscreen="true" class="dashboard-content">
       <!-- Refresher -->
       <ion-refresher slot="fixed" @ionRefresh="handleRefresh">
         <ion-refresher-content></ion-refresher-content>
       </ion-refresher>
 
-      <!-- Welcome Section -->
-      <div class="welcome-section" v-if="user">
-        <div class="welcome-content">
-          <ion-icon :icon="medicalOutline" class="welcome-icon"></ion-icon>
-          <h1>Olá, {{ user.name.split(' ')[0] }}!</h1>
-          <p>{{ user.unit?.name || 'Sistema de Hemodiálise' }}</p>
-        </div>
-      </div>
-
-      <!-- Quick Actions -->
-      <div class="actions-container">
-        <h2>Ações Principais</h2>
-
-        <div class="actions-grid">
-          <ion-card button class="action-card checklist" @click="navigateToChecklist">
-            <ion-card-content>
-              <ion-icon :icon="clipboardOutline" class="action-icon"></ion-icon>
-              <h3>Novo Checklist</h3>
-              <p>Iniciar verificação</p>
-              <ion-badge v-if="availableMachinesCount > 0" color="success" class="badge-overlay">{{ availableMachinesCount }}</ion-badge>
-            </ion-card-content>
-          </ion-card>
-
-          <ion-card button class="action-card active-checklists" @click="showActiveChecklists" v-if="activeChecklistsCount > 0">
-            <ion-card-content>
-              <ion-icon :icon="timeOutline" class="action-icon"></ion-icon>
-              <h3>Checklists Ativos</h3>
-              <p>{{ activeChecklistsCount }} em andamento</p>
-              <ion-badge color="warning" class="badge-overlay">{{ activeChecklistsCount }}</ion-badge>
-            </ion-card-content>
-          </ion-card>
-
-          <ion-card button class="action-card patients" @click="navigateToPatients">
-            <ion-card-content>
-              <ion-icon :icon="peopleOutline" class="action-icon"></ion-icon>
-              <h3>Pacientes</h3>
-              <p>Buscar e gerenciar</p>
-            </ion-card-content>
-          </ion-card>
-
-          <ion-card button class="action-card machines" @click="showMachineStatus">
-            <ion-card-content>
-              <ion-icon :icon="medicalSharp" class="action-icon"></ion-icon>
-              <h3>Máquinas</h3>
-              <p>Status e controle</p>
-            </ion-card-content>
-          </ion-card>
-        </div>
-      </div>
-
-      <!-- Quick Stats -->
-      <div class="stats-container" v-if="statsLoaded">
-        <h2>Resumo de Hoje</h2>
-
-        <div class="stats-grid">
-          <div class="stat-item">
-            <div class="stat-number">{{ todayCount }}</div>
-            <div class="stat-label">Checklists Hoje</div>
-          </div>
-
-          <div class="stat-item">
-            <div class="stat-number">{{ totalMachines }}</div>
-            <div class="stat-label">Máquinas Ativas</div>
-          </div>
-
-          <div class="stat-item">
-            <div class="stat-number">{{ userRole }}</div>
-            <div class="stat-label">Perfil</div>
+      <div class="dashboard-container">
+        <!-- Welcome Section -->
+        <div class="welcome-section" v-if="user">
+          <div class="welcome-header">
+            <div>
+              <h1>Olá, {{ user.name.split(' ')[0] }}! 👋</h1>
+              <p class="unit-name">{{ user.unit?.name || 'Sistema de Hemodiálise' }}</p>
+            </div>
+            <div class="user-badge">
+              <span class="role-tag">{{ userRole }}</span>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Active Checklists Section -->
-      <div class="checklists-container" v-if="activeChecklists.length > 0">
-        <h2>Checklists em Andamento</h2>
-        <div class="checklists-grid">
-          <ActiveChecklistCard
-            v-for="checklist in activeChecklists"
-            :key="checklist.id"
-            :checklist="checklist"
-            @continue="continueChecklist"
-            @pause="pauseChecklist"
-            @resume="resumeChecklist"
-          />
+        <!-- Quick Stats Summary -->
+        <div class="quick-stats" v-if="statsLoaded">
+          <div class="stat-card available" @click="showMachineStatus">
+            <div class="stat-icon">
+              <ion-icon :icon="medicalSharp"></ion-icon>
+            </div>
+            <div class="stat-content">
+              <div class="stat-number">{{ availableMachinesCount }}</div>
+              <div class="stat-label">Disponíveis</div>
+            </div>
+          </div>
+
+          <div class="stat-card active" @click="showActiveChecklists">
+            <div class="stat-icon">
+              <ion-icon :icon="timeOutline"></ion-icon>
+            </div>
+            <div class="stat-content">
+              <div class="stat-number">{{ activeChecklistsCount }}</div>
+              <div class="stat-label">Em Andamento</div>
+            </div>
+          </div>
+
+          <div class="stat-card total">
+            <div class="stat-icon">
+              <ion-icon :icon="medicalOutline"></ion-icon>
+            </div>
+            <div class="stat-content">
+              <div class="stat-number">{{ totalMachines }}</div>
+              <div class="stat-label">Total Máquinas</div>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <!-- Connection Status -->
-      <div class="status-indicator">
-        <ion-chip :color="isOnline ? 'success' : 'danger'">
-          <ion-icon :icon="isOnline ? wifiOutline : wifiOutline" slot="start"></ion-icon>
-          <ion-label>{{ isOnline ? 'Online' : 'Offline' }}</ion-label>
-        </ion-chip>
+        <!-- Primary Action -->
+        <div class="primary-action">
+          <button class="primary-btn" @click="navigateToChecklist">
+            <ion-icon :icon="clipboardOutline"></ion-icon>
+            <div class="btn-text">
+              <span class="btn-title">Novo Checklist</span>
+              <span class="btn-subtitle">Iniciar verificação de segurança</span>
+            </div>
+            <ion-badge v-if="availableMachinesCount > 0" color="success">{{ availableMachinesCount }}</ion-badge>
+          </button>
+        </div>
+
+        <!-- Quick Actions Grid -->
+        <div class="section">
+          <h2 class="section-title">Acesso Rápido</h2>
+
+          <div class="quick-actions">
+            <div class="action-btn" @click="showActiveChecklists" v-if="activeChecklistsCount > 0">
+              <div class="action-icon warning">
+                <ion-icon :icon="timeOutline"></ion-icon>
+              </div>
+              <div class="action-content">
+                <span class="action-title">Checklists Ativos</span>
+                <span class="action-subtitle">{{ activeChecklistsCount }} em andamento</span>
+              </div>
+              <ion-icon :icon="chevronForwardOutline" class="chevron"></ion-icon>
+            </div>
+
+            <div class="action-btn" @click="showMachineStatus">
+              <div class="action-icon tertiary">
+                <ion-icon :icon="medicalSharp"></ion-icon>
+              </div>
+              <div class="action-content">
+                <span class="action-title">Máquinas</span>
+                <span class="action-subtitle">Status e controle</span>
+              </div>
+              <ion-icon :icon="chevronForwardOutline" class="chevron"></ion-icon>
+            </div>
+
+            <div class="action-btn" @click="navigateToCleaningControls">
+              <div class="action-icon cleaning">
+                <ion-icon :icon="sparklesOutline"></ion-icon>
+              </div>
+              <div class="action-content">
+                <span class="action-title">Controle de Limpeza</span>
+                <span class="action-subtitle">Limpeza e desinfecção</span>
+              </div>
+              <ion-icon :icon="chevronForwardOutline" class="chevron"></ion-icon>
+            </div>
+
+            <div class="action-btn" @click="navigateToPatients">
+              <div class="action-icon primary">
+                <ion-icon :icon="peopleOutline"></ion-icon>
+              </div>
+              <div class="action-content">
+                <span class="action-title">Pacientes</span>
+                <span class="action-subtitle">Buscar e gerenciar</span>
+              </div>
+              <ion-icon :icon="chevronForwardOutline" class="chevron"></ion-icon>
+            </div>
+          </div>
+        </div>
+
+        <!-- Active Checklists Section -->
+        <div class="section" v-if="activeChecklists.length > 0">
+          <h2 class="section-title">Em Andamento</h2>
+          <div class="checklists-list">
+            <ActiveChecklistCard
+              v-for="checklist in activeChecklists"
+              :key="checklist.id"
+              :checklist="checklist"
+              @continue="continueChecklist"
+              @pause="pauseChecklist"
+              @resume="resumeChecklist"
+            />
+          </div>
+        </div>
+
+        <!-- Connection Status -->
+        <div class="connection-status">
+          <ion-chip :color="isOnline ? 'success' : 'danger'" class="status-chip">
+            <ion-icon :icon="wifiOutline"></ion-icon>
+            <ion-label>{{ isOnline ? 'Online' : 'Offline' }}</ion-label>
+          </ion-chip>
+        </div>
       </div>
 
     </ion-content>
@@ -162,7 +201,9 @@ import {
   moonOutline,
   sunnyOutline,
   timeOutline,
-  medicalSharp
+  medicalSharp,
+  sparklesOutline,
+  chevronForwardOutline
 } from 'ionicons/icons';
 
 import { Container } from '@mobile/core/di/Container';
@@ -298,16 +339,28 @@ const loadMachines = async () => {
   try {
     const response = await fetch('/api/machines', {
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
       }
     });
 
+    if (!response.ok) {
+      console.warn(`Failed to load machines: ${response.status}`);
+      // Don't throw error, just set empty array
+      machines.value = [];
+      return;
+    }
+
     const data = await response.json();
-    if (data.success) {
+    if (data.success && data.machines) {
       machines.value = data.machines;
+    } else {
+      machines.value = [];
     }
   } catch (error) {
     console.error('Erro ao carregar máquinas:', error);
+    machines.value = [];
   }
 };
 
@@ -368,8 +421,8 @@ const handleLogout = async () => {
 };
 
 const navigateToChecklist = () => {
-  console.log('Navigating to checklist list...');
-  router.push('/checklists');
+  console.log('Navigating to new checklist...');
+  router.push('/checklist/new');
 };
 
 const navigateToPatients = () => {
@@ -378,11 +431,17 @@ const navigateToPatients = () => {
 };
 
 const showActiveChecklists = () => {
-  router.push('/checklists/active');
+  console.log('Navigating to active checklists...');
+  router.push('/checklists');
 };
 
 const showMachineStatus = () => {
   router.push('/machines');
+};
+
+const navigateToCleaningControls = () => {
+  console.log('Navigating to cleaning controls...');
+  router.push('/cleaning-controls');
 };
 
 const continueChecklist = (checklist: any) => {
@@ -611,227 +670,348 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.dashboard-content {
+  --background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.dashboard-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding-bottom: 24px;
+}
+
 /* Welcome Section */
 .welcome-section {
-  background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-primary-shade) 100%);
-  color: white;
-  padding: 2rem 1.5rem;
-  text-align: center;
-  margin-bottom: 1rem;
-}
-
-.welcome-content {
-  max-width: 300px;
-  margin: 0 auto;
-}
-
-.welcome-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  opacity: 0.9;
-}
-
-.welcome-section h1 {
-  font-size: 1.8rem;
-  font-weight: 600;
-  margin: 0 0 0.5rem 0;
-}
-
-.welcome-section p {
-  font-size: 1rem;
-  opacity: 0.9;
-  margin: 0;
-}
-
-/* Actions Container */
-.actions-container {
-  padding: 0 1rem 1.5rem;
-}
-
-.actions-container h2 {
-  font-size: 1.3rem;
-  font-weight: 600;
-  margin: 0 0 1rem 0;
-  color: var(--ion-color-dark);
-}
-
-.actions-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-}
-
-.action-card {
-  margin: 0;
-  border-radius: 16px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  overflow: hidden;
-}
-
-.action-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-}
-
-.action-card ion-card-content {
-  text-align: center;
-  padding: 1.5rem 1rem;
-  position: relative;
-}
-
-.action-icon {
-  font-size: 2.5rem;
-  margin-bottom: 0.8rem;
-}
-
-.action-card h3 {
-  font-size: 1rem;
-  font-weight: 600;
-  margin: 0 0 0.3rem 0;
-  color: var(--ion-color-dark);
-}
-
-.action-card p {
-  font-size: 0.85rem;
-  color: var(--ion-color-medium);
-  margin: 0;
-}
-
-/* Action Card Colors */
-.action-card.checklist .action-icon {
-  color: var(--ion-color-success);
-}
-
-.action-card.patients .action-icon {
-  color: var(--ion-color-primary);
-}
-
-.action-card.reports .action-icon {
-  color: var(--ion-color-warning);
-}
-
-.action-card.settings .action-icon {
-  color: var(--ion-color-medium);
-}
-
-.action-card.active-checklists .action-icon {
-  color: var(--ion-color-warning);
-}
-
-.action-card.machines .action-icon {
-  color: var(--ion-color-tertiary);
-}
-
-/* Badge overlay for action cards */
-.badge-overlay {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  min-width: 20px;
-  height: 20px;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-/* Checklists Container */
-.checklists-container {
-  padding: 0 1rem 1.5rem;
-}
-
-.checklists-container h2 {
-  font-size: 1.3rem;
-  font-weight: 600;
-  margin: 0 0 1rem 0;
-  color: var(--ion-color-dark);
-}
-
-.checklists-grid {
-  display: grid;
-  gap: 16px;
-}
-
-/* Stats Container */
-.stats-container {
-  padding: 0 1rem 1.5rem;
-}
-
-.stats-container h2 {
-  font-size: 1.3rem;
-  font-weight: 600;
-  margin: 0 0 1rem 0;
-  color: var(--ion-color-dark);
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
   background: white;
+  padding: 20px;
+  margin: 16px 16px 0;
   border-radius: 16px;
-  padding: 1.5rem 1rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-.stat-item {
-  text-align: center;
+.welcome-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.welcome-section h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 4px 0;
+}
+
+.unit-name {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin: 0;
+  font-weight: 500;
+}
+
+.user-badge {
+  flex-shrink: 0;
+}
+
+.role-tag {
+  display: inline-block;
+  background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-primary-shade) 100%);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Quick Stats */
+.quick-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  padding: 16px;
+  background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: white;
+  border-left: 4px solid transparent;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.stat-card:active {
+  transform: scale(0.97);
+}
+
+.stat-card.available {
+  border-left-color: #10b981;
+}
+
+.stat-card.active {
+  border-left-color: #f59e0b;
+}
+
+.stat-card.total {
+  border-left-color: #6b7280;
+}
+
+.stat-icon {
+  flex-shrink: 0;
+}
+
+.stat-icon ion-icon {
+  font-size: 2rem;
+}
+
+.stat-card.available .stat-icon ion-icon {
+  color: #10b981;
+}
+
+.stat-card.active .stat-icon ion-icon {
+  color: #f59e0b;
+}
+
+.stat-card.total .stat-icon ion-icon {
+  color: #6b7280;
+}
+
+.stat-content {
+  flex: 1;
+  min-width: 0;
 }
 
 .stat-number {
-  font-size: 1.8rem;
-  font-weight: bold;
-  color: var(--ion-color-primary);
-  margin-bottom: 0.3rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1;
 }
 
 .stat-label {
-  font-size: 0.8rem;
-  color: var(--ion-color-medium);
-  line-height: 1.2;
+  font-size: 0.7rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+  font-weight: 600;
 }
 
-/* Status Indicator */
-.status-indicator {
-  padding: 1rem;
+/* Primary Action */
+.primary-action {
+  padding: 0 16px;
+  margin-top: 16px;
+}
+
+.primary-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-primary-shade) 100%);
+  color: white;
+  border: none;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.primary-btn:active {
+  transform: scale(0.98);
+}
+
+.primary-btn ion-icon {
+  font-size: 2.5rem;
+  flex-shrink: 0;
+}
+
+.btn-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  text-align: left;
+}
+
+.btn-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.btn-subtitle {
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+.primary-btn ion-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+/* Section */
+.section {
+  padding: 0 16px;
+  margin-top: 24px;
+}
+
+.section-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 12px 0;
+}
+
+/* Quick Actions */
+.quick-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.action-btn:active {
+  transform: scale(0.98);
+  border-color: var(--ion-color-primary);
+}
+
+.action-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.action-icon ion-icon {
+  font-size: 1.8rem;
+  color: white;
+}
+
+.action-icon.primary {
+  background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-primary-shade) 100%);
+}
+
+.action-icon.warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.action-icon.tertiary {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+}
+
+.action-icon.cleaning {
+  background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+}
+
+.action-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.action-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.action-subtitle {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.chevron {
+  font-size: 1.2rem;
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
+/* Checklists List */
+.checklists-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Connection Status */
+.connection-status {
+  padding: 16px;
   text-align: center;
+}
+
+.status-chip {
+  font-size: 0.85rem;
+  font-weight: 600;
 }
 
 /* Responsive adjustments */
 @media (max-width: 480px) {
-  .actions-grid {
-    gap: 0.8rem;
+  .quick-stats {
+    gap: 8px;
+    padding: 12px;
   }
 
-  .action-card ion-card-content {
-    padding: 1.2rem 0.8rem;
+  .stat-card {
+    flex-direction: column;
+    text-align: center;
+    gap: 8px;
+    padding: 12px;
   }
 
-  .action-icon {
-    font-size: 2rem;
-  }
-
-  .stats-grid {
-    gap: 0.8rem;
-    padding: 1.2rem 0.8rem;
+  .stat-icon ion-icon {
+    font-size: 1.8rem;
   }
 
   .stat-number {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
   }
-}
 
-/* Loading state */
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 60vh;
-  color: var(--ion-color-medium);
-}
+  .stat-label {
+    font-size: 0.65rem;
+  }
 
-.loading-container ion-spinner {
-  margin-bottom: 1rem;
+  .primary-btn {
+    padding: 16px;
+  }
+
+  .primary-btn ion-icon {
+    font-size: 2rem;
+  }
+
+  .btn-title {
+    font-size: 1.1rem;
+  }
+
+  .btn-subtitle {
+    font-size: 0.8rem;
+  }
 }
 
 /* Interface Switch Button */

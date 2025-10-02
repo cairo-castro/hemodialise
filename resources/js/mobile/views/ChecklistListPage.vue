@@ -267,16 +267,28 @@ const loadMachines = async () => {
   try {
     const response = await fetch('/api/machines', {
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
       }
     });
 
+    if (!response.ok) {
+      console.warn(`Failed to load machines: ${response.status}`);
+      // Don't throw error, just set empty array
+      machines.value = [];
+      return;
+    }
+
     const data = await response.json();
-    if (data.success) {
+    if (data.success && data.machines) {
       machines.value = data.machines;
+    } else {
+      machines.value = [];
     }
   } catch (error) {
     console.error('Erro ao carregar máquinas:', error);
+    machines.value = [];
   }
 };
 
@@ -476,21 +488,56 @@ onMounted(async () => {
 }
 
 .status-indicators {
-  display: flex;
-  gap: 20px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
   margin-top: 16px;
 }
 
 .status-item {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 14px;
-  opacity: 0.9;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border-left: 4px solid transparent;
+}
+
+.status-item:active {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
 }
 
 .status-item ion-icon {
-  font-size: 16px;
+  font-size: 2.5rem;
+  flex-shrink: 0;
+}
+
+.status-item span {
+  color: #1f2937;
+  font-size: 0.75rem;
+  line-height: 1.2;
+  font-weight: 500;
+  flex: 1;
+}
+
+.status-item.available {
+  border-left-color: #10b981;
+}
+
+.status-item.available ion-icon {
+  color: #10b981;
+}
+
+.status-item.occupied {
+  border-left-color: #f59e0b;
+}
+
+.status-item.occupied ion-icon {
+  color: #f59e0b;
 }
 
 .content-container {

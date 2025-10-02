@@ -29,28 +29,9 @@ Route::prefix('api/smart-route')->name('smart-route.')->group(function () {
 
 // Mobile/Ionic interface - única interface mobile
 Route::prefix('mobile')->name('mobile.')->group(function () {
-    // Redirecionar /mobile para /mobile/app
-    Route::get('/', function () {
-        return redirect('/mobile/app');
-    })->name('index');
-
-    // Interface Ionic principal integrada
-    Route::get('/app', function () {
-        return view('mobile.app');
-    })->name('app');
-
-    // Rota de login mobile (redireciona para SPA)
-    Route::get('/login', function () {
-        return redirect('/mobile/app');
-    })->name('login');
-
-    // Manter compatibilidade com rota antiga
-    Route::get('/ionic', function () {
-        return redirect('/mobile/app');
-    })->name('ionic');
-
-    // Catch-all route for SPA navigation (Vue Router handles internal routes)
-    Route::get('/{any}', function () {
+    // Catch-all route for SPA navigation (Vue Router handles all routes)
+    // This must be a single route that serves the SPA for ALL paths
+    Route::get('/{any?}', function () {
         return view('mobile.app');
     })->where('any', '.*')->name('spa');
 });

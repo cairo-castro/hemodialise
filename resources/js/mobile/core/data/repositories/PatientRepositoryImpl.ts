@@ -57,8 +57,19 @@ export class PatientRepositoryImpl implements PatientRepository {
 
   async getAll(): Promise<Patient[]> {
     const token = this.getToken();
-    const response = await this.apiDataSource.get<Patient[]>('/patients', token);
-    return response.data;
+    const response = await this.apiDataSource.get<any>('/patients', token);
+
+    // API returns { success: true, patients: [...] }
+    if (response.data && response.data.patients) {
+      return response.data.patients;
+    }
+
+    // Fallback if data is already an array
+    if (Array.isArray(response.data)) {
+      return response.data;
+    }
+
+    return [];
   }
 
   async update(id: number, data: Partial<CreatePatientData>): Promise<Patient> {

@@ -5,14 +5,26 @@
 
 echo "🏥 Sistema de Hemodiálise - Iniciando servidor..."
 
-# Parar processos existentes na porta 8000
-echo "🔄 Verificando processos na porta 8000..."
-EXISTING_PID=$(lsof -ti:8000)
-if [ ! -z "$EXISTING_PID" ]; then
-    echo "⚠️  Parando processo existente (PID: $EXISTING_PID)"
-    kill -9 $EXISTING_PID 2>/dev/null
-    sleep 2
-fi
+# Função para limpar processos ao sair
+cleanup() {
+    echo ""
+    echo "🛑 Parando servidores..."
+    kill $PHP_PID $VITE_PID 2>/dev/null
+    exit
+}
+
+trap cleanup SIGINT SIGTERM
+
+# Parar processos existentes nas portas
+echo "🔄 Verificando processos existentes..."
+for PORT in 8000 5173 5174; do
+    EXISTING_PID=$(lsof -ti:$PORT)
+    if [ ! -z "$EXISTING_PID" ]; then
+        echo "⚠️  Parando processo na porta $PORT (PID: $EXISTING_PID)"
+        kill -9 $EXISTING_PID 2>/dev/null
+    fi
+done
+sleep 2
 
 # Verificar se está no diretório correto
 if [ ! -f "artisan" ]; then
@@ -24,6 +36,12 @@ fi
 if [ ! -f ".env" ]; then
     echo "⚠️  Arquivo .env não encontrado. Execute ./setup.sh primeiro!"
     exit 1
+fi
+
+# Verificar se node_modules existe
+if [ ! -d "node_modules" ]; then
+    echo "⚠️  Dependências não instaladas. Instalando..."
+    npm install
 fi
 
 # Limpar cache se necessário
@@ -40,15 +58,30 @@ fi
 
 echo "✅ Conexão com banco estabelecida"
 
-# Iniciar servidor
-echo "🚀 Iniciando servidor em http://localhost:8000"
-echo "📱 Acesse o admin em: http://localhost:8000/admin"
+# Iniciar servidores
+echo "🚀 Iniciando servidores..."
+echo ""
+echo "📱 Sistema: http://localhost:8000"
+echo "📱 Admin: http://localhost:8000/admin"
 echo ""
 echo "Credenciais:"
 echo "📧 Email: admin@hemodialise.com"
 echo "🔐 Senha: admin123"
 echo ""
-echo "Pressione Ctrl+C para parar o servidor"
+echo "Pressione Ctrl+C para parar os servidores"
 echo "================================="
+echo ""
 
-php artisan serve --host=0.0.0.0 --port=8000
+# Iniciar Vite em background
+npm run dev > /dev/null 2>&1 &
+VITE_PID=$!
+
+# Aguardar Vite iniciar
+sleep 3
+
+# Iniciar servidor Laravel
+php artisan serve --host=0.0.0.0 --port=8000 &
+PHP_PID=$!
+
+# Aguardar ambos os processos
+wait

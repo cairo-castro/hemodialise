@@ -32,14 +32,26 @@ class MachineController extends Controller
     public function index(): JsonResponse
     {
         try {
-            $machines = Machine::active()
-                ->with(['getCurrentChecklist.patient'])
-                ->orderBy('name')
-                ->get();
+            // Get all machines (not just active ones)
+            $machines = Machine::orderBy('name')->get();
 
             // Adicionar status info para cada máquina
             $machines = $machines->map(function ($machine) {
                 $currentChecklist = $machine->getCurrentChecklist();
+
+                $checklistData = null;
+                if ($currentChecklist) {
+                    // Load patient relationship if exists
+                    $currentChecklist->load('patient');
+
+                    $checklistData = [
+                        'id' => $currentChecklist->id,
+                        'current_phase' => $currentChecklist->current_phase,
+                        'patient_name' => $currentChecklist->patient->full_name ?? null,
+                        'started_at' => $currentChecklist->created_at,
+                        'is_paused' => method_exists($currentChecklist, 'isPaused') ? $currentChecklist->isPaused() : false,
+                    ];
+                }
 
                 return [
                     'id' => $machine->id,
@@ -47,16 +59,11 @@ class MachineController extends Controller
                     'identifier' => $machine->identifier,
                     'description' => $machine->description,
                     'status' => $machine->status,
+                    'is_active' => $machine->active,
                     'is_available' => $machine->isAvailable(),
                     'is_occupied' => $machine->isOccupied(),
                     'is_reserved' => $machine->isReserved(),
-                    'current_checklist' => $currentChecklist ? [
-                        'id' => $currentChecklist->id,
-                        'current_phase' => $currentChecklist->current_phase,
-                        'patient_name' => $currentChecklist->patient->name ?? null,
-                        'started_at' => $currentChecklist->created_at,
-                        'is_paused' => $currentChecklist->isPaused(),
-                    ] : null
+                    'current_checklist' => $checklistData
                 ];
             });
 

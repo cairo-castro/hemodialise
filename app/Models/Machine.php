@@ -95,7 +95,7 @@ class Machine extends Model
     {
         return $this->safetyChecklists()
                    ->whereIn('current_phase', ['pre_dialysis', 'during_session', 'post_dialysis'])
-                   ->whereNull('completed_at')
+                   ->where('is_interrupted', false)
                    ->whereNull('interrupted_at')
                    ->latest()
                    ->first();

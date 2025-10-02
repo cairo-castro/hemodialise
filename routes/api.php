@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ChecklistController;
+use App\Http\Controllers\Api\CleaningChecklistController;
 use App\Http\Controllers\Api\PatientController;
 use App\Http\Controllers\Api\MachineController;
 use Illuminate\Support\Facades\Route;
@@ -79,10 +80,15 @@ Route::middleware('auth:api')->group(function () {
 
         Route::apiResource('checklists', ChecklistController::class);
 
+        Route::get('/patients', [PatientController::class, 'index']);
         Route::post('/patients/search', [PatientController::class, 'search']);
         Route::post('/patients', [PatientController::class, 'store']);
 
         Route::get('/machines', [MachineController::class, 'index']);
         Route::get('/machines/available', [MachineController::class, 'available']);
+
+        // Cleaning Checklist routes
+        Route::get('/cleaning-checklists/stats', [CleaningChecklistController::class, 'stats']);
+        Route::apiResource('cleaning-checklists', CleaningChecklistController::class);
     });
 });

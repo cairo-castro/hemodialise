@@ -19,8 +19,19 @@ export class MachineRepositoryImpl implements MachineRepository {
 
   async getAll(): Promise<Machine[]> {
     const token = this.getToken();
-    const response = await this.apiDataSource.get<Machine[]>('/machines', token);
-    return response.data;
+    const response = await this.apiDataSource.get<any>('/machines', token);
+
+    // API returns { success: true, machines: [...] }
+    if (response.data && response.data.machines) {
+      return response.data.machines;
+    }
+
+    // Fallback if data is already an array
+    if (Array.isArray(response.data)) {
+      return response.data;
+    }
+
+    return [];
   }
 
   async getById(id: number): Promise<Machine> {

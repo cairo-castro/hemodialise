@@ -10,6 +10,30 @@ use Illuminate\Validation\ValidationException;
 
 class PatientController extends Controller
 {
+    public function index(): JsonResponse
+    {
+        $patients = Patient::where('active', true)
+            ->orderBy('full_name', 'asc')
+            ->get()
+            ->map(function ($patient) {
+                return [
+                    'id' => $patient->id,
+                    'full_name' => $patient->full_name,
+                    'birth_date' => $patient->birth_date->format('Y-m-d'),
+                    'medical_record' => $patient->medical_record,
+                    'blood_type' => $patient->blood_type,
+                    'age' => $patient->age,
+                    'allergies' => $patient->allergies,
+                    'observations' => $patient->observations,
+                ];
+            });
+
+        return response()->json([
+            'success' => true,
+            'patients' => $patients
+        ]);
+    }
+
     public function search(Request $request): JsonResponse
     {
         $request->validate([

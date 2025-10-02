@@ -6,25 +6,49 @@ const container = Container.getInstance();
 const authRepository = container.getAuthRepository();
 
 // Route guard to check authentication
-const requiresAuth = (to: any, from: any, next: any) => {
+const requiresAuth = async (to: any, from: any, next: any) => {
   console.log('requiresAuth guard - checking authentication...');
-  if (authRepository.isAuthenticated()) {
-    console.log('User is authenticated, allowing access to:', to.path);
+  const token = authRepository.getStoredToken();
+
+  if (!token) {
+    console.log('No token found, redirecting to login');
+    next('/login');
+    return;
+  }
+
+  // Validate token with backend
+  try {
+    const getCurrentUserUseCase = container.getCurrentUserUseCase();
+    await getCurrentUserUseCase.execute();
+    console.log('Token is valid, allowing access to:', to.path);
     next();
-  } else {
-    console.log('User not authenticated, redirecting to login');
+  } catch (error) {
+    console.log('Token validation failed, clearing token and redirecting to login');
+    authRepository.removeToken();
     next('/login');
   }
 };
 
 // Route guard to redirect authenticated users away from login
-const redirectIfAuthenticated = (to: any, from: any, next: any) => {
+const redirectIfAuthenticated = async (to: any, from: any, next: any) => {
   console.log('redirectIfAuthenticated guard - checking authentication...');
-  if (authRepository.isAuthenticated()) {
+  const token = authRepository.getStoredToken();
+
+  if (!token) {
+    console.log('No token, allowing access to login');
+    next();
+    return;
+  }
+
+  // Validate token with backend
+  try {
+    const getCurrentUserUseCase = container.getCurrentUserUseCase();
+    await getCurrentUserUseCase.execute();
     console.log('User is authenticated, redirecting to dashboard');
     next('/dashboard');
-  } else {
-    console.log('User not authenticated, allowing access to login');
+  } catch (error) {
+    console.log('Token validation failed, clearing token and allowing login');
+    authRepository.removeToken();
     next();
   }
 };
@@ -72,6 +96,24 @@ const routes: Array<RouteRecordRaw> = [
     path: '/patients',
     name: 'Patients',
     component: () => import('@mobile/views/PatientsPage.vue'),
+    beforeEnter: requiresAuth
+  },
+  {
+    path: '/machines',
+    name: 'Machines',
+    component: () => import('@mobile/views/MachinesPage.vue'),
+    beforeEnter: requiresAuth
+  },
+  {
+    path: '/cleaning-controls',
+    name: 'CleaningControls',
+    component: () => import('@mobile/views/CleaningControlsPage.vue'),
+    beforeEnter: requiresAuth
+  },
+  {
+    path: '/cleaning-checklist/new',
+    name: 'NewCleaningChecklist',
+    component: () => import('@mobile/views/CleaningChecklistNewPage.vue'),
     beforeEnter: requiresAuth
   },
   // Fallback route for any unmatched paths

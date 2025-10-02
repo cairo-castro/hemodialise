@@ -7,12 +7,14 @@ import { AuthRepositoryImpl } from '../data/repositories/AuthRepositoryImpl';
 import { PatientRepositoryImpl } from '../data/repositories/PatientRepositoryImpl';
 import { ChecklistRepositoryImpl } from '../data/repositories/ChecklistRepositoryImpl';
 import { MachineRepositoryImpl } from '../data/repositories/MachineRepositoryImpl';
+import { CleaningChecklistRepositoryImpl } from '../data/repositories/CleaningChecklistRepositoryImpl';
 
 // Repository Interfaces
 import { AuthRepository } from '../domain/repositories/AuthRepository';
 import { PatientRepository } from '../domain/repositories/PatientRepository';
 import { ChecklistRepository } from '../domain/repositories/ChecklistRepository';
 import { MachineRepository } from '../domain/repositories/MachineRepository';
+import { CleaningChecklistRepository } from '../domain/repositories/CleaningChecklistRepository';
 
 // Use Cases
 import { LoginUseCase } from '../domain/usecases/auth/LoginUseCase';
@@ -21,6 +23,9 @@ import { LogoutUseCase } from '../domain/usecases/auth/LogoutUseCase';
 import { SearchPatientUseCase } from '../domain/usecases/patient/SearchPatientUseCase';
 import { CreatePatientUseCase } from '../domain/usecases/patient/CreatePatientUseCase';
 import { CreateChecklistUseCase } from '../domain/usecases/checklist/CreateChecklistUseCase';
+import { GetCleaningChecklistsUseCase } from '../domain/usecases/GetCleaningChecklistsUseCase';
+import { CreateCleaningChecklistUseCase } from '../domain/usecases/CreateCleaningChecklistUseCase';
+import { GetCleaningChecklistStatsUseCase } from '../domain/usecases/GetCleaningChecklistStatsUseCase';
 
 export class Container {
   private static instance: Container;
@@ -47,14 +52,20 @@ export class Container {
 
     // Repositories
     const authRepository: AuthRepository = new AuthRepositoryImpl(apiDataSource, localStorageDataSource);
+
+    // Connect ApiDataSource to AuthRepository for automatic token refresh
+    apiDataSource.setAuthRepository(authRepository);
+
     const patientRepository: PatientRepository = new PatientRepositoryImpl(apiDataSource, localStorageDataSource);
     const checklistRepository: ChecklistRepository = new ChecklistRepositoryImpl(apiDataSource, localStorageDataSource);
     const machineRepository: MachineRepository = new MachineRepositoryImpl(apiDataSource, localStorageDataSource);
+    const cleaningChecklistRepository: CleaningChecklistRepository = new CleaningChecklistRepositoryImpl(apiDataSource, authRepository);
 
     this.services.set('AuthRepository', authRepository);
     this.services.set('PatientRepository', patientRepository);
     this.services.set('ChecklistRepository', checklistRepository);
     this.services.set('MachineRepository', machineRepository);
+    this.services.set('CleaningChecklistRepository', cleaningChecklistRepository);
 
     // Use Cases
     this.services.set('LoginUseCase', new LoginUseCase(authRepository));
@@ -63,6 +74,9 @@ export class Container {
     this.services.set('SearchPatientUseCase', new SearchPatientUseCase(patientRepository));
     this.services.set('CreatePatientUseCase', new CreatePatientUseCase(patientRepository));
     this.services.set('CreateChecklistUseCase', new CreateChecklistUseCase(checklistRepository));
+    this.services.set('GetCleaningChecklistsUseCase', new GetCleaningChecklistsUseCase(cleaningChecklistRepository));
+    this.services.set('CreateCleaningChecklistUseCase', new CreateCleaningChecklistUseCase(cleaningChecklistRepository));
+    this.services.set('GetCleaningChecklistStatsUseCase', new GetCleaningChecklistStatsUseCase(cleaningChecklistRepository));
   }
 
   get<T>(serviceName: string): T {
@@ -104,5 +118,21 @@ export class Container {
 
   getMachineRepository(): MachineRepository {
     return this.get<MachineRepository>('MachineRepository');
+  }
+
+  getGetCleaningChecklistsUseCase(): GetCleaningChecklistsUseCase {
+    return this.get<GetCleaningChecklistsUseCase>('GetCleaningChecklistsUseCase');
+  }
+
+  getCreateCleaningChecklistUseCase(): CreateCleaningChecklistUseCase {
+    return this.get<CreateCleaningChecklistUseCase>('CreateCleaningChecklistUseCase');
+  }
+
+  getGetCleaningChecklistStatsUseCase(): GetCleaningChecklistStatsUseCase {
+    return this.get<GetCleaningChecklistStatsUseCase>('GetCleaningChecklistStatsUseCase');
+  }
+
+  getCleaningChecklistRepository(): CleaningChecklistRepository {
+    return this.get<CleaningChecklistRepository>('CleaningChecklistRepository');
   }
 }

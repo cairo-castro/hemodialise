@@ -138,7 +138,7 @@
                 <ion-label position="floating">Alergias</ion-label>
                 <ion-textarea
                   v-model="newPatient.allergies"
-                  rows="3"
+                  :rows="3"
                   placeholder="Descreva alergias conhecidas..."
                 ></ion-textarea>
               </ion-item>
@@ -149,7 +149,7 @@
                 <ion-label position="floating">Observações</ion-label>
                 <ion-textarea
                   v-model="newPatient.observations"
-                  rows="3"
+                  :rows="3"
                   placeholder="Observações gerais..."
                 ></ion-textarea>
               </ion-item>
@@ -341,7 +341,22 @@ const createPatient = async () => {
 };
 
 const formatDate = (dateString: string) => {
-  return new Date(dateString).toLocaleDateString('pt-BR');
+  if (!dateString) return 'Data não informada';
+
+  // Parse date in YYYY-MM-DD format (UTC)
+  const parts = dateString.split('-');
+  if (parts.length === 3) {
+    const year = parseInt(parts[0]);
+    const month = parseInt(parts[1]) - 1; // Month is 0-indexed
+    const day = parseInt(parts[2]);
+    const date = new Date(year, month, day);
+
+    if (!isNaN(date.getTime())) {
+      return date.toLocaleDateString('pt-BR');
+    }
+  }
+
+  return 'Data inválida';
 };
 
 // Lifecycle
