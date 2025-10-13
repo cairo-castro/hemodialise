@@ -1,69 +1,133 @@
 <template>
   <ion-page>
     <ion-header :translucent="true">
-      <ion-toolbar>
+      <ion-toolbar color="primary">
         <ion-buttons slot="start">
           <ion-back-button default-href="/dashboard"></ion-back-button>
         </ion-buttons>
-        <ion-title>Pacientes</ion-title>
+        <ion-title>
+          <div class="header-title">
+            <ion-icon :icon="peopleOutline"></ion-icon>
+            <span>Pacientes</span>
+          </div>
+        </ion-title>
         <ion-buttons slot="end">
-          <ion-button @click="showCreateModal = true">
+          <ion-button @click="showCreateModal = true" class="add-button">
             <ion-icon :icon="addOutline" slot="icon-only"></ion-icon>
           </ion-button>
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
 
-    <ion-content :fullscreen="true">
+    <ion-content :fullscreen="true" class="dashboard-content">
       <!-- Search bar -->
-      <div class="search-container">
-        <ion-searchbar
-          v-model="searchQuery"
-          placeholder="Buscar pacientes..."
-          @ionInput="handleSearch"
-          show-clear-button="focus"
-        ></ion-searchbar>
+      <div class="search-container-dash">
+        <div class="search-card">
+          <ion-icon :icon="peopleOutline" class="search-icon"></ion-icon>
+          <ion-searchbar
+            :value="searchQuery"
+            placeholder="Buscar pacientes..."
+            @ionInput="handleSearch($event)"
+            @ionClear="searchQuery = ''"
+            show-clear-button="focus"
+            class="search-bar-dash"
+            debounce="300"
+          ></ion-searchbar>
+        </div>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="stats-grid">
+        <div class="stat-card primary">
+          <div class="stat-icon">
+            <ion-icon :icon="peopleOutline"></ion-icon>
+          </div>
+          <div class="stat-info">
+            <span class="stat-value">{{ patients.length }}</span>
+            <span class="stat-label">Total</span>
+          </div>
+        </div>
+
+        <div class="stat-card success">
+          <div class="stat-icon">
+            <ion-icon :icon="checkmarkCircleOutline"></ion-icon>
+          </div>
+          <div class="stat-info">
+            <span class="stat-value">{{ patients.length }}</span>
+            <span class="stat-label">Ativos</span>
+          </div>
+        </div>
       </div>
 
       <!-- Patients list -->
-      <div class="patients-container">
-        <ion-card
-          v-for="patient in filteredPatients"
-          :key="patient.id"
-          class="patient-card"
-          button
-          @click="selectPatient(patient)"
-        >
-          <ion-card-content>
-            <div class="patient-header">
-              <div class="patient-info">
+      <div class="patients-container-dash">
+        <div class="section-header">
+          <h2>Lista de Pacientes</h2>
+          <ion-badge color="primary">{{ filteredPatients.length }}</ion-badge>
+        </div>
+
+        <div class="patients-grid">
+          <div
+            v-for="patient in filteredPatients"
+            :key="patient.id"
+            class="patient-card-dash"
+            @click="selectPatient(patient)"
+          >
+            <div class="patient-avatar">
+              <ion-icon :icon="personOutline"></ion-icon>
+            </div>
+
+            <div class="patient-content">
+              <div class="patient-header-dash">
                 <h3>{{ patient.full_name }}</h3>
-                <p>{{ formatDate(patient.birth_date) }} • {{ patient.age }} anos</p>
+                <ion-badge color="success" class="status-badge">Ativo</ion-badge>
               </div>
-              <div class="patient-status">
-                <ion-badge color="success">Ativo</ion-badge>
+
+              <div class="patient-meta">
+                <div class="meta-item">
+                  <ion-icon :icon="calendarOutline"></ion-icon>
+                  <span>{{ formatDate(patient.birth_date) }}</span>
+                </div>
+                <div class="meta-item">
+                  <ion-icon :icon="informationCircleOutline"></ion-icon>
+                  <span>{{ patient.age }} anos</span>
+                </div>
+              </div>
+
+              <div class="patient-details-dash" v-if="patient.medical_record || patient.blood_type">
+                <div class="detail-chip" v-if="patient.medical_record">
+                  <ion-icon :icon="documentTextOutline"></ion-icon>
+                  <span>{{ patient.medical_record }}</span>
+                </div>
+                <div class="detail-chip" v-if="patient.blood_type">
+                  <ion-icon :icon="waterOutline"></ion-icon>
+                  <span>{{ patient.blood_type }}</span>
+                </div>
               </div>
             </div>
 
-            <div class="patient-details">
-              <div class="detail-item" v-if="patient.medical_record">
-                <ion-icon :icon="documentTextOutline"></ion-icon>
-                <span>{{ patient.medical_record }}</span>
-              </div>
-              <div class="detail-item" v-if="patient.blood_type">
-                <ion-icon :icon="waterOutline"></ion-icon>
-                <span>{{ patient.blood_type }}</span>
-              </div>
+            <div class="patient-arrow">
+              <ion-icon :icon="arrowForwardOutline"></ion-icon>
             </div>
-          </ion-card-content>
-        </ion-card>
+          </div>
+        </div>
 
         <!-- Empty state -->
-        <div v-if="filteredPatients.length === 0" class="empty-state">
-          <ion-icon :icon="peopleOutline"></ion-icon>
+        <div v-if="filteredPatients.length === 0" class="empty-state-dash">
+          <div class="empty-icon">
+            <ion-icon :icon="peopleOutline"></ion-icon>
+          </div>
           <h3>Nenhum paciente encontrado</h3>
           <p v-if="searchQuery">Tente ajustar os termos de busca</p>
-          <p v-else>Cadastre o primeiro paciente</p>
+          <p v-else>Cadastre o primeiro paciente clicando no botão +</p>
+          <ion-button
+            v-if="!searchQuery"
+            @click="showCreateModal = true"
+            class="empty-action"
+          >
+            <ion-icon :icon="addOutline" slot="start"></ion-icon>
+            Novo Paciente
+          </ion-button>
         </div>
       </div>
 
@@ -245,7 +309,8 @@ import {
   clipboardOutline,
   checkmarkCircleOutline,
   informationCircleOutline,
-  warningOutline
+  warningOutline,
+  arrowForwardOutline
 } from 'ionicons/icons';
 
 import { Container } from '@mobile/core/di/Container';
@@ -262,6 +327,8 @@ const patientRepository = container.get<PatientRepository>('PatientRepository');
 const patients = ref<Patient[]>([]);
 const searchQuery = ref('');
 const showCreateModal = ref(false);
+const isSearching = ref(false);
+let searchTimeout: NodeJS.Timeout | null = null;
 
 const newPatient = ref<CreatePatientData>({
   full_name: '',
@@ -274,16 +341,8 @@ const newPatient = ref<CreatePatientData>({
 
 // Computed properties
 const filteredPatients = computed(() => {
-  if (!searchQuery.value) {
-    return patients.value;
-  }
-
-  const query = searchQuery.value.toLowerCase();
-  return patients.value.filter(patient =>
-    patient.full_name.toLowerCase().includes(query) ||
-    patient.medical_record.toLowerCase().includes(query) ||
-    (patient.blood_type && patient.blood_type.toLowerCase().includes(query))
-  );
+  // Como a busca agora é feita no backend, apenas retorna os pacientes
+  return patients.value;
 });
 
 const canCreatePatient = computed(() => {
@@ -292,15 +351,16 @@ const canCreatePatient = computed(() => {
 });
 
 // Methods
-const loadPatients = async () => {
+const loadPatients = async (search: string = '') => {
   const loading = await loadingController.create({
-    message: 'Carregando pacientes...',
+    message: search ? 'Buscando pacientes...' : 'Carregando pacientes...',
     spinner: 'crescent'
   });
   await loading.present();
 
   try {
-    patients.value = await patientRepository.getAll();
+    // Carrega os 100 últimos pacientes ou busca com o termo
+    patients.value = await patientRepository.getAll(search, 100);
   } catch (error) {
     console.error('Error loading patients:', error);
     const toast = await toastController.create({
@@ -316,7 +376,41 @@ const loadPatients = async () => {
 };
 
 const handleSearch = (event: any) => {
-  searchQuery.value = event.target.value;
+  const query = event.target?.value || event.detail?.value || '';
+  searchQuery.value = query;
+  
+  // Limpa o timeout anterior
+  if (searchTimeout) {
+    clearTimeout(searchTimeout);
+  }
+  
+  // Se a busca estiver vazia, carrega os pacientes padrão
+  if (!query || query.length === 0) {
+    loadPatients();
+    return;
+  }
+  
+  // Aguarda o usuário parar de digitar (debounce de 500ms)
+  searchTimeout = setTimeout(async () => {
+    if (query.length >= 2) {
+      isSearching.value = true;
+      try {
+        // Usa busca rápida otimizada
+        patients.value = await patientRepository.quickSearch(query, 50);
+      } catch (error) {
+        console.error('Error searching patients:', error);
+        const toast = await toastController.create({
+          message: 'Erro ao buscar pacientes',
+          duration: 2000,
+          color: 'warning',
+          position: 'top'
+        });
+        await toast.present();
+      } finally {
+        isSearching.value = false;
+      }
+    }
+  }, 500);
 };
 
 const selectPatient = (patient: Patient) => {
@@ -396,83 +490,362 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.search-container {
-  padding: 1rem;
-  background: var(--ion-color-light);
-}
-
-.patients-container {
-  padding: 0 1rem 1rem 1rem;
-}
-
-.patient-card {
-  margin-bottom: 1rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease;
-}
-
-.patient-card:active {
-  transform: scale(0.98);
-}
-
-.patient-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 0.75rem;
-}
-
-.patient-info h3 {
-  margin: 0;
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: var(--ion-color-dark);
-}
-
-.patient-info p {
-  margin: 0.25rem 0 0 0;
-  font-size: 0.875rem;
-  color: var(--ion-color-medium);
-}
-
-.patient-details {
-  display: flex;
-  gap: 1rem;
-}
-
-.detail-item {
+/* ===== HEADER ===== */
+.header-title {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  font-weight: 700;
+}
+
+.header-title ion-icon {
+  font-size: 1.5rem;
+}
+
+.add-button {
+  --background: rgba(255, 255, 255, 0.2);
+  --border-radius: 12px;
+}
+
+/* ===== CONTENT ===== */
+.dashboard-content {
+  --background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+/* ===== SEARCH ===== */
+.search-container-dash {
+  padding: 20px 16px;
+}
+
+.search-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: white;
+  border-radius: 16px;
+  padding: 8px 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.search-icon {
+  font-size: 1.5rem;
+  color: var(--ion-color-primary);
+  flex-shrink: 0;
+}
+
+.search-bar-dash {
+  --background: transparent;
+  --box-shadow: none;
+  --border-radius: 0;
+  --placeholder-opacity: 0.6;
+  --color: #1f2937;
+  padding: 0;
+  width: 100%;
+}
+
+.search-bar-dash::part(native) {
+  padding-inline-start: 0 !important;
+  padding-inline-end: 0 !important;
+}
+
+/* ===== STATS GRID ===== */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  padding: 0 16px 20px 16px;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: white;
+  border-radius: 16px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: currentColor;
+}
+
+.stat-card.primary {
+  color: var(--ion-color-primary);
+}
+
+.stat-card.success {
+  color: var(--ion-color-success);
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.stat-card.primary .stat-icon {
+  background: rgba(59, 130, 246, 0.2);
+}
+
+.stat-card.success .stat-icon {
+  background: rgba(16, 185, 129, 0.2);
+}
+
+.stat-icon ion-icon {
+  font-size: 2rem;
+  position: relative;
+  z-index: 1;
+  font-weight: bold;
+}
+
+.stat-card.primary .stat-icon ion-icon {
+  color: #2563eb;
+}
+
+.stat-card.success .stat-icon ion-icon {
+  color: #059669;
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1;
+}
+
+.stat-label {
   font-size: 0.875rem;
-  color: var(--ion-color-medium);
+  color: #6b7280;
+  margin-top: 4px;
 }
 
-.detail-item ion-icon {
-  font-size: 1rem;
+/* ===== PATIENTS CONTAINER ===== */
+.patients-container-dash {
+  padding: 0 16px 80px 16px;
 }
 
-.empty-state {
-  text-align: center;
-  padding: 3rem 1rem;
-  color: var(--ion-color-medium);
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
 }
 
-.empty-state ion-icon {
-  font-size: 4rem;
-  margin-bottom: 1rem;
-}
-
-.empty-state h3 {
-  margin: 0 0 0.5rem 0;
+.section-header h2 {
   font-size: 1.25rem;
-  color: var(--ion-color-dark);
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
 }
 
-.empty-state p {
-  margin: 0;
+.section-header ion-badge {
   font-size: 0.875rem;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 12px;
+}
+
+/* ===== PATIENTS GRID ===== */
+.patients-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.patient-card-dash {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.patient-card-dash:active {
+  transform: scale(0.98);
+  border-color: var(--ion-color-primary);
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.15);
+}
+
+.patient-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-primary-shade) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.patient-avatar ion-icon {
+  font-size: 2rem;
+  color: white;
+}
+
+.patient-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.patient-header-dash {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.patient-header-dash h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status-badge {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  padding: 4px 8px;
+}
+
+.patient-meta {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.813rem;
+  color: #6b7280;
+}
+
+.meta-item ion-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.patient-details-dash {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.detail-chip {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  background: #f3f4f6;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  color: #4b5563;
+}
+
+.detail-chip ion-icon {
+  font-size: 0.875rem;
+}
+
+.patient-arrow {
+  flex-shrink: 0;
+  color: #d1d5db;
+}
+
+.patient-arrow ion-icon {
+  font-size: 1.25rem;
+}
+
+/* ===== EMPTY STATE ===== */
+.empty-state-dash {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 16px;
+  border: 2px dashed #e5e7eb;
+}
+
+.empty-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.empty-icon ion-icon {
+  font-size: 3rem;
+  color: #9ca3af;
+}
+
+.empty-state-dash h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 8px 0;
+}
+
+.empty-state-dash p {
+  font-size: 0.938rem;
+  color: #6b7280;
+  margin: 0 0 20px 0;
+}
+
+.empty-action {
+  --border-radius: 12px;
+  --padding-start: 20px;
+  --padding-end: 20px;
+  font-weight: 600;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .patient-avatar {
+    width: 48px;
+    height: 48px;
+  }
+
+  .patient-avatar ion-icon {
+    font-size: 1.75rem;
+  }
 }
 
 /* ===== MODAL DASHBOARD STYLE ===== */

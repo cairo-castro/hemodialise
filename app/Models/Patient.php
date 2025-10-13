@@ -16,6 +16,7 @@ class Patient extends Model
         'allergies',
         'observations',
         'active',
+        'unit_id',
     ];
 
     protected $casts = [
@@ -28,6 +29,11 @@ class Patient extends Model
         return $this->hasMany(SafetyChecklist::class);
     }
 
+    public function unit()
+    {
+        return $this->belongsTo(Unit::class);
+    }
+
     public function getAgeAttribute(): int
     {
         return Carbon::parse($this->birth_date)->age;
@@ -36,5 +42,10 @@ class Patient extends Model
     public function scopeActive($query)
     {
         return $query->where('active', true);
+    }
+
+    public function scopeForUnit($query, $unitId)
+    {
+        return $query->where('unit_id', $unitId);
     }
 }

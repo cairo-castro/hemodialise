@@ -9,6 +9,7 @@ export interface Patient {
   age: number;
   created_at: string;
   updated_at: string;
+  created?: boolean; // Flag to indicate if patient was just created
 }
 
 export interface PatientSearchCriteria {

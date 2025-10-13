@@ -55,9 +55,18 @@ export class PatientRepositoryImpl implements PatientRepository {
     return response.data;
   }
 
-  async getAll(): Promise<Patient[]> {
+  async getAll(searchQuery?: string, perPage: number = 100): Promise<Patient[]> {
     const token = this.getToken();
-    const response = await this.apiDataSource.get<any>('/patients', token);
+    
+    // Construir query params
+    const params = new URLSearchParams();
+    params.append('per_page', perPage.toString());
+    if (searchQuery) {
+      params.append('search', searchQuery);
+    }
+    
+    const url = `/patients?${params.toString()}`;
+    const response = await this.apiDataSource.get<any>(url, token);
 
     // API returns { success: true, patients: [...] }
     if (response.data && response.data.patients) {
@@ -67,6 +76,25 @@ export class PatientRepositoryImpl implements PatientRepository {
     // Fallback if data is already an array
     if (Array.isArray(response.data)) {
       return response.data;
+    }
+
+    return [];
+  }
+
+  async quickSearch(query: string, limit: number = 20): Promise<Patient[]> {
+    const token = this.getToken();
+    
+    // Construir query params
+    const params = new URLSearchParams();
+    params.append('query', query);
+    params.append('limit', limit.toString());
+    
+    const url = `/patients/quick-search?${params.toString()}`;
+    const response = await this.apiDataSource.get<any>(url, token);
+
+    // API returns { success: true, patients: [...] }
+    if (response.data && response.data.patients) {
+      return response.data.patients;
     }
 
     return [];

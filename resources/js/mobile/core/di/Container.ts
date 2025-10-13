@@ -116,6 +116,10 @@ export class Container {
     return this.get<AuthRepository>('AuthRepository');
   }
 
+  getPatientRepository(): PatientRepository {
+    return this.get<PatientRepository>('PatientRepository');
+  }
+
   getMachineRepository(): MachineRepository {
     return this.get<MachineRepository>('MachineRepository');
   }

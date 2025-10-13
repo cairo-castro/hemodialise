@@ -99,6 +99,12 @@ const routes: Array<RouteRecordRaw> = [
     beforeEnter: requiresAuth
   },
   {
+    path: '/patients/new',
+    name: 'NewPatient',
+    component: () => import('@mobile/views/PatientFormPage.vue'),
+    beforeEnter: requiresAuth
+  },
+  {
     path: '/machines',
     name: 'Machines',
     component: () => import('@mobile/views/MachinesPage.vue'),

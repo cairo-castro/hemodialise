@@ -29,71 +29,102 @@
         </ion-card>
 
         <!-- Patient Search Section -->
-        <ion-card v-if="!activeChecklist" class="patient-search-card">
-          <ion-card-header>
-            <ion-card-title>
-              <ion-icon :icon="personAddOutline"></ion-icon>
-              1. Buscar/Cadastrar Paciente
-            </ion-card-title>
-          </ion-card-header>
-          <ion-card-content>
-            <div class="form-group">
-              <ion-item fill="outline" class="patient-input">
-                <ion-label position="floating">Nome Completo</ion-label>
-                <ion-input
-                  v-model="patientForm.full_name"
-                  type="text"
-                  placeholder="Digite o nome completo do paciente"
-                  required
-                ></ion-input>
-              </ion-item>
+        <div v-if="!activeChecklist" class="section">
+          <h2 class="section-title">
+            <ion-icon :icon="personAddOutline"></ion-icon>
+            Etapa 1: Buscar Paciente
+          </h2>
+          
+          <div class="search-card">
+            <div class="search-input-wrapper">
+              <ion-icon :icon="searchOutline" class="search-icon"></ion-icon>
+              <input
+                v-model="searchQuery"
+                type="text"
+                placeholder="Digite o nome do paciente..."
+                class="search-input"
+                @input="handleSearchInput"
+              />
             </div>
-
-            <div class="form-group">
-              <ion-item fill="outline" class="patient-input">
-                <ion-label position="floating">Data de Nascimento</ion-label>
-                <ion-input
-                  v-model="patientForm.birth_date"
-                  type="date"
-                  required
-                ></ion-input>
-              </ion-item>
-            </div>
-
-            <ion-button expand="block" class="mobile-button" @click="searchPatient" :disabled="!canSearchPatient">
-              <ion-icon :icon="searchOutline" slot="start"></ion-icon>
-              Buscar Paciente
-            </ion-button>
 
             <!-- Patient found -->
-            <div v-if="selectedPatient" class="patient-found">
-              <ion-chip color="success">
-                <ion-icon :icon="checkmarkCircleOutline"></ion-icon>
-                <ion-label>Paciente Selecionado</ion-label>
-              </ion-chip>
-              <div class="patient-info">
-                <h4>{{ selectedPatient.full_name }}</h4>
-                <p>Nascimento: {{ formatDate(selectedPatient.birth_date) }}</p>
-                <p>Idade: {{ selectedPatient.age }} anos</p>
-                <p v-if="selectedPatient.medical_record">Prontuário: {{ selectedPatient.medical_record }}</p>
+            <div v-if="selectedPatient" class="patient-selected">
+              <div class="action-btn selected">
+                <div class="action-icon success">
+                  <ion-icon :icon="checkmarkCircleOutline"></ion-icon>
+                </div>
+                <div class="action-content">
+                  <span class="action-title">{{ selectedPatient.full_name }}</span>
+                  <span class="action-subtitle">
+                    {{ formatDate(selectedPatient.birth_date) }} • {{ selectedPatient.age }} anos
+                  </span>
+                </div>
+                <ion-button fill="clear" @click="clearPatientSelection">
+                  <ion-icon :icon="closeOutline" slot="icon-only"></ion-icon>
+                </ion-button>
               </div>
             </div>
-          </ion-card-content>
-        </ion-card>
+
+            <!-- Search Results -->
+            <div v-else-if="searchResults.length > 0 && searchQuery.length > 0" class="search-results">
+              <div
+                v-for="patient in searchResults"
+                :key="patient.id"
+                class="action-btn"
+                @click="selectPatient(patient)"
+              >
+                <div class="action-icon primary">
+                  <ion-icon :icon="personAddOutline"></ion-icon>
+                </div>
+                <div class="action-content">
+                  <span class="action-title">{{ patient.full_name }}</span>
+                  <span class="action-subtitle">
+                    {{ formatDate(patient.birth_date) }} • {{ patient.age }} anos
+                  </span>
+                </div>
+                <ion-icon :icon="chevronForwardOutline" class="chevron"></ion-icon>
+              </div>
+            </div>
+
+            <!-- No results -->
+            <div v-else-if="searchQuery.length > 2 && searchResults.length === 0 && !isSearching" class="no-results">
+              <ion-icon :icon="alertCircleOutline" class="no-results-icon"></ion-icon>
+              <h3>Paciente não encontrado</h3>
+              <p>Não encontramos nenhum paciente com esse nome.</p>
+              <ion-button expand="block" @click="navigateToRegisterPatient" class="register-btn">
+                <ion-icon :icon="personAddOutline" slot="start"></ion-icon>
+                Cadastrar Novo Paciente
+              </ion-button>
+            </div>
+
+            <!-- Loading -->
+            <div v-if="isSearching" class="search-loading">
+              <ion-spinner name="crescent"></ion-spinner>
+              <p>Buscando...</p>
+            </div>
+          </div>
+        </div>
 
         <!-- Machine Selection -->
-        <ion-card v-if="selectedPatient && !activeChecklist" class="machine-selection-card">
-          <ion-card-header>
-            <ion-card-title>
-              <ion-icon :icon="hardwareChipOutline"></ion-icon>
-              2. Selecionar Máquina e Turno
-            </ion-card-title>
-          </ion-card-header>
-          <ion-card-content>
+        <div v-if="selectedPatient && !activeChecklist" class="section">
+          <h2 class="section-title">
+            <ion-icon :icon="hardwareChipOutline"></ion-icon>
+            Etapa 2: Máquina e Turno
+          </h2>
+
+          <div class="selection-card">
             <div class="form-group">
-              <ion-item fill="outline" class="patient-input">
-                <ion-label position="floating">Máquina</ion-label>
-                <ion-select v-model="checklistForm.machine_id" placeholder="Selecione uma máquina">
+              <label class="input-label">
+                <ion-icon :icon="medicalOutline"></ion-icon>
+                Selecione a Máquina
+              </label>
+              <ion-item fill="solid" class="select-input" lines="none">
+                <ion-select 
+                  v-model="checklistForm.machine_id" 
+                  placeholder="Escolha uma máquina"
+                  interface="action-sheet"
+                  cancel-text="Cancelar"
+                >
                   <ion-select-option v-for="machine in availableMachines" :key="machine.id" :value="machine.id">
                     {{ machine.name }}
                   </ion-select-option>
@@ -102,27 +133,58 @@
             </div>
 
             <div class="form-group">
-              <ion-item fill="outline" class="patient-input">
-                <ion-label position="floating">Turno</ion-label>
-                <ion-select v-model="checklistForm.shift" placeholder="Selecione o turno">
-                  <ion-select-option value="matutino">Matutino</ion-select-option>
-                  <ion-select-option value="vespertino">Vespertino</ion-select-option>
-                  <ion-select-option value="noturno">Noturno</ion-select-option>
-                </ion-select>
-              </ion-item>
+              <label class="input-label">
+                <ion-icon :icon="timeOutline"></ion-icon>
+                Selecione o Turno
+              </label>
+              <div class="shift-selector">
+                <button
+                  type="button"
+                  class="shift-btn"
+                  :class="{ active: checklistForm.shift === 'matutino' }"
+                  @click="checklistForm.shift = 'matutino'"
+                >
+                  <ion-icon :icon="sunnyOutline"></ion-icon>
+                  <span>Matutino</span>
+                </button>
+                <button
+                  type="button"
+                  class="shift-btn"
+                  :class="{ active: checklistForm.shift === 'vespertino' }"
+                  @click="checklistForm.shift = 'vespertino'"
+                >
+                  <ion-icon :icon="partlySunnyOutline"></ion-icon>
+                  <span>Vespertino</span>
+                </button>
+                <button
+                  type="button"
+                  class="shift-btn"
+                  :class="{ active: checklistForm.shift === 'noturno' }"
+                  @click="checklistForm.shift = 'noturno'"
+                >
+                  <ion-icon :icon="moonOutline"></ion-icon>
+                  <span>Noturno</span>
+                </button>
+              </div>
             </div>
+          </div>
 
-            <ion-button
-              expand="block"
-              class="mobile-button primary-button"
+          <!-- Primary Action -->
+          <div class="primary-action">
+            <button
+              class="primary-btn"
               @click="startChecklist"
               :disabled="!canStartChecklist"
             >
-              <ion-icon :icon="playOutline" slot="start"></ion-icon>
-              Iniciar Checklist de Segurança
-            </ion-button>
-          </ion-card-content>
-        </ion-card>
+              <ion-icon :icon="playOutline"></ion-icon>
+              <div class="btn-text">
+                <span class="btn-title">Iniciar Checklist</span>
+                <span class="btn-subtitle">Começar verificação de segurança</span>
+              </div>
+              <ion-icon :icon="arrowForwardOutline"></ion-icon>
+            </button>
+          </div>
+        </div>
 
         <!-- Active Checklist with Phases -->
         <div v-if="activeChecklist">
@@ -212,7 +274,7 @@
                   <ion-label position="floating">Observações (opcional)</ion-label>
                   <ion-textarea
                     v-model="checklistForm.observations"
-                    rows="3"
+                    :rows="3"
                     placeholder="Digite observações sobre esta fase..."
                   ></ion-textarea>
                 </ion-item>
@@ -329,7 +391,7 @@
                 <ion-label position="floating">Motivo da Interrupção</ion-label>
                 <ion-textarea
                   v-model="interruptReason"
-                  rows="4"
+                  :rows="4"
                   placeholder="Descreva o motivo da interrupção (obrigatório)"
                   required
                 ></ion-textarea>
@@ -390,6 +452,7 @@ import {
   IonIcon,
   IonProgressBar,
   IonModal,
+  IonSpinner,
   loadingController,
   toastController
 } from '@ionic/vue';
@@ -409,7 +472,15 @@ import {
   lockClosedOutline,
   calendarOutline,
   timeOutline,
-  pauseOutline
+  pauseOutline,
+  informationCircleOutline,
+  documentTextOutline,
+  refreshOutline,
+  chevronForwardOutline,
+  medicalOutline,
+  sunnyOutline,
+  partlySunnyOutline,
+  moonOutline
 } from 'ionicons/icons';
 
 import { Container } from '@mobile/core/di/Container';
@@ -434,12 +505,12 @@ const interruptReason = ref('');
 const currentPhaseCompletion = ref(0);
 const currentPhase = ref<'machine-patient' | 'pre-dialysis' | 'during-session' | 'post-dialysis'>('machine-patient');
 
-const patientForm = ref<PatientSearchCriteria>({
-  full_name: '',
-  birth_date: ''
-});
-
+// Search state
+const searchQuery = ref('');
+const searchResults = ref<Patient[]>([]);
+const isSearching = ref(false);
 const selectedPatient = ref<Patient | null>(null);
+let searchTimeout: ReturnType<typeof setTimeout>;
 const selectedMachine = ref<Machine | null>(null);
 const availableMachines = ref<Machine[]>([]);
 const existingChecklistId = ref<number | null>(null);
@@ -479,12 +550,9 @@ const itemObservations = ref<Record<string, string>>({});
 const phases = ['pre_dialysis', 'during_session', 'post_dialysis'];
 
 // Time update interval
-let timeInterval: number;
+let timeInterval: ReturnType<typeof setInterval>;
 
 // Computed properties
-const canSearchPatient = computed(() => {
-  return patientForm.value.full_name.length > 0 && patientForm.value.birth_date.length > 0;
-});
 
 const canStartChecklist = computed(() => {
   return selectedPatient.value && checklistForm.value.machine_id && checklistForm.value.shift;
@@ -707,46 +775,58 @@ const updateTime = () => {
 };
 
 // Methods
-const searchPatient = async () => {
-  const loading = await loadingController.create({
-    message: 'Buscando paciente...',
-    spinner: 'crescent'
-  });
-  await loading.present();
+const handleSearchInput = () => {
+  if (searchTimeout) {
+    clearTimeout(searchTimeout);
+  }
+
+  if (searchQuery.value.length < 3) {
+    searchResults.value = [];
+    return;
+  }
+
+  isSearching.value = true;
+  searchTimeout = setTimeout(async () => {
+    await searchPatients();
+  }, 500);
+};
+
+const searchPatients = async () => {
+  if (searchQuery.value.length < 3) {
+    searchResults.value = [];
+    isSearching.value = false;
+    return;
+  }
 
   try {
-    const patient = await searchPatientUseCase.execute(patientForm.value);
-
-    if (patient) {
-      selectedPatient.value = patient;
-
-      const toast = await toastController.create({
-        message: patient.created ? 'Paciente cadastrado e selecionado!' : 'Paciente encontrado!',
-        duration: 2000,
-        color: 'success',
-        position: 'top'
-      });
-      await toast.present();
-    } else {
-      const toast = await toastController.create({
-        message: 'Erro ao buscar/cadastrar paciente.',
-        duration: 3000,
-        color: 'warning',
-        position: 'top'
-      });
-      await toast.present();
-    }
-  } catch (error: any) {
-    const toast = await toastController.create({
-      message: error.message || 'Erro ao buscar paciente',
-      duration: 3000,
-      color: 'danger',
-      position: 'top'
-    });
-    await toast.present();
+    const patientRepository = container.getPatientRepository();
+    const results = await patientRepository.quickSearch(searchQuery.value, 10);
+    searchResults.value = results;
+  } catch (error) {
+    console.error('Erro ao buscar pacientes:', error);
+    searchResults.value = [];
   } finally {
-    await loading.dismiss();
+    isSearching.value = false;
   }
+};
+
+const selectPatient = (patient: Patient) => {
+  selectedPatient.value = patient;
+  searchQuery.value = patient.full_name;
+  searchResults.value = [];
+};
+
+const clearPatientSelection = () => {
+  selectedPatient.value = null;
+  searchQuery.value = '';
+  searchResults.value = [];
+};
+
+const navigateToRegisterPatient = () => {
+  // Store search query in localStorage to pre-fill the register form
+  localStorage.setItem('patient_search_query', searchQuery.value);
+  localStorage.setItem('return_to_checklist', 'true');
+  router.push('/patients/new');
 };
 
 const startChecklist = async () => {
@@ -1145,7 +1225,40 @@ onMounted(() => {
   loadExistingChecklist();
   updateTime();
   timeInterval = setInterval(updateTime, 1000);
+  
+  // Check if returning from patient registration
+  const returnToChecklist = localStorage.getItem('return_to_checklist');
+  const newPatientId = localStorage.getItem('new_patient_id');
+  
+  if (returnToChecklist === 'true' && newPatientId) {
+    // Load the newly created patient
+    loadNewPatient(parseInt(newPatientId));
+    localStorage.removeItem('return_to_checklist');
+    localStorage.removeItem('new_patient_id');
+    localStorage.removeItem('patient_search_query');
+  }
 });
+
+const loadNewPatient = async (patientId: number) => {
+  try {
+    const patientRepository = container.getPatientRepository();
+    const patient = await patientRepository.getById(patientId);
+    if (patient) {
+      selectedPatient.value = patient;
+      searchQuery.value = patient.full_name;
+      
+      const toast = await toastController.create({
+        message: 'Paciente cadastrado com sucesso!',
+        duration: 2000,
+        color: 'success',
+        position: 'top'
+      });
+      await toast.present();
+    }
+  } catch (error) {
+    console.error('Erro ao carregar paciente:', error);
+  }
+};
 
 onUnmounted(() => {
   if (timeInterval) {
@@ -1156,14 +1269,17 @@ onUnmounted(() => {
 
 <style scoped>
 .checklist-container {
-  padding: 1rem;
+  padding: 0;
   max-width: 100%;
+  background: #f9fafb;
+  min-height: 100vh;
 }
 
 .time-header-card {
-  background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-secondary) 100%);
+  background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-primary-shade) 100%);
   color: white;
-  margin-bottom: 1rem;
+  margin: 0;
+  border-radius: 0;
 }
 
 .time-display {
@@ -1183,66 +1299,360 @@ onUnmounted(() => {
   font-size: 1.2rem;
 }
 
-.patient-search-card,
-.machine-selection-card,
+/* Section */
+.section {
+  padding: 0 16px;
+  margin-top: 24px;
+}
+
+.section-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-title ion-icon {
+  font-size: 1.3rem;
+  color: var(--ion-color-primary);
+}
+
+/* Search Card */
+.search-card {
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #f9fafb;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.search-input-wrapper:focus-within {
+  background: white;
+  border-color: var(--ion-color-primary);
+}
+
+.search-icon {
+  font-size: 1.5rem;
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
+.search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 1rem;
+  color: #1f2937;
+}
+
+.search-input::placeholder {
+  color: #9ca3af;
+}
+
+/* Search Results */
+.search-results {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* Action Button (reusable) */
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.action-btn:active {
+  transform: scale(0.98);
+  border-color: var(--ion-color-primary);
+}
+
+.action-btn.selected {
+  border-color: var(--ion-color-success);
+  background: #f0fdf4;
+}
+
+.action-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.action-icon ion-icon {
+  font-size: 1.8rem;
+  color: white;
+}
+
+.action-icon.primary {
+  background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-primary-shade) 100%);
+}
+
+.action-icon.success {
+  background: linear-gradient(135deg, var(--ion-color-success) 0%, var(--ion-color-success-shade) 100%);
+}
+
+.action-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.action-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.action-subtitle {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.chevron {
+  font-size: 1.2rem;
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
+/* No Results */
+.no-results {
+  text-align: center;
+  padding: 32px 16px;
+}
+
+.no-results-icon {
+  font-size: 4rem;
+  color: #f59e0b;
+  margin-bottom: 16px;
+}
+
+.no-results h3 {
+  margin: 0 0 8px 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.no-results p {
+  margin: 0 0 24px 0;
+  font-size: 0.95rem;
+  color: #6b7280;
+}
+
+.register-btn {
+  --border-radius: 12px;
+  height: 48px;
+  font-weight: 600;
+}
+
+/* Search Loading */
+.search-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 32px 16px;
+}
+
+.search-loading p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #6b7280;
+}
+
+/* Patient Selected */
+.patient-selected {
+  margin-top: 12px;
+}
+
+/* Selection Card */
+.selection-card {
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+.input-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.input-label ion-icon {
+  font-size: 1.2rem;
+  color: var(--ion-color-primary);
+}
+
+.select-input {
+  --border-radius: 12px;
+  --background: #f9fafb;
+  --border-width: 2px;
+  --border-color: #e5e7eb;
+  --padding-start: 16px;
+  --padding-end: 16px;
+}
+
+.select-input:focus-within {
+  --background: white;
+  --border-color: var(--ion-color-primary);
+}
+
+/* Shift Selector */
+.shift-selector {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.shift-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 8px;
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+.shift-btn ion-icon {
+  font-size: 1.8rem;
+  color: #9ca3af;
+}
+
+.shift-btn.active {
+  border-color: var(--ion-color-primary);
+  background: linear-gradient(135deg, rgba(var(--ion-color-primary-rgb), 0.1) 0%, rgba(var(--ion-color-primary-rgb), 0.05) 100%);
+  color: var(--ion-color-primary);
+}
+
+.shift-btn.active ion-icon {
+  color: var(--ion-color-primary);
+}
+
+.shift-btn:active {
+  transform: scale(0.95);
+}
+
+/* Primary Action */
+.primary-action {
+  padding: 0 16px;
+  margin-top: 24px;
+  margin-bottom: 24px;
+}
+
+.primary-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-primary-shade) 100%);
+  border: none;
+  border-radius: 16px;
+  padding: 20px 24px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(var(--ion-color-primary-rgb), 0.3);
+}
+
+.primary-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.primary-btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.primary-btn > ion-icon:first-child {
+  font-size: 2rem;
+  color: white;
+  flex-shrink: 0;
+}
+
+.btn-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  flex: 1;
+}
+
+.btn-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: white;
+}
+
+.btn-subtitle {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.primary-btn > ion-icon:last-child {
+  font-size: 1.5rem;
+  color: white;
+  flex-shrink: 0;
+}
+
+/* Checklist Phase Cards */
 .checklist-phase-card,
 .phase-progress-card,
 .patient-summary-card,
 .interrupted-card,
 .completed-card {
-  margin-bottom: 1rem;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-}
-
-.patient-input {
-  --border-radius: 12px;
-  --border-width: 2px;
-  --highlight-color-focused: var(--ion-color-primary);
-  --highlight-color-invalid: var(--ion-color-danger);
-  margin-bottom: 16px;
-  transition: all 0.3s ease;
-}
-
-.patient-input ion-label {
-  --color: var(--ion-color-medium);
-  font-weight: 500;
-  margin-bottom: 4px;
-}
-
-.mobile-button {
-  --border-radius: 12px;
-  --padding: 16px;
-  margin: 8px 0;
-  height: 52px;
-  font-weight: 600;
-  --transition: all 0.2s ease;
-}
-
-.primary-button {
-  --background: var(--ion-color-primary);
-  --color: white;
-  font-size: 1.1rem;
-}
-
-.patient-found {
-  margin-top: 1rem;
-  padding: 1rem;
-  background: var(--ion-color-success-tint);
-  border-radius: 12px;
-  border: 2px solid var(--ion-color-success);
-}
-
-.patient-info h4 {
-  margin: 0.5rem 0 0.25rem 0;
-  color: var(--ion-color-dark);
-  font-weight: 600;
-}
-
-.patient-info p {
-  margin: 0.25rem 0;
-  color: var(--ion-color-medium);
-  font-size: 0.875rem;
+  margin: 16px;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
 }
 
 .phase-header {
