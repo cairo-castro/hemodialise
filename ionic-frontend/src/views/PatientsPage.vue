@@ -67,11 +67,16 @@
         </div>
       </div>
 
-      <!-- Create Patient Modal -->
+      <!-- Create Patient Modal - Improved -->
       <ion-modal :is-open="showCreateModal" @will-dismiss="showCreateModal = false">
         <ion-header>
-          <ion-toolbar>
-            <ion-title>Novo Paciente</ion-title>
+          <ion-toolbar color="primary">
+            <ion-title>
+              <div class="modal-title">
+                <ion-icon :icon="personAddOutline"></ion-icon>
+                <span>Novo Paciente</span>
+              </div>
+            </ion-title>
             <ion-buttons slot="end">
               <ion-button @click="showCreateModal = false">
                 <ion-icon :icon="closeOutline" slot="icon-only"></ion-icon>
@@ -82,97 +87,172 @@
 
         <ion-content class="modal-content">
           <form @submit.prevent="createPatient" class="create-form">
-            <div class="form-group">
-              <ion-item class="mobile-input" fill="outline">
-                <ion-label position="floating">Nome Completo *</ion-label>
-                <ion-input
-                  v-model="newPatient.full_name"
-                  type="text"
-                  required
-                  placeholder="Digite o nome completo"
-                ></ion-input>
-              </ion-item>
+            <!-- Progress indicator -->
+            <div class="form-progress">
+              <div class="progress-step" :class="{ active: newPatient.full_name }">
+                <ion-icon :icon="personOutline"></ion-icon>
+              </div>
+              <div class="progress-step" :class="{ active: newPatient.birth_date }">
+                <ion-icon :icon="calendarOutline"></ion-icon>
+              </div>
+              <div class="progress-step" :class="{ active: newPatient.medical_record }">
+                <ion-icon :icon="documentTextOutline"></ion-icon>
+              </div>
+              <div class="progress-step" :class="{ active: canCreatePatient }">
+                <ion-icon :icon="checkmarkCircleOutline"></ion-icon>
+              </div>
             </div>
 
-            <div class="form-group">
-              <ion-item class="mobile-input" fill="outline">
-                <ion-label position="floating">Data de Nascimento *</ion-label>
-                <ion-input
-                  v-model="newPatient.birth_date"
-                  type="date"
-                  required
-                ></ion-input>
-              </ion-item>
+            <!-- Info banner -->
+            <div class="info-banner">
+              <ion-icon :icon="informationCircleOutline"></ion-icon>
+              <span>Preencha os campos obrigatórios (*) para cadastrar</span>
             </div>
 
-            <div class="form-group">
-              <ion-item class="mobile-input" fill="outline">
-                <ion-label position="floating">Prontuário Médico *</ion-label>
-                <ion-input
-                  v-model="newPatient.medical_record"
-                  type="text"
-                  required
-                  placeholder="Número do prontuário"
-                ></ion-input>
-              </ion-item>
+            <!-- Section: Dados Pessoais -->
+            <div class="form-section">
+              <div class="section-header">
+                <ion-icon :icon="personOutline" class="section-icon"></ion-icon>
+                <h3>Dados Pessoais</h3>
+              </div>
+
+              <div class="form-group">
+                <label class="input-label">
+                  <ion-icon :icon="personOutline"></ion-icon>
+                  Nome Completo <span class="required">*</span>
+                </label>
+                <ion-item class="modern-input" lines="none">
+                  <ion-input
+                    v-model="newPatient.full_name"
+                    type="text"
+                    required
+                    placeholder="Digite o nome completo do paciente"
+                  ></ion-input>
+                </ion-item>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group flex-1">
+                  <label class="input-label">
+                    <ion-icon :icon="calendarOutline"></ion-icon>
+                    Data de Nascimento <span class="required">*</span>
+                  </label>
+                  <ion-item class="modern-input" lines="none">
+                    <ion-input
+                      v-model="newPatient.birth_date"
+                      type="date"
+                      required
+                    ></ion-input>
+                  </ion-item>
+                </div>
+
+                <div class="form-group" style="width: 120px;">
+                  <label class="input-label">
+                    <ion-icon :icon="waterOutline"></ion-icon>
+                    Tipo Sanguíneo
+                  </label>
+                  <ion-item class="modern-input" lines="none">
+                    <ion-select
+                      v-model="newPatient.blood_type"
+                      placeholder="Tipo"
+                      interface="action-sheet"
+                    >
+                      <ion-select-option value="A+">A+</ion-select-option>
+                      <ion-select-option value="A-">A-</ion-select-option>
+                      <ion-select-option value="B+">B+</ion-select-option>
+                      <ion-select-option value="B-">B-</ion-select-option>
+                      <ion-select-option value="AB+">AB+</ion-select-option>
+                      <ion-select-option value="AB-">AB-</ion-select-option>
+                      <ion-select-option value="O+">O+</ion-select-option>
+                      <ion-select-option value="O-">O-</ion-select-option>
+                    </ion-select>
+                  </ion-item>
+                </div>
+              </div>
             </div>
 
-            <div class="form-group">
-              <ion-item class="mobile-input" fill="outline">
-                <ion-label position="floating">Tipo Sanguíneo</ion-label>
-                <ion-select v-model="newPatient.blood_type" placeholder="Selecione">
-                  <ion-select-option value="A+">A+</ion-select-option>
-                  <ion-select-option value="A-">A-</ion-select-option>
-                  <ion-select-option value="B+">B+</ion-select-option>
-                  <ion-select-option value="B-">B-</ion-select-option>
-                  <ion-select-option value="AB+">AB+</ion-select-option>
-                  <ion-select-option value="AB-">AB-</ion-select-option>
-                  <ion-select-option value="O+">O+</ion-select-option>
-                  <ion-select-option value="O-">O-</ion-select-option>
-                </ion-select>
-              </ion-item>
+            <!-- Section: Dados Médicos -->
+            <div class="form-section">
+              <div class="section-header">
+                <ion-icon :icon="medkitOutline" class="section-icon"></ion-icon>
+                <h3>Dados Médicos</h3>
+              </div>
+
+              <div class="form-group">
+                <label class="input-label">
+                  <ion-icon :icon="documentTextOutline"></ion-icon>
+                  Prontuário Médico <span class="required">*</span>
+                </label>
+                <ion-item class="modern-input" lines="none">
+                  <ion-input
+                    v-model="newPatient.medical_record"
+                    type="text"
+                    required
+                    placeholder="Ex: PRO-2024-001"
+                  ></ion-input>
+                </ion-item>
+              </div>
+
+              <div class="form-group">
+                <label class="input-label">
+                  <ion-icon :icon="alertCircleOutline"></ion-icon>
+                  Alergias
+                </label>
+                <ion-item class="modern-textarea" lines="none">
+                  <ion-textarea
+                    v-model="newPatient.allergies"
+                    rows="3"
+                    placeholder="Descreva alergias conhecidas (medicamentos, alimentos, etc.)"
+                    auto-grow
+                  ></ion-textarea>
+                </ion-item>
+              </div>
+
+              <div class="form-group">
+                <label class="input-label">
+                  <ion-icon :icon="clipboardOutline"></ion-icon>
+                  Observações Gerais
+                </label>
+                <ion-item class="modern-textarea" lines="none">
+                  <ion-textarea
+                    v-model="newPatient.observations"
+                    rows="3"
+                    placeholder="Observações adicionais sobre o paciente"
+                    auto-grow
+                  ></ion-textarea>
+                </ion-item>
+              </div>
             </div>
 
-            <div class="form-group">
-              <ion-item class="mobile-input" fill="outline">
-                <ion-label position="floating">Alergias</ion-label>
-                <ion-textarea
-                  v-model="newPatient.allergies"
-                  rows="3"
-                  placeholder="Descreva alergias conhecidas..."
-                ></ion-textarea>
-              </ion-item>
+            <!-- Form validation summary -->
+            <div class="validation-summary" v-if="!canCreatePatient">
+              <ion-chip color="warning">
+                <ion-icon :icon="warningOutline"></ion-icon>
+                <ion-label>Preencha todos os campos obrigatórios</ion-label>
+              </ion-chip>
             </div>
 
-            <div class="form-group">
-              <ion-item class="mobile-input" fill="outline">
-                <ion-label position="floating">Observações</ion-label>
-                <ion-textarea
-                  v-model="newPatient.observations"
-                  rows="3"
-                  placeholder="Observações gerais..."
-                ></ion-textarea>
-              </ion-item>
-            </div>
-
-            <div class="modal-buttons">
+            <!-- Action buttons -->
+            <div class="modal-actions">
               <ion-button
+                fill="outline"
                 expand="block"
-                type="submit"
-                class="mobile-button"
-                :disabled="!canCreatePatient"
+                class="action-button"
+                @click="showCreateModal = false"
               >
-                <ion-icon :icon="saveOutline" slot="start"></ion-icon>
-                Cadastrar Paciente
+                <ion-icon :icon="closeOutline" slot="start"></ion-icon>
+                Cancelar
               </ion-button>
 
               <ion-button
+                color="success"
                 expand="block"
-                fill="outline"
-                class="mobile-button"
-                @click="showCreateModal = false"
+                type="submit"
+                class="action-button"
+                :disabled="!canCreatePatient"
               >
-                Cancelar
+                <ion-icon :icon="checkmarkCircleOutline" slot="start"></ion-icon>
+                Cadastrar Paciente
               </ion-button>
             </div>
           </form>
@@ -205,6 +285,7 @@ import {
   IonTextarea,
   IonSelect,
   IonSelectOption,
+  IonChip,
   loadingController,
   toastController
 } from '@ionic/vue';
@@ -214,7 +295,16 @@ import {
   saveOutline,
   peopleOutline,
   documentTextOutline,
-  waterOutline
+  waterOutline,
+  personAddOutline,
+  personOutline,
+  calendarOutline,
+  medkitOutline,
+  alertCircleOutline,
+  clipboardOutline,
+  checkmarkCircleOutline,
+  informationCircleOutline,
+  warningOutline
 } from 'ionicons/icons';
 
 import { Container } from '@/core/di/Container';
@@ -430,18 +520,200 @@ onMounted(() => {
   font-size: 0.875rem;
 }
 
+/* Modal Improvements */
+.modal-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.modal-title ion-icon {
+  font-size: 1.5rem;
+}
+
 .modal-content {
-  padding: 1rem;
+  --padding: 0;
 }
 
 .create-form {
-  max-width: 100%;
+  padding: 1rem;
 }
 
+/* Progress Indicator */
+.form-progress {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.5rem 0;
+  background: linear-gradient(135deg, var(--ion-color-primary-tint) 0%, var(--ion-color-primary) 100%);
+  margin-bottom: 1rem;
+}
+
+.progress-step {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.progress-step ion-icon {
+  font-size: 1.5rem;
+  color: white;
+  opacity: 0.5;
+}
+
+.progress-step.active {
+  background: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: scale(1.1);
+}
+
+.progress-step.active ion-icon {
+  color: var(--ion-color-primary);
+  opacity: 1;
+}
+
+/* Info Banner */
+.info-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  background: #e0f2fe;
+  border-left: 4px solid var(--ion-color-primary);
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  font-size: 0.875rem;
+  color: var(--ion-color-primary-shade);
+}
+
+.info-banner ion-icon {
+  font-size: 1.5rem;
+  color: var(--ion-color-primary);
+  flex-shrink: 0;
+}
+
+/* Form Sections */
+.form-section {
+  margin-bottom: 2rem;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid var(--ion-color-light);
+}
+
+.section-icon {
+  font-size: 1.5rem;
+  color: var(--ion-color-primary);
+}
+
+.section-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--ion-color-dark);
+}
+
+/* Form Groups */
 .form-group {
   margin-bottom: 1rem;
 }
 
+.form-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+/* Input Labels */
+.input-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--ion-color-medium);
+  margin-bottom: 0.5rem;
+}
+
+.input-label ion-icon {
+  font-size: 1rem;
+}
+
+.required {
+  color: var(--ion-color-danger);
+  font-weight: bold;
+}
+
+/* Modern Inputs */
+.modern-input {
+  --background: #f5f7fa;
+  --border-radius: 12px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --padding-top: 14px;
+  --padding-bottom: 14px;
+  border-radius: 12px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.modern-textarea {
+  --background: #f5f7fa;
+  --border-radius: 12px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  --padding-top: 14px;
+  --padding-bottom: 14px;
+  border-radius: 12px;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Validation Summary */
+.validation-summary {
+  display: flex;
+  justify-content: center;
+  margin: 1rem 0;
+}
+
+.validation-summary ion-chip {
+  font-size: 0.875rem;
+}
+
+/* Modal Actions */
+.modal-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 2px solid var(--ion-color-light);
+}
+
+.action-button {
+  --border-radius: 12px;
+  height: 52px;
+  font-weight: 600;
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* Legacy support */
 .mobile-input {
   --background: #f9fafb;
   --border-color: #d1d5db;

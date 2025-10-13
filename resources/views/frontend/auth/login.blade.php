@@ -6,7 +6,8 @@
     <meta name="theme-color" content="#2563eb">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Login - Sistema Hemodiálise</title>
-    @vite(['resources/css/app.css', 'resources/js/auth/login.js'])
+
+    @vite(['resources/css/app.css', 'resources/js/auth/login.js', 'resources/js/device-detection.js'])
     <style>
         .mobile-detect { display: none; }
         @media (max-width: 768px) {

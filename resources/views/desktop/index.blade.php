@@ -5,7 +5,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Hemodiálise - Desktop</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/device-detection.js'])
+
+    <!-- Device Detection Inline - garantir que funciona mesmo sem build -->
+    <script>
+        (function() {
+            function setCookie(name, value) {
+                document.cookie = name + "=" + value + "; path=/; max-age=" + (30*24*60*60) + "; SameSite=Lax";
+            }
+            function updateAndCheck() {
+                const width = window.innerWidth;
+                setCookie('screen_width', width);
+                setCookie('screen_height', window.innerHeight);
+
+                const path = window.location.pathname;
+                const isMobile = width <= 768;
+                const isDesktop = width > 768;
+                const inMobile = path.startsWith('/mobile');
+                const inDesktop = path.startsWith('/desktop');
+
+                console.log('[Device Detection] Width:', width + 'px, Path:', path);
+
+                if (isMobile && inDesktop) {
+                    console.log('[Device Detection] Redirecting to /mobile');
+                    window.location.href = '/mobile';
+                } else if (isDesktop && inMobile) {
+                    console.log('[Device Detection] Redirecting to /desktop');
+                    window.location.href = '/desktop';
+                }
+            }
+
+            updateAndCheck();
+            let timeout;
+            window.addEventListener('resize', function() {
+                clearTimeout(timeout);
+                timeout = setTimeout(updateAndCheck, 300);
+            });
+        })();
+    </script>
+
     <style>
         .sidebar-transition {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -327,17 +366,16 @@
                 currentView: 'dashboard',
                 canToggleViews: false,
 
-                init() {
-                    this.checkAuth();
-                    setTimeout(() => {
-                        this.loading = false;
-                    }, 1000);
+                async init() {
+                    await this.checkAuth();
+                    // Não desligar loading até verificar auth
                 },
 
                 async checkAuth() {
                     const token = localStorage.getItem('token');
 
                     if (!token) {
+                        this.loading = false;
                         this.redirectToLogin();
                         return;
                     }
@@ -360,6 +398,9 @@
                                 window.location.href = '/mobile';
                                 return;
                             }
+
+                            // Auth OK, remover loading
+                            this.loading = false;
                         } else if (response.status === 401) {
                             this.handleInvalidToken();
                         } else {

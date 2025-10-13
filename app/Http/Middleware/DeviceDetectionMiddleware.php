@@ -32,50 +32,89 @@ class DeviceDetectionMiddleware
     {
         $userAgent = $request->userAgent();
         $acceptHeader = $request->header('Accept', '');
-        $screenWidth = $request->input('screen_width', 0);
 
-        // Cache key baseado em user agent e screen width
-        $cacheKey = 'device_detection_' . md5($userAgent . $screenWidth);
+        // Capturar dimensões reais da tela do cookie ou request
+        $screenWidth = $request->cookie('screen_width', $request->input('screen_width', 0));
+        $screenHeight = $request->cookie('screen_height', $request->input('screen_height', 0));
+        $devicePixelRatio = $request->cookie('device_pixel_ratio', $request->input('device_pixel_ratio', 1));
 
-        return Cache::remember($cacheKey, 3600, function () use ($userAgent, $acceptHeader, $screenWidth) {
-            // Detectar mobile devices
+        // Cache key baseado em user agent e dimensões da tela
+        $cacheKey = 'device_detection_' . md5($userAgent . $screenWidth . $screenHeight);
+
+        return Cache::remember($cacheKey, 3600, function () use ($userAgent, $acceptHeader, $screenWidth, $screenHeight, $devicePixelRatio) {
+            // Detectar mobile devices via User Agent
             $mobileKeywords = [
                 'Mobile', 'Android', 'iPhone', 'iPad', 'iPod', 'BlackBerry',
                 'Windows Phone', 'Opera Mini', 'IEMobile', 'webOS'
             ];
 
-            $isMobile = false;
+            $isMobileUA = false;
             foreach ($mobileKeywords as $keyword) {
                 if (stripos($userAgent, $keyword) !== false) {
-                    $isMobile = true;
+                    $isMobileUA = true;
                     break;
                 }
             }
 
-            // Detectar tablet vs phone
-            $isTablet = false;
-            if ($isMobile) {
+            // Detectar tablet vs phone via User Agent
+            $isTabletUA = false;
+            if ($isMobileUA) {
                 $tabletKeywords = ['iPad', 'Tablet', 'PlayBook', 'Nexus 7', 'Nexus 10', 'Galaxy Tab'];
                 foreach ($tabletKeywords as $keyword) {
                     if (stripos($userAgent, $keyword) !== false) {
-                        $isTablet = true;
+                        $isTabletUA = true;
                         break;
                     }
                 }
+            }
 
-                // Detectar tablet por screen width se disponível
-                if ($screenWidth > 768 && $screenWidth < 1024) {
-                    $isTablet = true;
+            // DETECÇÃO INTELIGENTE BASEADA NO TAMANHO DA TELA
+            // Breakpoints mais precisos baseados em padrões modernos
+            $isMobileScreen = false;
+            $isTabletScreen = false;
+            $isDesktopScreen = false;
+
+            if ($screenWidth > 0) {
+                // Mobile: até 768px (smartphones em portrait e landscape)
+                if ($screenWidth <= 768) {
+                    $isMobileScreen = true;
+                }
+                // Tablet: 769px até 1024px
+                elseif ($screenWidth > 768 && $screenWidth <= 1024) {
+                    $isTabletScreen = true;
+                }
+                // Desktop: acima de 1024px
+                else {
+                    $isDesktopScreen = true;
                 }
             }
 
-            // Detectar desktop
-            $isDesktop = !$isMobile;
+            // Decisão final: priorizar detecção por tela se disponível, senão usar UA
+            $isMobile = $screenWidth > 0 ? $isMobileScreen : $isMobileUA;
+            $isTablet = $screenWidth > 0 ? $isTabletScreen : $isTabletUA;
+            $isDesktop = $screenWidth > 0 ? $isDesktopScreen : !$isMobileUA;
 
-            // Detectar tipo específico
+            // Ajuste: se UA indica mobile mas tela indica desktop, considerar o contexto
+            // (ex: modo desktop no celular ou tablet com tela grande)
+            if ($isMobileUA && $isDesktopScreen) {
+                // Se UA é mobile mas tela é grande, verificar se é tablet ou modo desktop
+                if ($screenWidth > 1024) {
+                    // Tela muito grande, provavelmente modo desktop forçado ou cast
+                    $isDesktop = true;
+                    $isMobile = false;
+                } else {
+                    // Pode ser um tablet grande
+                    $isTablet = true;
+                    $isMobile = false;
+                }
+            }
+
+            // Detectar tipo específico (usado para routing)
             $deviceType = 'desktop';
-            if ($isMobile) {
-                $deviceType = $isTablet ? 'tablet' : 'mobile';
+            if ($isMobile && !$isTablet) {
+                $deviceType = 'mobile';
+            } elseif ($isTablet) {
+                $deviceType = 'tablet';
             }
 
             // Detectar browser
@@ -87,18 +126,24 @@ class DeviceDetectionMiddleware
             // Verificar se suporta features modernas
             $supportsModernFeatures = $this->supportsModernFeatures($userAgent);
 
+            // Determinar interface recomendada
+            $recommendedInterface = $this->getRecommendedInterface($deviceType, $supportsModernFeatures, $screenWidth);
+
             return [
-                'is_mobile' => $isMobile,
+                'is_mobile' => $isMobile && !$isTablet,
                 'is_tablet' => $isTablet,
                 'is_desktop' => $isDesktop,
                 'device_type' => $deviceType,
                 'browser' => $browser,
                 'os' => $os,
                 'user_agent' => $userAgent,
-                'screen_width' => $screenWidth,
+                'screen_width' => (int)$screenWidth,
+                'screen_height' => (int)$screenHeight,
+                'device_pixel_ratio' => (float)$devicePixelRatio,
                 'supports_modern_features' => $supportsModernFeatures,
-                'recommended_interface' => $this->getRecommendedInterface($deviceType, $supportsModernFeatures),
-                'can_force_desktop' => !$isMobile || $isTablet, // Tablets podem forçar desktop
+                'recommended_interface' => $recommendedInterface,
+                'can_force_desktop' => $isTablet || $isDesktop, // Tablets e desktop podem alternar
+                'detection_method' => $screenWidth > 0 ? 'screen_size' : 'user_agent',
                 'detection_timestamp' => now()->timestamp
             ];
         });
@@ -155,21 +200,26 @@ class DeviceDetectionMiddleware
     }
 
     /**
-     * Recomendar interface baseado no dispositivo
+     * Recomendar interface baseado no dispositivo e tamanho da tela
      */
-    private function getRecommendedInterface(string $deviceType, bool $supportsModernFeatures): string
+    private function getRecommendedInterface(string $deviceType, bool $supportsModernFeatures, int $screenWidth): string
     {
-        // Mobile sempre usa Ionic
-        if ($deviceType === 'mobile') {
-            return 'ionic';
+        // Mobile (até 768px) sempre usa interface Mobile
+        if ($deviceType === 'mobile' || $screenWidth <= 768) {
+            return 'mobile';
         }
 
-        // Tablets podem usar ambos, preferir Ionic para melhor UX touch
+        // Desktop (acima de 1024px) usa interface Desktop
+        if ($deviceType === 'desktop' || $screenWidth > 1024) {
+            return 'desktop';
+        }
+
+        // Tablets (769-1024px) preferem mobile para melhor UX touch, mas podem usar desktop
         if ($deviceType === 'tablet') {
-            return $supportsModernFeatures ? 'ionic' : 'blade';
+            return $supportsModernFeatures ? 'mobile' : 'desktop';
         }
 
-        // Desktop usa Blade com Preline
-        return 'blade';
+        // Fallback: Desktop
+        return 'desktop';
     }
 }

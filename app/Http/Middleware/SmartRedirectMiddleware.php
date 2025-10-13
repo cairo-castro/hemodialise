@@ -155,12 +155,15 @@ class SmartRedirectMiddleware
             return url('/login');
         }
 
+        // Obter interface recomendada baseada no tamanho da tela
+        $recommendedInterface = $deviceInfo['recommended_interface'] ?? 'desktop';
+
         // Baseado no role do usuário
         switch ($user->role) {
             case 'field_user':
             case 'tecnico':
-                // Técnicos sempre vão para mobile (Ionic)
-                return url('/mobile/ionic');
+                // Técnicos sempre vão para mobile
+                return url('/mobile');
 
             case 'admin':
                 // Admins sempre vão para Filament
@@ -169,17 +172,19 @@ class SmartRedirectMiddleware
             case 'gestor':
             case 'coordenador':
             case 'supervisor':
-                // Gestores vão baseado no device
-                if ($deviceInfo['is_mobile'] && !$deviceInfo['is_tablet']) {
-                    return url('/mobile/ionic');
+                // Gestores vão baseado no tamanho da tela
+                // Mobile: tela <= 768px
+                // Desktop: tela > 768px
+                if ($recommendedInterface === 'mobile') {
+                    return url('/mobile');
                 } else {
                     return url('/desktop');
                 }
 
             default:
-                // Fallback baseado no device
-                if ($deviceInfo['is_mobile'] && !$deviceInfo['is_tablet']) {
-                    return url('/mobile/ionic');
+                // Fallback baseado na interface recomendada (tamanho da tela)
+                if ($recommendedInterface === 'mobile') {
+                    return url('/mobile');
                 } else {
                     return url('/desktop');
                 }
@@ -192,11 +197,13 @@ class SmartRedirectMiddleware
     private function checkCurrentInterface(Request $request, array $deviceInfo, $user): ?string
     {
         $currentPath = $request->path();
+        $recommendedInterface = $deviceInfo['recommended_interface'] ?? 'desktop';
+        $screenWidth = $deviceInfo['screen_width'] ?? 0;
 
         // Usuários field_user/tecnico devem estar no mobile
         if (in_array($user->role, ['field_user', 'tecnico'])) {
-            if (!str_starts_with($currentPath, 'mobile/')) {
-                return url('/mobile/ionic');
+            if (!str_starts_with($currentPath, 'mobile')) {
+                return url('/mobile');
             }
             return null;
         }
@@ -206,21 +213,24 @@ class SmartRedirectMiddleware
             return null;
         }
 
-        // Para gestores, verificar compatibilidade device/interface
+        // Para gestores, verificar compatibilidade tela/interface
         if (in_array($user->role, ['gestor', 'coordenador', 'supervisor'])) {
-            // Se está no mobile mas device é desktop, sugerir desktop
-            if (str_starts_with($currentPath, 'mobile/') && $deviceInfo['is_desktop']) {
-                // Verificar preferência do usuário
-                $userPreference = $user->interface_preference ?? 'auto';
-                if ($userPreference === 'auto') {
+            // Verificar preferência do usuário (se existir)
+            $userPreference = $user->interface_preference ?? 'auto';
+
+            // Se preferência é automática, usar detecção de tela
+            if ($userPreference === 'auto') {
+                // Se está no mobile mas tela é desktop (> 768px), redirecionar para desktop
+                if (str_starts_with($currentPath, 'mobile') && $recommendedInterface === 'desktop') {
                     return url('/desktop');
                 }
-            }
 
-            // Se está no desktop mas device é mobile (não tablet)
-            if (str_starts_with($currentPath, 'desktop') && $deviceInfo['is_mobile'] && !$deviceInfo['is_tablet']) {
-                return url('/mobile/ionic');
+                // Se está no desktop mas tela é mobile (<= 768px), redirecionar para mobile
+                if (str_starts_with($currentPath, 'desktop') && $recommendedInterface === 'mobile') {
+                    return url('/mobile');
+                }
             }
+            // Se usuário tem preferência manual, respeitar (não redirecionar)
         }
 
         return null;

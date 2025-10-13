@@ -39,6 +39,7 @@ export default defineConfig(({ mode }) => {
                 input: [
                     'resources/js/mobile/main.ts',
                     'resources/css/app.css',
+                    'resources/js/device-detection.js',
                 ],
                 refresh: true,
                 buildDirectory: 'mobile-assets',
@@ -79,7 +80,8 @@ export default defineConfig(({ mode }) => {
                 input: [
                     'resources/css/app.css',
                     'resources/js/app.js',
-                    'resources/js/auth/login.js'
+                    'resources/js/auth/login.js',
+                    'resources/js/device-detection.js'
                 ],
                 refresh: true,
                 buildDirectory: 'desktop',
@@ -95,7 +97,8 @@ export default defineConfig(({ mode }) => {
                     'resources/css/app.css',
                     'resources/js/app.js',
                     'resources/js/auth/login.js',
-                    'resources/js/mobile/main.ts'
+                    'resources/js/mobile/main.ts',
+                    'resources/js/device-detection.js'
                 ],
                 refresh: true,
             })
