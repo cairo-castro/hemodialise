@@ -45,14 +45,20 @@ export class PatientRepositoryImpl implements PatientRepository {
 
   async create(data: CreatePatientData): Promise<Patient> {
     const token = this.getToken();
-    const response = await this.apiDataSource.post<Patient>('/patients', data, token);
-    return response.data;
+    const response = await this.apiDataSource.post<{ success: boolean; patient: Patient }>('/patients', data, token);
+    return response.data.patient;
   }
 
   async getById(id: number): Promise<Patient> {
     const token = this.getToken();
-    const response = await this.apiDataSource.get<Patient>(`/patients/${id}`, token);
-    return response.data;
+    const response = await this.apiDataSource.get<any>(`/patients/${id}`, token);
+    
+    // API returns { success: true, patient: {...} }
+    if (response.data && response.data.patient) {
+      return response.data.patient;
+    }
+    
+    throw new Error('Paciente não encontrado');
   }
 
   async getAll(searchQuery?: string, perPage: number = 100): Promise<Patient[]> {

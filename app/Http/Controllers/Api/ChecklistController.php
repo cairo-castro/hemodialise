@@ -27,7 +27,7 @@ class ChecklistController extends Controller
         $data = $request->validate([
             'machine_id' => 'required|exists:machines,id',
             'patient_id' => 'required|exists:patients,id',
-            'shift' => 'required|in:matutino,vespertino,noturno',
+            'shift' => 'required|in:matutino,vespertino,noturno,madrugada',
             'observations' => 'nullable|string',
         ]);
 

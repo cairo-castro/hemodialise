@@ -83,6 +83,7 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/patients', [PatientController::class, 'index']);
         Route::get('/patients/quick-search', [PatientController::class, 'quickSearch']);
         Route::post('/patients/search', [PatientController::class, 'search']);
+        Route::get('/patients/{id}', [PatientController::class, 'show']);
         Route::post('/patients', [PatientController::class, 'store']);
 
         Route::get('/machines', [MachineController::class, 'index']);

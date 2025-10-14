@@ -14,26 +14,27 @@ export class CreatePatientUseCase {
       throw new Error('Data de nascimento é obrigatória');
     }
 
-    if (!data.medical_record?.trim()) {
-      throw new Error('Prontuário médico é obrigatório');
-    }
-
     // Validate date
     if (!this.isValidDate(data.birth_date)) {
       throw new Error('Data de nascimento deve estar no formato válido');
     }
 
-    // Validate blood type if provided
-    if (data.blood_type && !this.isValidBloodType(data.blood_type)) {
+    // Validate blood group if provided
+    if (data.blood_group && !this.isValidBloodGroup(data.blood_group)) {
       throw new Error('Tipo sanguíneo inválido');
+    }
+
+    // Validate RH factor if provided
+    if (data.rh_factor && !this.isValidRhFactor(data.rh_factor)) {
+      throw new Error('Fator RH inválido');
     }
 
     // Normalize data
     const normalizedData: CreatePatientData = {
       full_name: data.full_name.trim(),
       birth_date: data.birth_date,
-      medical_record: data.medical_record.trim(),
-      blood_type: data.blood_type?.trim(),
+      blood_group: data.blood_group?.trim(),
+      rh_factor: data.rh_factor?.trim(),
       allergies: data.allergies?.trim(),
       observations: data.observations?.trim()
     };
@@ -46,8 +47,13 @@ export class CreatePatientUseCase {
     return date instanceof Date && !isNaN(date.getTime());
   }
 
-  private isValidBloodType(bloodType: string): boolean {
-    const validTypes = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
-    return validTypes.includes(bloodType);
+  private isValidBloodGroup(bloodGroup: string): boolean {
+    const validGroups = ['A', 'B', 'AB', 'O'];
+    return validGroups.includes(bloodGroup);
+  }
+
+  private isValidRhFactor(rhFactor: string): boolean {
+    const validFactors = ['+', '-'];
+    return validFactors.includes(rhFactor);
   }
 }

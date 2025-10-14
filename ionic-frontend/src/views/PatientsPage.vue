@@ -46,10 +46,6 @@
             </div>
 
             <div class="patient-details">
-              <div class="detail-item" v-if="patient.medical_record">
-                <ion-icon :icon="documentTextOutline"></ion-icon>
-                <span>{{ patient.medical_record }}</span>
-              </div>
               <div class="detail-item" v-if="patient.blood_type">
                 <ion-icon :icon="waterOutline"></ion-icon>
                 <span>{{ patient.blood_type }}</span>
@@ -94,9 +90,6 @@
               </div>
               <div class="progress-step" :class="{ active: newPatient.birth_date }">
                 <ion-icon :icon="calendarOutline"></ion-icon>
-              </div>
-              <div class="progress-step" :class="{ active: newPatient.medical_record }">
-                <ion-icon :icon="documentTextOutline"></ion-icon>
               </div>
               <div class="progress-step" :class="{ active: canCreatePatient }">
                 <ion-icon :icon="checkmarkCircleOutline"></ion-icon>
@@ -176,21 +169,6 @@
               <div class="section-header">
                 <ion-icon :icon="medkitOutline" class="section-icon"></ion-icon>
                 <h3>Dados Médicos</h3>
-              </div>
-
-              <div class="form-group">
-                <label class="input-label">
-                  <ion-icon :icon="documentTextOutline"></ion-icon>
-                  Prontuário Médico <span class="required">*</span>
-                </label>
-                <ion-item class="modern-input" lines="none">
-                  <ion-input
-                    v-model="newPatient.medical_record"
-                    type="text"
-                    required
-                    placeholder="Ex: PRO-2024-001"
-                  ></ion-input>
-                </ion-item>
               </div>
 
               <div class="form-group">
@@ -325,7 +303,6 @@ const showCreateModal = ref(false);
 const newPatient = ref<CreatePatientData>({
   full_name: '',
   birth_date: '',
-  medical_record: '',
   blood_type: '',
   allergies: '',
   observations: ''
@@ -340,15 +317,13 @@ const filteredPatients = computed(() => {
   const query = searchQuery.value.toLowerCase();
   return patients.value.filter(patient =>
     patient.full_name.toLowerCase().includes(query) ||
-    patient.medical_record.toLowerCase().includes(query) ||
     (patient.blood_type && patient.blood_type.toLowerCase().includes(query))
   );
 });
 
 const canCreatePatient = computed(() => {
   return newPatient.value.full_name.length > 0 &&
-         newPatient.value.birth_date.length > 0 &&
-         newPatient.value.medical_record.length > 0;
+         newPatient.value.birth_date.length > 0;
 });
 
 // Methods
@@ -401,7 +376,6 @@ const createPatient = async () => {
     newPatient.value = {
       full_name: '',
       birth_date: '',
-      medical_record: '',
       blood_type: '',
       allergies: '',
       observations: ''

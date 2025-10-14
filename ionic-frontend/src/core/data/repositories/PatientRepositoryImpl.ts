@@ -40,8 +40,8 @@ export class PatientRepositoryImpl implements PatientRepository {
 
   async create(data: CreatePatientData): Promise<Patient> {
     const token = this.getToken();
-    const response = await this.apiDataSource.post<Patient>('/patients', data, token);
-    return response.data;
+    const response = await this.apiDataSource.post<{ success: boolean; patient: Patient }>('/patients', data, token);
+    return response.data.patient;
   }
 
   async getById(id: number): Promise<Patient> {

@@ -33,8 +33,7 @@ class PatientController extends Controller
         if (!empty($search)) {
             $query->where(function ($q) use ($search) {
                 $q->where('full_name', 'LIKE', "%{$search}%")
-                  ->orWhere('medical_record', 'LIKE', "%{$search}%")
-                  ->orWhere('blood_type', 'LIKE', "%{$search}%");
+                  ->orWhere('blood_group', 'LIKE', "%{$search}%");
             });
             // Quando há busca, ordena por relevância (nome primeiro)
             $query->orderByRaw("CASE WHEN full_name LIKE ? THEN 0 ELSE 1 END", ["{$search}%"])
@@ -51,7 +50,6 @@ class PatientController extends Controller
                     'id' => $patient->id,
                     'full_name' => $patient->full_name,
                     'birth_date' => $patient->birth_date->format('Y-m-d'),
-                    'medical_record' => $patient->medical_record,
                     'blood_type' => $patient->blood_type,
                     'age' => $patient->age,
                     'allergies' => $patient->allergies,
@@ -94,15 +92,13 @@ class PatientController extends Controller
         $patients = $query->where(function ($q) use ($searchTerm) {
                 // Busca otimizada com prioridade
                 $q->where('full_name', 'LIKE', "%{$searchTerm}%")
-                  ->orWhere('medical_record', 'LIKE', "%{$searchTerm}%")
-                  ->orWhere('blood_type', 'LIKE', "%{$searchTerm}%");
+                  ->orWhere('blood_group', 'LIKE', "%{$searchTerm}%");
             })
             // Ordena por relevância: nomes que começam com o termo vêm primeiro
-            ->orderByRaw("CASE 
-                WHEN full_name LIKE ? THEN 1 
-                WHEN medical_record LIKE ? THEN 2 
-                ELSE 3 
-            END", ["{$searchTerm}%", "{$searchTerm}%"])
+            ->orderByRaw("CASE
+                WHEN full_name LIKE ? THEN 1
+                ELSE 2
+            END", ["{$searchTerm}%"])
             ->orderBy('full_name', 'asc')
             ->limit($limit)
             ->get()
@@ -111,7 +107,6 @@ class PatientController extends Controller
                     'id' => $patient->id,
                     'full_name' => $patient->full_name,
                     'birth_date' => $patient->birth_date->format('Y-m-d'),
-                    'medical_record' => $patient->medical_record,
                     'blood_type' => $patient->blood_type,
                     'age' => $patient->age,
                 ];
@@ -123,6 +118,46 @@ class PatientController extends Controller
             'count' => $patients->count(),
             'query' => $searchTerm,
             'unit_id' => $user->unit_id ?? null
+        ]);
+    }
+
+    /**
+     * Retorna um paciente específico pelo ID
+     * Filtra automaticamente pela unidade do usuário autenticado
+     */
+    public function show($id): JsonResponse
+    {
+        $user = auth()->user();
+        
+        $query = Patient::where('id', $id)
+            ->where('active', true);
+            
+        // SEGURANÇA: Filtra apenas pacientes da unidade do usuário
+        // Admin pode ver todos, outros usuários apenas da sua unidade
+        if (!$user->isAdmin() && $user->unit_id) {
+            $query->where('unit_id', $user->unit_id);
+        }
+        
+        $patient = $query->first();
+        
+        if (!$patient) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Paciente não encontrado ou não pertence à sua unidade.'
+            ], 404);
+        }
+        
+        return response()->json([
+            'success' => true,
+            'patient' => [
+                'id' => $patient->id,
+                'full_name' => $patient->full_name,
+                'birth_date' => $patient->birth_date->format('Y-m-d'),
+                'blood_type' => $patient->blood_type,
+                'age' => $patient->age,
+                'allergies' => $patient->allergies,
+                'observations' => $patient->observations,
+            ]
         ]);
     }
 
@@ -154,7 +189,6 @@ class PatientController extends Controller
                     'id' => $patient->id,
                     'full_name' => $patient->full_name,
                     'birth_date' => $patient->birth_date->format('Y-m-d'),
-                    'medical_record' => $patient->medical_record,
                     'blood_type' => $patient->blood_type,
                     'age' => $patient->age,
                 ]
@@ -163,13 +197,9 @@ class PatientController extends Controller
 
         // Patient not found, create new one automatically
         try {
-            // Generate medical record number
-            $medicalRecord = 'PAC' . str_pad(Patient::count() + 1, 6, '0', STR_PAD_LEFT);
-
             $newPatient = Patient::create([
                 'full_name' => $request->full_name,
                 'birth_date' => $request->birth_date,
-                'medical_record' => $medicalRecord,
                 'active' => true,
                 'unit_id' => $user->unit_id, // SEGURANÇA: Associa à unidade do usuário
             ]);
@@ -181,7 +211,6 @@ class PatientController extends Controller
                     'id' => $newPatient->id,
                     'full_name' => $newPatient->full_name,
                     'birth_date' => $newPatient->birth_date->format('Y-m-d'),
-                    'medical_record' => $newPatient->medical_record,
                     'blood_type' => $newPatient->blood_type,
                     'age' => $newPatient->age,
                 ]
@@ -200,12 +229,12 @@ class PatientController extends Controller
     {
         try {
             $user = auth()->user();
-            
+
             $validated = $request->validate([
                 'full_name' => 'required|string|max:255',
                 'birth_date' => 'required|date_format:Y-m-d',
-                'medical_record' => 'required|string|max:255|unique:patients',
-                'blood_type' => 'nullable|in:A+,A-,B+,B-,AB+,AB-,O+,O-',
+                'blood_group' => 'nullable|in:A,B,AB,O',
+                'rh_factor' => 'nullable|in:+,-',
                 'allergies' => 'nullable|string',
                 'observations' => 'nullable|string',
             ]);
@@ -221,7 +250,6 @@ class PatientController extends Controller
                     'id' => $patient->id,
                     'full_name' => $patient->full_name,
                     'birth_date' => $patient->birth_date->format('Y-m-d'),
-                    'medical_record' => $patient->medical_record,
                     'blood_type' => $patient->blood_type,
                     'age' => $patient->age,
                 ]

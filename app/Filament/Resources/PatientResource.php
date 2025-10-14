@@ -24,17 +24,33 @@ class PatientResource extends Resource
         return $form
             ->schema([
                 Forms\Components\TextInput::make('full_name')
-                    ->required(),
+                    ->required()
+                    ->label('Nome Completo'),
                 Forms\Components\DatePicker::make('birth_date')
-                    ->required(),
-                Forms\Components\TextInput::make('medical_record')
-                    ->required(),
-                Forms\Components\TextInput::make('blood_type'),
+                    ->required()
+                    ->label('Data de Nascimento'),
+                Forms\Components\Select::make('blood_group')
+                    ->options([
+                        'A' => 'A',
+                        'B' => 'B',
+                        'AB' => 'AB',
+                        'O' => 'O',
+                    ])
+                    ->label('Tipo Sanguíneo'),
+                Forms\Components\Select::make('rh_factor')
+                    ->options([
+                        '+' => 'Positivo (+)',
+                        '-' => 'Negativo (-)',
+                    ])
+                    ->label('Fator RH'),
                 Forms\Components\Textarea::make('allergies')
+                    ->label('Alergias')
                     ->columnSpanFull(),
                 Forms\Components\Textarea::make('observations')
+                    ->label('Observações')
                     ->columnSpanFull(),
                 Forms\Components\Toggle::make('active')
+                    ->label('Ativo')
                     ->required(),
             ]);
     }
@@ -44,21 +60,31 @@ class PatientResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('full_name')
+                    ->label('Nome')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('birth_date')
+                    ->label('Data de Nascimento')
                     ->date()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('medical_record')
-                    ->searchable(),
                 Tables\Columns\TextColumn::make('blood_type')
+                    ->label('Tipo Sanguíneo')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('blood_group')
+                    ->label('Grupo')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('rh_factor')
+                    ->label('RH')
                     ->searchable(),
                 Tables\Columns\IconColumn::make('active')
+                    ->label('Ativo')
                     ->boolean(),
                 Tables\Columns\TextColumn::make('created_at')
+                    ->label('Criado em')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
+                    ->label('Atualizado em')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

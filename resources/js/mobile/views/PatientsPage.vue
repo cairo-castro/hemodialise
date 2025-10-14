@@ -94,11 +94,7 @@
                 </div>
               </div>
 
-              <div class="patient-details-dash" v-if="patient.medical_record || patient.blood_type">
-                <div class="detail-chip" v-if="patient.medical_record">
-                  <ion-icon :icon="documentTextOutline"></ion-icon>
-                  <span>{{ patient.medical_record }}</span>
-                </div>
+              <div class="patient-details-dash" v-if="patient.blood_type">
                 <div class="detail-chip" v-if="patient.blood_type">
                   <ion-icon :icon="waterOutline"></ion-icon>
                   <span>{{ patient.blood_type }}</span>
@@ -299,7 +295,6 @@ import {
   closeOutline,
   saveOutline,
   peopleOutline,
-  documentTextOutline,
   waterOutline,
   personAddOutline,
   personOutline,
@@ -333,7 +328,6 @@ let searchTimeout: NodeJS.Timeout | null = null;
 const newPatient = ref<CreatePatientData>({
   full_name: '',
   birth_date: '',
-  medical_record: '',
   blood_type: '',
   allergies: '',
   observations: ''
@@ -435,7 +429,6 @@ const createPatient = async () => {
     newPatient.value = {
       full_name: '',
       birth_date: '',
-      medical_record: '',
       blood_type: '',
       allergies: '',
       observations: ''

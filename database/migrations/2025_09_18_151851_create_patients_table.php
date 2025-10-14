@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->string('full_name');
             $table->date('birth_date');
-            $table->string('medical_record')->unique();
             $table->enum('blood_type', ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'])->nullable();
             $table->text('allergies')->nullable();
             $table->text('observations')->nullable();

@@ -2,7 +2,8 @@ export interface Patient {
   id: number;
   full_name: string;
   birth_date: string;
-  medical_record: string;
+  blood_group?: string;
+  rh_factor?: string;
   blood_type?: string;
   allergies?: string;
   observations?: string;
@@ -20,8 +21,8 @@ export interface PatientSearchCriteria {
 export interface CreatePatientData {
   full_name: string;
   birth_date: string;
-  medical_record: string;
-  blood_type?: string;
+  blood_group?: string;
+  rh_factor?: string;
   allergies?: string;
   observations?: string;
 }

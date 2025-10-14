@@ -34,10 +34,10 @@
             <div class="progress-dot"></div>
             <span>Data</span>
           </div>
-          <div class="progress-line" :class="{ active: newPatient.blood_type }"></div>
-          <div class="progress-item" :class="{ done: newPatient.blood_type }">
+          <div class="progress-line" :class="{ active: newPatient.blood_group || newPatient.rh_factor }"></div>
+          <div class="progress-item" :class="{ done: newPatient.blood_group && newPatient.rh_factor }">
             <div class="progress-dot"></div>
-            <span>Fator RH</span>
+            <span>Sangue</span>
           </div>
         </div>
 
@@ -77,27 +77,42 @@
             </div>
           </div>
 
-          <!-- Fator RH -->
+          <!-- Tipo Sanguíneo -->
           <div class="input-card-dash">
             <div class="card-icon-dash tertiary">
               <ion-icon :icon="waterOutline"></ion-icon>
             </div>
             <div class="card-content-dash">
-              <label>Fator RH <span class="optional">(opcional)</span></label>
+              <label>Tipo Sanguíneo <span class="optional">(opcional)</span></label>
               <ion-select
-                v-model="newPatient.blood_type"
-                placeholder="Selecione o tipo sanguíneo"
+                v-model="newPatient.blood_group"
+                placeholder="Selecione o tipo"
                 interface="action-sheet"
                 class="select-dash"
               >
-                <ion-select-option value="A+">A+</ion-select-option>
-                <ion-select-option value="A-">A-</ion-select-option>
-                <ion-select-option value="B+">B+</ion-select-option>
-                <ion-select-option value="B-">B-</ion-select-option>
-                <ion-select-option value="AB+">AB+</ion-select-option>
-                <ion-select-option value="AB-">AB-</ion-select-option>
-                <ion-select-option value="O+">O+</ion-select-option>
-                <ion-select-option value="O-">O-</ion-select-option>
+                <ion-select-option value="A">A</ion-select-option>
+                <ion-select-option value="B">B</ion-select-option>
+                <ion-select-option value="AB">AB</ion-select-option>
+                <ion-select-option value="O">O</ion-select-option>
+              </ion-select>
+            </div>
+          </div>
+
+          <!-- Fator RH -->
+          <div class="input-card-dash">
+            <div class="card-icon-dash success">
+              <ion-icon :icon="addCircleOutline"></ion-icon>
+            </div>
+            <div class="card-content-dash">
+              <label>Fator RH <span class="optional">(opcional)</span></label>
+              <ion-select
+                v-model="newPatient.rh_factor"
+                placeholder="Selecione o fator"
+                interface="action-sheet"
+                class="select-dash"
+              >
+                <ion-select-option value="+">Positivo (+)</ion-select-option>
+                <ion-select-option value="-">Negativo (-)</ion-select-option>
               </ion-select>
             </div>
           </div>
@@ -154,6 +169,7 @@ import {
   personOutline,
   calendarOutline,
   waterOutline,
+  addCircleOutline,
   closeOutline,
   checkmarkCircleOutline
 } from 'ionicons/icons';
@@ -169,8 +185,8 @@ const createPatientUseCase = container.getCreatePatientUseCase();
 const newPatient = ref<CreatePatientData>({
   full_name: '',
   birth_date: '',
-  medical_record: '',
-  blood_type: '',
+  blood_group: '',
+  rh_factor: '',
   allergies: '',
   observations: ''
 });
@@ -195,8 +211,17 @@ const handleSubmit = async () => {
     const patient = await createPatientUseCase.execute(newPatient.value);
 
     if (patient) {
-      // Store patient ID to load in checklist page
-      localStorage.setItem('new_patient_id', patient.id.toString());
+      console.log('✅ Paciente criado com sucesso:', patient);
+      
+      // Store patient ID to auto-select when returning to checklist
+      const patientId = patient.id.toString();
+      localStorage.setItem('new_patient_id', patientId);
+      localStorage.setItem('return_to_checklist', 'true');
+      
+      console.log('💾 localStorage salvo - new_patient_id:', patientId);
+      console.log('💾 localStorage salvo - return_to_checklist: true');
+      
+      await loading.dismiss();
 
       const toast = await toastController.create({
         message: 'Paciente cadastrado com sucesso!',
@@ -206,10 +231,14 @@ const handleSubmit = async () => {
       });
       await toast.present();
 
-      // Return to checklist
-      router.replace('/checklist/new');
+      console.log('🔙 Voltando para checklist...');
+      
+      // Go back to previous page (checklist) - patient will be auto-selected
+      router.back();
     }
   } catch (error: any) {
+    await loading.dismiss();
+    
     const toast = await toastController.create({
       message: error.message || 'Erro ao cadastrar paciente',
       duration: 3000,
@@ -217,8 +246,6 @@ const handleSubmit = async () => {
       position: 'top'
     });
     await toast.present();
-  } finally {
-    await loading.dismiss();
   }
 };
 
@@ -237,7 +264,6 @@ const handleCancel = async () => {
           role: 'destructive',
           handler: () => {
             localStorage.removeItem('patient_search_query');
-            localStorage.removeItem('return_to_checklist');
             router.back();
           }
         }
@@ -247,7 +273,6 @@ const handleCancel = async () => {
     await alert.present();
   } else {
     localStorage.removeItem('patient_search_query');
-    localStorage.removeItem('return_to_checklist');
     router.back();
   }
 };
@@ -418,6 +443,10 @@ onMounted(() => {
 
 .card-icon-dash.tertiary {
   background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.card-icon-dash.success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
 }
 
 .card-content-dash {

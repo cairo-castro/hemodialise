@@ -11,8 +11,8 @@ class Patient extends Model
     protected $fillable = [
         'full_name',
         'birth_date',
-        'medical_record',
-        'blood_type',
+        'blood_group',
+        'rh_factor',
         'allergies',
         'observations',
         'active',
@@ -37,6 +37,14 @@ class Patient extends Model
     public function getAgeAttribute(): int
     {
         return Carbon::parse($this->birth_date)->age;
+    }
+
+    public function getBloodTypeAttribute(): ?string
+    {
+        if ($this->blood_group && $this->rh_factor) {
+            return $this->blood_group . $this->rh_factor;
+        }
+        return null;
     }
 
     public function scopeActive($query)

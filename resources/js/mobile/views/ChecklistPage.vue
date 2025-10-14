@@ -118,18 +118,29 @@
                 <ion-icon :icon="medicalOutline"></ion-icon>
                 Selecione a Máquina
               </label>
-              <ion-item fill="solid" class="select-input" lines="none">
-                <ion-select 
-                  v-model="checklistForm.machine_id" 
-                  placeholder="Escolha uma máquina"
-                  interface="action-sheet"
-                  cancel-text="Cancelar"
+              
+              <!-- Machine Cards Grid -->
+              <div class="machine-grid">
+                <button
+                  v-for="machine in availableMachines"
+                  :key="machine.id"
+                  type="button"
+                  class="machine-card"
+                  :class="{ selected: checklistForm.machine_id === machine.id }"
+                  @click="checklistForm.machine_id = machine.id"
                 >
-                  <ion-select-option v-for="machine in availableMachines" :key="machine.id" :value="machine.id">
-                    {{ machine.name }}
-                  </ion-select-option>
-                </ion-select>
-              </ion-item>
+                  <div class="machine-icon">
+                    <ion-icon :icon="hardwareChipOutline"></ion-icon>
+                  </div>
+                  <div class="machine-info">
+                    <span class="machine-name">{{ machine.name }}</span>
+                    <span class="machine-status">Disponível</span>
+                  </div>
+                  <div class="machine-check" v-if="checklistForm.machine_id === machine.id">
+                    <ion-icon :icon="checkmarkCircleOutline"></ion-icon>
+                  </div>
+                </button>
+              </div>
             </div>
 
             <div class="form-group">
@@ -146,6 +157,7 @@
                 >
                   <ion-icon :icon="sunnyOutline"></ion-icon>
                   <span>Matutino</span>
+                  <span class="shift-time">06:00 - 12:00</span>
                 </button>
                 <button
                   type="button"
@@ -155,6 +167,7 @@
                 >
                   <ion-icon :icon="partlySunnyOutline"></ion-icon>
                   <span>Vespertino</span>
+                  <span class="shift-time">12:00 - 18:00</span>
                 </button>
                 <button
                   type="button"
@@ -164,6 +177,17 @@
                 >
                   <ion-icon :icon="moonOutline"></ion-icon>
                   <span>Noturno</span>
+                  <span class="shift-time">18:00 - 00:00</span>
+                </button>
+                <button
+                  type="button"
+                  class="shift-btn"
+                  :class="{ active: checklistForm.shift === 'madrugada' }"
+                  @click="checklistForm.shift = 'madrugada'"
+                >
+                  <ion-icon :icon="cloudyNightOutline"></ion-icon>
+                  <span>Madrugada</span>
+                  <span class="shift-time">00:00 - 06:00</span>
                 </button>
               </div>
             </div>
@@ -425,8 +449,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import { useIonRouter } from '@ionic/vue';
 import {
   IonPage,
   IonHeader,
@@ -454,7 +479,8 @@ import {
   IonModal,
   IonSpinner,
   loadingController,
-  toastController
+  toastController,
+  onIonViewWillEnter
 } from '@ionic/vue';
 import {
   searchOutline,
@@ -480,7 +506,8 @@ import {
   medicalOutline,
   sunnyOutline,
   partlySunnyOutline,
-  moonOutline
+  moonOutline,
+  cloudyNightOutline
 } from 'ionicons/icons';
 
 import { Container } from '@mobile/core/di/Container';
@@ -825,7 +852,6 @@ const clearPatientSelection = () => {
 const navigateToRegisterPatient = () => {
   // Store search query in localStorage to pre-fill the register form
   localStorage.setItem('patient_search_query', searchQuery.value);
-  localStorage.setItem('return_to_checklist', 'true');
   router.push('/patients/new');
 };
 
@@ -1219,36 +1245,21 @@ const setItemObservation = (key: string, observation: string) => {
   }
 };
 
-// Lifecycle
-onMounted(() => {
-  loadMachines();
-  loadExistingChecklist();
-  updateTime();
-  timeInterval = setInterval(updateTime, 1000);
-  
-  // Check if returning from patient registration
-  const returnToChecklist = localStorage.getItem('return_to_checklist');
-  const newPatientId = localStorage.getItem('new_patient_id');
-  
-  if (returnToChecklist === 'true' && newPatientId) {
-    // Load the newly created patient
-    loadNewPatient(parseInt(newPatientId));
-    localStorage.removeItem('return_to_checklist');
-    localStorage.removeItem('new_patient_id');
-    localStorage.removeItem('patient_search_query');
-  }
-});
-
 const loadNewPatient = async (patientId: number) => {
   try {
+    console.log('🔄 Carregando paciente ID:', patientId);
     const patientRepository = container.getPatientRepository();
     const patient = await patientRepository.getById(patientId);
+    
     if (patient) {
+      console.log('✅ Paciente carregado:', patient);
       selectedPatient.value = patient;
       searchQuery.value = patient.full_name;
+      searchResults.value = [];
       
+      // Show success toast
       const toast = await toastController.create({
-        message: 'Paciente cadastrado com sucesso!',
+        message: `Paciente ${patient.full_name} selecionado!`,
         duration: 2000,
         color: 'success',
         position: 'top'
@@ -1256,9 +1267,64 @@ const loadNewPatient = async (patientId: number) => {
       await toast.present();
     }
   } catch (error) {
-    console.error('Erro ao carregar paciente:', error);
+    console.error('❌ Erro ao carregar paciente:', error);
+    
+    const toast = await toastController.create({
+      message: 'Erro ao carregar paciente cadastrado',
+      duration: 3000,
+      color: 'danger',
+      position: 'top'
+    });
+    await toast.present();
   }
 };
+
+const checkAndLoadNewPatient = () => {
+  const returnToChecklist = localStorage.getItem('return_to_checklist');
+  const newPatientId = localStorage.getItem('new_patient_id');
+  
+  console.log('🔍 Verificando retorno - return_to_checklist:', returnToChecklist, 'new_patient_id:', newPatientId);
+  
+  if (returnToChecklist === 'true' && newPatientId) {
+    console.log('🎯 Detectado retorno de cadastro, carregando paciente...');
+    
+    // Load the newly created patient
+    loadNewPatient(parseInt(newPatientId));
+    
+    // Clean up localStorage
+    localStorage.removeItem('return_to_checklist');
+    localStorage.removeItem('new_patient_id');
+    localStorage.removeItem('patient_search_query');
+  }
+};
+
+// Ionic lifecycle hook - CALLED EVERY TIME THE VIEW IS ENTERED
+onIonViewWillEnter(() => {
+  console.log('🚀 onIonViewWillEnter - Página sendo exibida');
+  checkAndLoadNewPatient();
+});
+
+// Watch for route changes (additional safeguard)
+watch(() => route.path, (newPath) => {
+  console.log('🔄 Rota mudou para:', newPath);
+  if (newPath === '/checklist/new') {
+    console.log('📍 Detectado retorno para /checklist/new via watch');
+    // Small delay to ensure localStorage is set
+    setTimeout(checkAndLoadNewPatient, 100);
+  }
+});
+
+// Lifecycle
+onMounted(() => {
+  console.log('🏁 onMounted - Página montada');
+  loadMachines();
+  loadExistingChecklist();
+  updateTime();
+  timeInterval = setInterval(updateTime, 1000);
+  
+  // Also check on mount (for first load)
+  checkAndLoadNewPatient();
+});
 
 onUnmounted(() => {
   if (timeInterval) {
@@ -1540,11 +1606,110 @@ onUnmounted(() => {
   --border-color: var(--ion-color-primary);
 }
 
+/* Machine Grid */
+.machine-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.machine-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 16px;
+  background: white;
+  border: 3px solid #e5e7eb;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-height: 140px;
+}
+
+.machine-card:active {
+  transform: scale(0.97);
+}
+
+.machine-card.selected {
+  border-color: var(--ion-color-primary);
+  background: linear-gradient(135deg, rgba(var(--ion-color-primary-rgb), 0.1) 0%, rgba(var(--ion-color-primary-rgb), 0.05) 100%);
+  box-shadow: 0 4px 12px rgba(var(--ion-color-primary-rgb), 0.2);
+}
+
+.machine-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.machine-card.selected .machine-icon {
+  background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-primary-shade) 100%);
+}
+
+.machine-icon ion-icon {
+  font-size: 2rem;
+  color: #6b7280;
+  transition: all 0.3s ease;
+}
+
+.machine-card.selected .machine-icon ion-icon {
+  color: white;
+}
+
+.machine-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+}
+
+.machine-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1f2937;
+  text-align: center;
+}
+
+.machine-status {
+  font-size: 0.75rem;
+  color: #10b981;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.machine-check {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+.machine-check ion-icon {
+  font-size: 1.5rem;
+  color: var(--ion-color-primary);
+}
+
 /* Shift Selector */
 .shift-selector {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 8px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 12px;
+}
+
+@media (min-width: 640px) {
+  .shift-selector {
+    grid-template-columns: repeat(4, 1fr);
+  }
 }
 
 .shift-btn {
@@ -1552,29 +1717,47 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  padding: 16px 8px;
+  padding: 16px 12px;
   background: white;
-  border: 2px solid #e5e7eb;
-  border-radius: 12px;
+  border: 3px solid #e5e7eb;
+  border-radius: 16px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   font-size: 0.85rem;
   font-weight: 600;
   color: #6b7280;
+  position: relative;
 }
 
 .shift-btn ion-icon {
-  font-size: 1.8rem;
+  font-size: 2rem;
   color: #9ca3af;
+  transition: all 0.3s ease;
+}
+
+.shift-btn span:first-of-type {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.shift-time {
+  font-size: 0.7rem;
+  color: #9ca3af;
+  font-weight: 500;
 }
 
 .shift-btn.active {
   border-color: var(--ion-color-primary);
   background: linear-gradient(135deg, rgba(var(--ion-color-primary-rgb), 0.1) 0%, rgba(var(--ion-color-primary-rgb), 0.05) 100%);
   color: var(--ion-color-primary);
+  box-shadow: 0 4px 12px rgba(var(--ion-color-primary-rgb), 0.2);
 }
 
 .shift-btn.active ion-icon {
+  color: var(--ion-color-primary);
+}
+
+.shift-btn.active .shift-time {
   color: var(--ion-color-primary);
 }
 
