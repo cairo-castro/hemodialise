@@ -21,6 +21,8 @@ class AuthController extends Controller
         }
 
         $user = auth('api')->user();
+        $activeUnit = $user->getActiveUnit();
+
         return response()->json([
             'token' => $token,
             'user' => [
@@ -29,7 +31,10 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'role' => $user->role,
                 'unit_id' => $user->unit_id,
-                'unit' => $user->unit,
+                'unit' => $activeUnit,
+                'current_unit' => $activeUnit,
+                'units' => $user->hasGlobalAccess() ? [] : $user->units,
+                'has_global_access' => $user->hasGlobalAccess(),
             ]
         ]);
     }
@@ -37,6 +42,8 @@ class AuthController extends Controller
     public function me()
     {
         $user = auth('api')->user();
+        $activeUnit = $user->getActiveUnit();
+
         return response()->json([
             'user' => [
                 'id' => $user->id,
@@ -44,7 +51,10 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'role' => $user->role,
                 'unit_id' => $user->unit_id,
-                'unit' => $user->unit,
+                'unit' => $activeUnit,
+                'current_unit' => $activeUnit,
+                'units' => $user->hasGlobalAccess() ? [] : $user->units,
+                'has_global_access' => $user->hasGlobalAccess(),
             ]
         ]);
     }

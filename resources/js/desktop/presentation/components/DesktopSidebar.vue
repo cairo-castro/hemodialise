@@ -21,10 +21,53 @@
           <div class="w-12 h-12 medical-gradient rounded-full flex items-center justify-center text-white font-bold text-lg mr-3">
             {{ user.getInitials ? user.getInitials() : user.name?.charAt(0) }}
           </div>
-          <div class="flex-1">
-            <h3 class="font-semibold text-gray-800">{{ user.name }}</h3>
-            <p class="text-sm text-gray-600">{{ user.getRoleDisplay ? user.getRoleDisplay() : user.role }}</p>
-            <p class="text-xs text-gray-500">{{ user.unit?.name || 'Acesso Global' }}</p>
+          <div class="flex-1 min-w-0">
+            <h3 class="font-semibold text-gray-800 truncate">{{ user.name }}</h3>
+            
+            <!-- Single Unit Display -->
+            <div v-if="!availableUnits || availableUnits.length <= 1" class="flex items-center mt-1">
+              <svg class="w-3 h-3 text-gray-400 mr-1 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+              </svg>
+              <span class="text-xs text-gray-600 truncate">{{ currentUnit?.name || 'Carregando...' }}</span>
+            </div>
+
+            <!-- Multiple Units Selector -->
+            <div v-else class="relative mt-2">
+              <button 
+                @click="showUnitSelector = !showUnitSelector"
+                class="w-full flex items-center justify-between px-3 py-2 text-xs bg-white border border-blue-200 rounded-lg hover:border-blue-300 transition-colors"
+              >
+                <div class="flex items-center min-w-0 flex-1">
+                  <svg class="w-3 h-3 text-blue-500 mr-1.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+                  </svg>
+                  <span class="text-gray-700 font-medium truncate">{{ currentUnit?.name }}</span>
+                </div>
+                <svg class="w-4 h-4 text-gray-400 ml-2 flex-shrink-0" :class="{ 'transform rotate-180': showUnitSelector }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+              </button>
+
+              <!-- Dropdown Menu -->
+              <div 
+                v-if="showUnitSelector"
+                class="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto"
+              >
+                <button
+                  v-for="unit in availableUnits"
+                  :key="unit.id"
+                  @click="selectUnit(unit.id)"
+                  class="w-full px-3 py-2 text-left text-xs hover:bg-blue-50 transition-colors flex items-center"
+                  :class="{ 'bg-blue-50 text-blue-700 font-medium': unit.id === selectedUnitId }"
+                >
+                  <svg v-if="unit.id === selectedUnitId" class="w-3 h-3 text-blue-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                  </svg>
+                  <span class="flex-1 truncate" :class="{ 'ml-5': unit.id !== selectedUnitId }">{{ unit.name }}</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -170,11 +213,122 @@
 </template>
 
 <script setup>
-defineProps({
+import { ref, onMounted, onUnmounted, watch } from 'vue';
+import axios from 'axios';
+
+const props = defineProps({
   user: Object,
   currentView: String,
   canToggleInterfaces: Boolean
 });
 
-defineEmits(['view-change', 'interface-switch', 'logout']);
+const emit = defineEmits(['view-change', 'interface-switch', 'logout', 'unit-changed']);
+
+const availableUnits = ref([]);
+const currentUnit = ref(null);
+const selectedUnitId = ref(null);
+const showUnitSelector = ref(false);
+
+// Carrega as unidades disponíveis
+const loadAvailableUnits = async () => {
+  try {
+    const response = await axios.get('/api/user-units');
+    availableUnits.value = response.data.units || [];
+    
+    // Encontra a unidade atual
+    const currentUnitId = response.data.current_unit_id;
+    if (currentUnitId) {
+      currentUnit.value = response.data.units.find(u => u.id === currentUnitId);
+      selectedUnitId.value = currentUnitId;
+    } else if (response.data.units.length > 0) {
+      // Fallback: usa a primeira unidade se não houver current_unit_id
+      currentUnit.value = response.data.units[0];
+      selectedUnitId.value = response.data.units[0].id;
+    }
+    
+    console.log('Unidades carregadas:', {
+      total: availableUnits.value.length,
+      current: currentUnit.value?.name,
+      currentId: selectedUnitId.value
+    });
+  } catch (error) {
+    console.error('Erro ao carregar unidades:', error);
+    // Fallback: usa os dados do usuário prop
+    if (props.user?.unit) {
+      currentUnit.value = props.user.unit;
+      selectedUnitId.value = props.user.unit.id;
+      availableUnits.value = [props.user.unit];
+    }
+  }
+};
+
+// Seleciona uma unidade
+const selectUnit = async (unitId) => {
+  showUnitSelector.value = false;
+  
+  if (unitId === selectedUnitId.value) {
+    return; // Já está na unidade selecionada
+  }
+
+  try {
+    const response = await axios.post('/api/user-units/switch', {
+      unit_id: unitId
+    });
+
+    if (response.data.success) {
+      currentUnit.value = response.data.current_unit;
+      selectedUnitId.value = unitId;
+      emit('unit-changed', response.data.current_unit);
+      
+      // Recarrega a página para aplicar o novo filtro de unidade
+      window.location.reload();
+    }
+  } catch (error) {
+    console.error('Erro ao trocar unidade:', error);
+    // Reverte a seleção em caso de erro
+    selectedUnitId.value = currentUnit.value?.id;
+  }
+};
+
+// Fecha o dropdown ao clicar fora
+const handleClickOutside = (event) => {
+  if (showUnitSelector.value && !event.target.closest('.relative')) {
+    showUnitSelector.value = false;
+  }
+};
+
+// Atualiza a unidade atual quando o usuário muda
+watch(() => props.user, (newUser, oldUser) => {
+  // Só atualiza se o usuário mudou de verdade (exemplo: após login)
+  if (newUser && (!oldUser || newUser.id !== oldUser.id)) {
+    console.log('User changed, updating unit info');
+    currentUnit.value = newUser.current_unit || newUser.unit;
+    selectedUnitId.value = currentUnit.value?.id;
+    loadAvailableUnits();
+  }
+});
+
+onMounted(() => {
+  console.log('DesktopSidebar mounted with user:', props.user);
+  
+  if (props.user) {
+    // Define valores iniciais imediatamente dos props
+    if (props.user.current_unit || props.user.unit) {
+      currentUnit.value = props.user.current_unit || props.user.unit;
+      selectedUnitId.value = currentUnit.value?.id;
+      console.log('Unidade inicial definida:', currentUnit.value?.name);
+    }
+    
+    // Carrega lista completa de unidades
+    loadAvailableUnits();
+  }
+  
+  // Adiciona listener para fechar dropdown ao clicar fora
+  document.addEventListener('click', handleClickOutside);
+});
+
+// Remove listener ao desmontar
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside);
+});
 </script>

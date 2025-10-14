@@ -23,10 +23,10 @@ class PatientController extends Controller
         
         $query = Patient::where('active', true);
         
-        // SEGURANÇA: Filtra apenas pacientes da unidade do usuário
-        // Admin pode ver todos, outros usuários apenas da sua unidade
-        if (!$user->isAdmin() && $user->unit_id) {
-            $query->where('unit_id', $user->unit_id);
+        // Aplicar filtro de unidade do middleware
+        $scopedUnitId = $request->get('scoped_unit_id');
+        if ($scopedUnitId !== null) {
+            $query->where('unit_id', $scopedUnitId);
         }
         
         // Se houver busca, aplica filtros otimizados
@@ -83,10 +83,10 @@ class PatientController extends Controller
         
         $query = Patient::where('active', true);
         
-        // SEGURANÇA: Filtra apenas pacientes da unidade do usuário
-        // Admin pode ver todos, outros usuários apenas da sua unidade
-        if (!$user->isAdmin() && $user->unit_id) {
-            $query->where('unit_id', $user->unit_id);
+        // Aplicar filtro de unidade do middleware
+        $scopedUnitId = $request->get('scoped_unit_id');
+        if ($scopedUnitId !== null) {
+            $query->where('unit_id', $scopedUnitId);
         }
         
         $patients = $query->where(function ($q) use ($searchTerm) {

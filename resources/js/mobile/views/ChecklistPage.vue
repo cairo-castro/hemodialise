@@ -113,6 +113,19 @@
           </h2>
 
           <div class="selection-card">
+            <!-- ✅ Machine Availability Status Badge -->
+            <div v-if="machineAvailability" class="availability-badge" :class="machineAvailability.overall_status">
+              <div class="availability-icon">
+                <ion-icon v-if="machineAvailability.overall_status === 'good'" :icon="checkmarkCircleOutline"></ion-icon>
+                <ion-icon v-else-if="machineAvailability.overall_status === 'critical'" :icon="closeCircleOutline"></ion-icon>
+                <ion-icon v-else :icon="alertCircleOutline"></ion-icon>
+              </div>
+              <div class="availability-info">
+                <span class="availability-label">{{ machineAvailability.message }}</span>
+                <span class="availability-count">{{ machineAvailability.available }} de {{ machineAvailability.total }} disponíveis</span>
+              </div>
+            </div>
+
             <div class="form-group">
               <label class="input-label">
                 <ion-icon :icon="medicalOutline"></ion-icon>
@@ -273,81 +286,96 @@
           </ion-card>
 
           <!-- Current Phase Checklist -->
-          <ion-card v-if="!activeChecklist.is_interrupted" class="checklist-phase-card">
-            <ion-card-header>
-              <ion-card-title>{{ getPhaseTitle(activeChecklist.current_phase) }}</ion-card-title>
-              <ion-card-subtitle>{{ getPhaseDescription(activeChecklist.current_phase) }}</ion-card-subtitle>
-            </ion-card-header>
-            <ion-card-content>
-              <div class="checklist-items">
-                <ChecklistItem
-                  v-for="item in getCurrentPhaseItems()"
-                  :key="item.key"
-                  :title="item.label"
-                  :description="item.description"
-                  :value="getItemStatus(item.key)"
-                  :observation="getItemObservation(item.key)"
-                  @update:value="setItemStatus(item.key, $event)"
-                  @update:observation="setItemObservation(item.key, $event)"
-                />
+          <div v-if="!activeChecklist.is_interrupted" class="phase-section">
+            <!-- Phase Header Card -->
+            <div class="phase-header-card">
+              <div class="phase-header-icon">
+                <ion-icon :icon="getPhaseIcon(activeChecklist.current_phase)"></ion-icon>
               </div>
-
-              <!-- Observations -->
-              <div class="form-group">
-                <ion-item fill="outline" class="patient-input">
-                  <ion-label position="floating">Observações (opcional)</ion-label>
-                  <ion-textarea
-                    v-model="checklistForm.observations"
-                    :rows="3"
-                    placeholder="Digite observações sobre esta fase..."
-                  ></ion-textarea>
-                </ion-item>
+              <div class="phase-header-content">
+                <h3>{{ getPhaseTitle(activeChecklist.current_phase) }}</h3>
+                <p>{{ getPhaseDescription(activeChecklist.current_phase) }}</p>
               </div>
-
-              <!-- Action Buttons -->
-              <div class="action-buttons">
-                <!-- Pause and Return Button -->
-                <ion-button
-                  expand="block"
-                  color="warning"
-                  fill="outline"
-                  @click="pauseAndReturn"
-                  class="pause-button"
-                >
-                  <ion-icon :icon="pauseOutline" slot="start"></ion-icon>
-                  Pausar e Voltar ao Dashboard
-                </ion-button>
-
-                <!-- Emergency Interrupt Button -->
-                <ion-button
-                  expand="block"
-                  color="danger"
-                  fill="outline"
-                  @click="showInterruptModal = true"
-                  class="interrupt-button"
-                >
-                  <ion-icon :icon="stopCircleOutline" slot="start"></ion-icon>
-                  Interromper Checklist
-                </ion-button>
-
-                <!-- Continue/Complete Button -->
-                <ion-button
-                  expand="block"
-                  :color="canAdvancePhase ? 'success' : 'medium'"
-                  :disabled="!canAdvancePhase"
-                  @click="advancePhase"
-                  class="advance-button"
-                >
-                  <ion-icon :icon="canAdvancePhase ? arrowForwardOutline : lockClosedOutline" slot="start"></ion-icon>
-                  {{ getAdvanceButtonText() }}
-                </ion-button>
+              <div class="phase-header-badge">
+                <ion-chip :color="getPhaseColor(activeChecklist.current_phase)">
+                  {{ Math.round(currentPhaseCompletion) }}%
+                </ion-chip>
               </div>
-            </ion-card-content>
-          </ion-card>
+            </div>
+
+            <!-- Checklist Items as Cards -->
+            <div class="checklist-items-grid">
+              <ChecklistItem
+                v-for="item in getCurrentPhaseItems()"
+                :key="item.key"
+                :title="item.label"
+                :description="item.description"
+                :value="getItemStatus(item.key)"
+                :observation="getItemObservation(item.key)"
+                @update:value="setItemStatus(item.key, $event)"
+                @update:observation="setItemObservation(item.key, $event)"
+              />
+            </div>
+
+            <!-- Observations Card -->
+            <div class="observations-card">
+              <label class="card-label">
+                <ion-icon :icon="documentTextOutline"></ion-icon>
+                Observações Adicionais
+              </label>
+              <textarea
+                v-model="checklistForm.observations"
+                class="observations-input"
+                rows="4"
+                placeholder="Digite observações sobre esta fase do checklist..."
+              ></textarea>
+            </div>
+
+            <!-- Action Buttons Dashboard Style -->
+            <div class="dashboard-actions">
+              <!-- Pause Button -->
+              <button class="action-card warning" @click="pauseAndReturn">
+                <div class="action-card-icon warning">
+                  <ion-icon :icon="pauseOutline"></ion-icon>
+                </div>
+                <div class="action-card-content">
+                  <span class="action-card-title">Pausar</span>
+                  <span class="action-card-subtitle">Voltar depois</span>
+                </div>
+              </button>
+
+              <!-- Interrupt Button -->
+              <button class="action-card danger" @click="showInterruptModal = true">
+                <div class="action-card-icon danger">
+                  <ion-icon :icon="stopCircleOutline"></ion-icon>
+                </div>
+                <div class="action-card-content">
+                  <span class="action-card-title">Interromper</span>
+                  <span class="action-card-subtitle">Cancelar processo</span>
+                </div>
+              </button>
+            </div>
+
+            <!-- Primary Continue Button -->
+            <button
+              class="primary-continue-btn"
+              :class="{ disabled: !canAdvancePhase }"
+              :disabled="!canAdvancePhase"
+              @click="advancePhase"
+            >
+              <ion-icon :icon="checkmarkCircleOutline"></ion-icon>
+              <div class="btn-text">
+                <span class="btn-title">{{ isLastPhase ? 'Concluir Checklist' : 'Avançar para Próxima Fase' }}</span>
+                <span class="btn-subtitle">{{ canAdvancePhase ? 'Todos os itens verificados' : 'Complete todos os itens obrigatórios' }}</span>
+              </div>
+              <ion-icon :icon="arrowForwardOutline"></ion-icon>
+            </button>
+          </div>
 
           <!-- Interrupted State -->
-          <ion-card v-if="activeChecklist.is_interrupted" class="interrupted-card">
-            <ion-card-content>
+          <div v-else class="interrupted-section">
+            <ion-card class="interrupted-card">
+              <ion-card-content>
               <div class="interrupted-content">
                 <ion-icon :icon="alertCircleOutline" class="interrupted-icon"></ion-icon>
                 <h3>Checklist Interrompido</h3>
@@ -366,10 +394,12 @@
               </div>
             </ion-card-content>
           </ion-card>
+          </div>
 
           <!-- Completed State -->
-          <ion-card v-if="activeChecklist.current_phase === 'completed'" class="completed-card">
-            <ion-card-content>
+          <div v-if="activeChecklist.current_phase === 'completed'" class="completed-section">
+            <ion-card class="completed-card">
+              <ion-card-content>
               <div class="completed-content">
                 <ion-icon :icon="checkmarkCircleOutline" class="completed-icon"></ion-icon>
                 <h3>Checklist Concluído com Sucesso!</h3>
@@ -387,6 +417,7 @@
               </div>
             </ion-card-content>
           </ion-card>
+          </div>
         </div>
       </div>
 
@@ -480,6 +511,7 @@ import {
   IonSpinner,
   loadingController,
   toastController,
+  alertController,
   onIonViewWillEnter
 } from '@ionic/vue';
 import {
@@ -495,6 +527,7 @@ import {
   homeOutline,
   checkmarkOutline,
   closeOutline,
+  closeCircleOutline,
   lockClosedOutline,
   calendarOutline,
   timeOutline,
@@ -544,9 +577,13 @@ const existingChecklistId = ref<number | null>(null);
 const isEditingExisting = ref<boolean>(false);
 const activeChecklist = ref<any>(null);
 
+// ✅ Machine availability tracking
+const machineAvailability = ref<any>(null);
+const isCheckingAvailability = ref(false);
+
 const checklistForm = ref({
   machine_id: 0,
-  shift: 'matutino' as 'matutino' | 'vespertino' | 'noturno',
+  shift: 'matutino' as 'matutino' | 'vespertino' | 'noturno' | 'madrugada',
   observations: '',
   // Pre-dialysis items
   machine_disinfected: false,
@@ -590,9 +627,30 @@ const canAdvancePhase = computed(() => {
 
   const items = getCurrentPhaseItems();
 
-  const allComplete = items.every(item => getItemStatus(item.key) !== null);
+  const allComplete = items.every(item => {
+    const status = getItemStatus(item.key);
+    
+    // Item não preenchido
+    if (status === null) return false;
+    
+    // Conforme ou Não Aplica = OK
+    if (status === 'C' || status === 'NA') return true;
+    
+    // Não Conforme = precisa ter observação
+    if (status === 'NC') {
+      const observation = getItemObservation(item.key);
+      return observation && observation.trim().length > 0;
+    }
+    
+    return false;
+  });
 
   return allComplete;
+});
+
+const isLastPhase = computed(() => {
+  if (!activeChecklist.value) return false;
+  return activeChecklist.value.current_phase === 'post_dialysis';
 });
 
 // Phase management
@@ -862,6 +920,12 @@ const startChecklist = async () => {
     return;
   }
 
+  // ✅ VALIDAÇÃO ROBUSTA: Verificar disponibilidade antes de criar
+  const availabilityCheck = await checkMachineAvailability();
+  if (!availabilityCheck.canCreate) {
+    return; // Alerta já foi exibido
+  }
+
   const loading = await loadingController.create({
     message: 'Iniciando checklist...',
     spinner: 'crescent'
@@ -883,7 +947,7 @@ const startChecklist = async () => {
 
     const data = await response.json();
 
-    if (data.success) {
+    if (response.ok && data.success) {
       activeChecklist.value = data.checklist;
       selectedMachine.value = availableMachines.value.find(m => m.id === checklistForm.value.machine_id) || null;
       updatePhaseCompletion();
@@ -900,7 +964,9 @@ const startChecklist = async () => {
       });
       await toast.present();
     } else {
-      throw new Error(data.message || 'Erro ao iniciar checklist');
+      // Tratar erros de validação do backend
+      const errorMessage = data.message || data.errors?.machine_id?.[0] || 'Erro ao iniciar checklist';
+      throw new Error(errorMessage);
     }
   } catch (error: any) {
     const toast = await toastController.create({
@@ -969,31 +1035,58 @@ const advancePhase = async () => {
 const updatePhaseData = async () => {
   if (!activeChecklist.value) return;
 
-  const phaseData = {};
-  const items = getCurrentPhaseItems();
+  try {
+    const phaseData = {};
+    const itemsWithObservations = {};
+    const items = getCurrentPhaseItems();
 
-  items.forEach(item => {
-    // Para o backend, só marca como true se o status for 'C' (Conforme)
-    const status = getItemStatus(item.key);
-    phaseData[item.key] = status === 'C';
-  });
+    items.forEach(item => {
+      const status = getItemStatus(item.key);
+      const observation = getItemObservation(item.key);
+      
+      // Item considerado "completo" se:
+      // - Status = 'C' (Conforme) OU
+      // - Status = 'NC' (Não Conforme) COM observação preenchida OU
+      // - Status = 'NA' (Não Aplica)
+      let isComplete = false;
+      
+      if (status === 'C' || status === 'NA') {
+        isComplete = true;
+      } else if (status === 'NC' && observation && observation.trim().length > 0) {
+        isComplete = true;
+      }
+      
+      phaseData[item.key] = isComplete;
+      
+      // Guarda observação se existir
+      if (observation && observation.trim().length > 0) {
+        itemsWithObservations[item.key] = observation;
+      }
+    });
 
+    const response = await fetch(`/api/checklists/${activeChecklist.value.id}/phase`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+      },
+      body: JSON.stringify({
+        phase_data: phaseData,
+        observations: checklistForm.value.observations,
+        item_observations: itemsWithObservations
+      })
+    });
 
-  const response = await fetch(`/api/checklists/${activeChecklist.value.id}/phase`, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-    },
-    body: JSON.stringify({
-      phase_data: phaseData,
-      observations: checklistForm.value.observations
-    })
-  });
+    if (!response.ok) {
+      throw new Error('Erro ao salvar dados');
+    }
 
-  const data = await response.json();
-  if (data.success) {
-    currentPhaseCompletion.value = data.phase_completion;
+    const data = await response.json();
+    if (data.success) {
+      currentPhaseCompletion.value = data.phase_completion;
+    }
+  } catch (error) {
+    console.error('Erro no updatePhaseData:', error);
   }
 };
 
@@ -1101,9 +1194,83 @@ const updatePhaseCompletion = () => {
 const loadMachines = async () => {
   try {
     availableMachines.value = await machineRepository.getAvailable();
+    // Também carrega estatísticas de disponibilidade
+    await fetchMachineAvailability();
   } catch (error) {
     console.error('Error loading machines:', error);
   }
+};
+
+/**
+ * ✅ Busca estatísticas de disponibilidade de máquinas
+ */
+const fetchMachineAvailability = async () => {
+  try {
+    isCheckingAvailability.value = true;
+    const response = await fetch('/api/machines/availability', {
+      headers: AuthService.getAuthHeaders()
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      machineAvailability.value = data.availability;
+    }
+  } catch (error) {
+    console.error('Error fetching machine availability:', error);
+  } finally {
+    isCheckingAvailability.value = false;
+  }
+};
+
+/**
+ * ✅ VALIDAÇÃO ROBUSTA: Verifica se há máquinas disponíveis antes de criar checklist
+ */
+const checkMachineAvailability = async (): Promise<{ canCreate: boolean }> => {
+  // Recarregar dados mais recentes
+  await fetchMachineAvailability();
+
+  if (!machineAvailability.value) {
+    // Se não conseguiu carregar, assume que pode tentar (erro será tratado no backend)
+    return { canCreate: true };
+  }
+
+  const { available, overall_status, message } = machineAvailability.value;
+
+  // ❌ Nenhuma máquina disponível
+  if (available === 0) {
+    const alert = await alertController.create({
+      header: 'Máquinas Indisponíveis',
+      message: message || 'Não há máquinas disponíveis no momento. Por favor, aguarde até que uma máquina fique livre.',
+      buttons: ['OK']
+    });
+    await alert.present();
+    return { canCreate: false };
+  }
+
+  // ⚠️ Poucas máquinas disponíveis (warning)
+  if (overall_status === 'warning' || overall_status === 'alert') {
+    const alert = await alertController.create({
+      header: 'Atenção',
+      message: `${message}. Apenas ${available} máquina(s) disponível(is). Deseja continuar?`,
+      buttons: [
+        {
+          text: 'Cancelar',
+          role: 'cancel'
+        },
+        {
+          text: 'Continuar',
+          role: 'confirm'
+        }
+      ]
+    });
+
+    await alert.present();
+    const { role } = await alert.onDidDismiss();
+    return { canCreate: role === 'confirm' };
+  }
+
+  // ✅ Disponibilidade OK
+  return { canCreate: true };
 };
 
 const loadExistingChecklist = async () => {
@@ -1186,6 +1353,26 @@ const updateFormFromChecklist = (checklist: any) => {
       (checklistForm.value as any)[key] = checklist[key];
     }
   });
+
+  // Carregar observações de itens individuais
+  if (checklist.item_observations) {
+    itemObservations.value = { ...checklist.item_observations };
+  }
+
+  // Carregar status dos itens baseado nos valores booleanos
+  const items = getCurrentPhaseItems();
+  items.forEach(item => {
+    const value = checklist[item.key];
+    if (value !== undefined) {
+      // Converter booleano em status
+      // Se true = 'C', se false e tem observação = 'NC', se false sem observação = null
+      if (value === true) {
+        itemStatuses.value[item.key] = 'C';
+      } else if (value === false && itemObservations.value[item.key]) {
+        itemStatuses.value[item.key] = 'NC';
+      }
+    }
+  });
 };
 
 const formatDate = (dateString: string) => {
@@ -1236,13 +1423,22 @@ const getItemObservation = (key: string): string => {
   return itemObservations.value[key] || '';
 };
 
+// Debounce timer para auto-save
+let saveTimer: NodeJS.Timeout | null = null;
+
 const setItemObservation = (key: string, observation: string) => {
   itemObservations.value[key] = observation;
 
-  // Auto-save phase data
-  if (activeChecklist.value) {
-    updatePhaseData();
+  // Debounce: Só salva após 1 segundo sem digitação
+  if (saveTimer) {
+    clearTimeout(saveTimer);
   }
+  
+  saveTimer = setTimeout(() => {
+    if (activeChecklist.value) {
+      updatePhaseData();
+    }
+  }, 1000);
 };
 
 const loadNewPatient = async (patientId: number) => {
@@ -1567,6 +1763,88 @@ onUnmounted(() => {
   border: 2px solid #e5e7eb;
   border-radius: 12px;
   padding: 16px;
+}
+
+/* ✅ Machine Availability Badge */
+.availability-badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+  border: 2px solid;
+  transition: all 0.3s ease;
+}
+
+.availability-badge.good {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border-color: #10b981;
+}
+
+.availability-badge.alert {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-color: #f59e0b;
+}
+
+.availability-badge.warning {
+  background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%);
+  border-color: #f97316;
+}
+
+.availability-badge.critical {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border-color: #ef4444;
+}
+
+.availability-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.availability-badge.good .availability-icon {
+  background: #10b981;
+  color: white;
+}
+
+.availability-badge.alert .availability-icon {
+  background: #f59e0b;
+  color: white;
+}
+
+.availability-badge.warning .availability-icon {
+  background: #f97316;
+  color: white;
+}
+
+.availability-badge.critical .availability-icon {
+  background: #ef4444;
+  color: white;
+}
+
+.availability-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.availability-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.availability-count {
+  font-size: 13px;
+  color: #6b7280;
+  font-weight: 500;
 }
 
 .form-group {
@@ -2062,5 +2340,258 @@ onUnmounted(() => {
   margin-top: 1rem;
   font-size: 1.1rem;
   font-weight: 600;
+}
+
+/* ===== NEW DASHBOARD STYLE FOR CHECKLIST ===== */
+
+/* Phase Section */
+.phase-section {
+  padding: 16px;
+}
+
+/* Phase Header Card */
+.phase-header-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.phase-header-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-primary-shade) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.phase-header-icon ion-icon {
+  font-size: 2rem;
+  color: white;
+}
+
+.phase-header-content {
+  flex: 1;
+}
+
+.phase-header-content h3 {
+  margin: 0 0 4px 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.phase-header-content p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.phase-header-badge {
+  flex-shrink: 0;
+}
+
+.phase-header-badge ion-chip {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+/* Checklist Items Grid */
+.checklist-items-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+/* Observations Card */
+.observations-card {
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.card-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 12px;
+}
+
+.card-label ion-icon {
+  font-size: 1.3rem;
+  color: var(--ion-color-primary);
+}
+
+.observations-input {
+  width: 100%;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 0.95rem;
+  color: #1f2937;
+  font-family: inherit;
+  resize: vertical;
+  transition: all 0.2s ease;
+}
+
+.observations-input:focus {
+  outline: none;
+  border-color: var(--ion-color-primary);
+  background: #f9fafb;
+}
+
+.observations-input::placeholder {
+  color: #9ca3af;
+}
+
+/* Dashboard Actions (Pause/Interrupt) */
+.dashboard-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.action-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  background: white;
+  border: 3px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 20px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.action-card:active {
+  transform: scale(0.95);
+}
+
+.action-card.warning {
+  border-color: #fbbf24;
+}
+
+.action-card.warning:hover {
+  background: #fef3c7;
+}
+
+.action-card.danger {
+  border-color: #ef4444;
+}
+
+.action-card.danger:hover {
+  background: #fee2e2;
+}
+
+.action-card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-card-icon ion-icon {
+  font-size: 1.8rem;
+  color: white;
+}
+
+.action-card-icon.warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.action-card-icon.danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.action-card-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.action-card-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.action-card-subtitle {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+/* Primary Continue Button */
+.primary-continue-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: linear-gradient(135deg, var(--ion-color-success) 0%, var(--ion-color-success-shade) 100%);
+  border: none;
+  border-radius: 16px;
+  padding: 20px 24px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(var(--ion-color-success-rgb), 0.3);
+}
+
+.primary-continue-btn:active:not(.disabled) {
+  transform: scale(0.98);
+}
+
+.primary-continue-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+  box-shadow: 0 4px 12px rgba(156, 163, 175, 0.3);
+}
+
+.primary-continue-btn > ion-icon:first-child {
+  font-size: 2rem;
+  color: white;
+  flex-shrink: 0;
+}
+
+.primary-continue-btn > ion-icon:last-child {
+  font-size: 1.5rem;
+  color: white;
+  flex-shrink: 0;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .dashboard-actions {
+    grid-template-columns: 1fr;
+  }
+  
+  .phase-header-card {
+    flex-wrap: wrap;
+  }
+  
+  .phase-header-badge {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: 8px;
+  }
 }
 </style>

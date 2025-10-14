@@ -1,4 +1,4 @@
-import { MachineRepository } from '../../domain/repositories/MachineRepository';
+import { MachineRepository, UpdateStatusParams, ToggleActiveParams } from '../../domain/repositories/MachineRepository';
 import { Machine } from '../../domain/entities/Machine';
 import { ApiDataSource } from '../datasources/ApiDataSource';
 import { LocalStorageDataSource } from '../datasources/LocalStorageDataSource';
@@ -61,5 +61,25 @@ export class MachineRepositoryImpl implements MachineRepository {
 
     // Fallback for direct array response
     return (response as any).data || response as any;
+  }
+
+  async updateStatus(id: number, params: UpdateStatusParams): Promise<Machine> {
+    const token = this.getToken();
+    const response = await this.apiDataSource.put<{ machine: Machine }>(
+      `/machines/${id}/status`,
+      params,
+      token
+    );
+    return response.data.machine;
+  }
+
+  async toggleActive(id: number, params: ToggleActiveParams): Promise<Machine> {
+    const token = this.getToken();
+    const response = await this.apiDataSource.put<{ machine: Machine }>(
+      `/machines/${id}/toggle-active`,
+      params,
+      token
+    );
+    return response.data.machine;
   }
 }

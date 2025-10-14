@@ -44,6 +44,7 @@ class SafetyChecklist extends Model
         'equipment_cleaned',
         'observations',
         'incidents',
+        'item_observations',
         'paused_at',
         'resumed_at',
     ];
@@ -58,6 +59,7 @@ class SafetyChecklist extends Model
         'post_dialysis_completed_at' => 'datetime',
         'is_interrupted' => 'boolean',
         'interrupted_at' => 'datetime',
+        'item_observations' => 'array',
         'paused_at' => 'datetime',
         'resumed_at' => 'datetime',
         // Pré-diálise

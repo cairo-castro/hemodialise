@@ -17,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'jwt.auth' => \App\Http\Middleware\JwtAuthMiddleware::class,
             'device.detection' => \App\Http\Middleware\DeviceDetectionMiddleware::class,
             'smart.redirect' => \App\Http\Middleware\SmartRedirectMiddleware::class,
+            'unit.scope' => \App\Http\Middleware\UnitScopeMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreChecklistRequest;
 use App\Models\SafetyChecklist;
 use Illuminate\Http\Request;
 
@@ -22,14 +23,9 @@ class ChecklistController extends Controller
         return response()->json($query->latest()->paginate(20));
     }
 
-    public function store(Request $request)
+    public function store(StoreChecklistRequest $request)
     {
-        $data = $request->validate([
-            'machine_id' => 'required|exists:machines,id',
-            'patient_id' => 'required|exists:patients,id',
-            'shift' => 'required|in:matutino,vespertino,noturno,madrugada',
-            'observations' => 'nullable|string',
-        ]);
+        $data = $request->validated();
 
         // Verificar se já existe um checklist para o mesmo paciente, máquina, data e turno
         $existingChecklist = SafetyChecklist::where([
@@ -73,6 +69,7 @@ class ChecklistController extends Controller
         $data = $request->validate([
             'phase_data' => 'required|array',
             'observations' => 'nullable|string',
+            'item_observations' => 'nullable|array',
         ]);
 
         // Update checklist items
@@ -84,6 +81,16 @@ class ChecklistController extends Controller
 
         if (isset($data['observations'])) {
             $checklist->observations = $data['observations'];
+        }
+
+        // Atualizar observações de itens individuais
+        if (isset($data['item_observations'])) {
+            // Merge com observações existentes
+            $existingObservations = $checklist->item_observations ?? [];
+            $checklist->item_observations = array_merge(
+                $existingObservations,
+                $data['item_observations']
+            );
         }
 
         $checklist->save();

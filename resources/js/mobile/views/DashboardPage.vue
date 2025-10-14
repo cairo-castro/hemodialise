@@ -32,12 +32,37 @@
         <!-- Welcome Section -->
         <div class="welcome-section" v-if="user">
           <div class="welcome-header">
-            <div>
+            <div class="welcome-text">
               <h1>Olá, {{ user.name.split(' ')[0] }}! 👋</h1>
-              <p class="unit-name">{{ user.unit?.name || 'Sistema de Hemodiálise' }}</p>
             </div>
-            <div class="user-badge">
-              <span class="role-tag">{{ userRole }}</span>
+          </div>
+
+          <!-- Current Unit Display -->
+          <div class="unit-display">
+            <!-- Single Unit - Static Display -->
+            <div v-if="availableUnits.length <= 1" class="unit-info-static">
+              <ion-icon :icon="locationOutline" class="unit-icon-static"></ion-icon>
+              <div class="unit-text-static">
+                <span class="unit-label-static">Unidade</span>
+                <span class="unit-name-static">{{ currentUnit?.name || user.unit?.name || 'Carregando...' }}</span>
+              </div>
+            </div>
+
+            <!-- Multiple Units - Interactive Display -->
+            <div v-else class="unit-info">
+              <ion-icon :icon="locationOutline" class="unit-icon"></ion-icon>
+              <div class="unit-text">
+                <span class="unit-label">Unidade Atual</span>
+                <span class="unit-name">{{ currentUnit?.name || user.unit?.name || 'Carregando...' }}</span>
+              </div>
+              <ion-button 
+                fill="clear" 
+                size="small" 
+                @click="openUnitSelector"
+                class="unit-change-btn"
+              >
+                <ion-icon slot="icon-only" :icon="swapHorizontalOutline"></ion-icon>
+              </ion-button>
             </div>
           </div>
         </div>
@@ -185,9 +210,12 @@ import {
   IonBadge,
   IonRefresher,
   IonRefresherContent,
+  IonSelect,
+  IonSelectOption,
   alertController,
   toastController,
-  actionSheetController
+  actionSheetController,
+  loadingController
 } from '@ionic/vue';
 import {
   logOutOutline,
@@ -203,7 +231,10 @@ import {
   timeOutline,
   medicalSharp,
   sparklesOutline,
-  chevronForwardOutline
+  chevronForwardOutline,
+  locationOutline,
+  checkmarkCircleOutline,
+  closeOutline
 } from 'ionicons/icons';
 
 import { Container } from '@mobile/core/di/Container';
@@ -230,6 +261,11 @@ const isDarkMode = ref(false);
 const activeChecklists = ref([]);
 const availableMachines = ref([]);
 const machines = ref([]);
+
+// Unit management state
+const availableUnits = ref([]);
+const currentUnit = ref(null);
+const selectedUnitId = ref(null);
 
 // Computed properties
 const userRole = computed(() => {
@@ -262,6 +298,9 @@ const loadUserData = async () => {
   try {
     user.value = await getCurrentUserUseCase.execute();
     console.log('User loaded:', user.value);
+    
+    // Load available units
+    await loadAvailableUnits();
   } catch (error) {
     console.error('Error loading user:', error);
 
@@ -278,6 +317,133 @@ const loadUserData = async () => {
     setTimeout(() => {
       router.replace('/login');
     }, 2000);
+  }
+};
+
+const loadAvailableUnits = async () => {
+  try {
+    const response = await fetch('/api/user-units', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+      }
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      availableUnits.value = data.units || [];
+      
+      // Encontra a unidade atual
+      const currentUnitId = data.current_unit_id;
+      if (currentUnitId) {
+        currentUnit.value = data.units.find((u: any) => u.id === currentUnitId);
+        selectedUnitId.value = currentUnitId;
+      } else if (data.units.length > 0) {
+        // Fallback: usa a primeira unidade
+        currentUnit.value = data.units[0];
+        selectedUnitId.value = data.units[0].id;
+      }
+      
+      console.log('Unidades carregadas (mobile):', {
+        total: availableUnits.value.length,
+        current: currentUnit.value?.name,
+        currentId: selectedUnitId.value
+      });
+    }
+  } catch (error) {
+    console.error('Error loading available units:', error);
+    // Fallback: usa os dados do usuário
+    if (user.value?.unit) {
+      currentUnit.value = user.value.unit;
+      selectedUnitId.value = user.value.unit.id;
+      availableUnits.value = user.value.units || [user.value.unit];
+    }
+  }
+};
+
+const openUnitSelector = async () => {
+  const buttons = availableUnits.value.map((unit: any) => ({
+    text: unit.name,
+    icon: unit.id === selectedUnitId.value ? 'checkmark-circle-outline' : 'location-outline',
+    cssClass: unit.id === selectedUnitId.value ? 'unit-selected' : '',
+    handler: () => {
+      if (unit.id !== selectedUnitId.value) {
+        handleUnitChange(unit.id);
+      }
+    }
+  }));
+
+  buttons.push({
+    text: 'Cancelar',
+    icon: 'close-outline',
+    handler: () => {
+      // Just close
+    }
+  } as any);
+
+  const actionSheet = await actionSheetController.create({
+    header: 'Selecionar Unidade',
+    subHeader: 'Escolha a unidade para visualizar',
+    buttons: buttons,
+    cssClass: 'unit-selector-action-sheet'
+  });
+
+  await actionSheet.present();
+};
+
+const handleUnitChange = async (unitId: number) => {
+  try {
+    // Show loading
+    const loading = await loadingController.create({
+      message: 'Alternando unidade...',
+      spinner: 'crescent',
+      duration: 10000
+    });
+    await loading.present();
+
+    const response = await fetch('/api/user-units/switch', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ unit_id: unitId })
+    });
+    
+    const data = await response.json();
+    
+    await loading.dismiss();
+    
+    if (data.success) {
+      currentUnit.value = data.current_unit;
+      selectedUnitId.value = unitId;
+      
+      // Show success toast
+      const toast = await toastController.create({
+        message: `📍 Unidade alterada para ${data.current_unit.name}`,
+        duration: 2000,
+        color: 'success',
+        position: 'top',
+        cssClass: 'custom-toast'
+      });
+      await toast.present();
+      
+      // Reload stats with new unit
+      await loadStats();
+    }
+  } catch (error) {
+    console.error('Error switching unit:', error);
+    
+    // Revert selection
+    selectedUnitId.value = currentUnit.value?.id;
+    
+    const toast = await toastController.create({
+      message: 'Erro ao trocar de unidade',
+      duration: 3000,
+      color: 'danger',
+      position: 'top'
+    });
+    await toast.present();
   }
 };
 
@@ -693,6 +859,11 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.welcome-text {
+  flex: 1;
 }
 
 .welcome-section h1 {
@@ -711,6 +882,108 @@ onMounted(async () => {
 
 .user-badge {
   flex-shrink: 0;
+}
+
+.unit-display {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+/* Single Unit - Static Display */
+.unit-info-static {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  background: #f8fafc;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+}
+
+.unit-icon-static {
+  font-size: 1.2rem;
+  color: #64748b;
+  margin-right: 10px;
+  flex-shrink: 0;
+}
+
+.unit-text-static {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.unit-label-static {
+  font-size: 0.65rem;
+  color: #94a3b8;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 2px;
+}
+
+.unit-name-static {
+  font-size: 0.85rem;
+  color: #475569;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Multiple Units - Interactive Display */
+.unit-info {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-radius: 12px;
+  border: 1px solid #bae6fd;
+}
+
+.unit-icon {
+  font-size: 1.5rem;
+  color: #0284c7;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.unit-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.unit-label {
+  font-size: 0.7rem;
+  color: #64748b;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.unit-name {
+  font-size: 0.9rem;
+  color: #0f172a;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.unit-change-btn {
+  --padding-start: 8px;
+  --padding-end: 8px;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.unit-change-btn ion-icon {
+  font-size: 1.3rem;
+  color: #0284c7;
 }
 
 .role-tag {
@@ -1021,5 +1294,45 @@ onMounted(async () => {
 
 .interface-switch-btn ion-icon {
   opacity: 0.9;
+}
+
+/* Custom Toast */
+:deep(.custom-toast) {
+  --background: #10b981;
+  --color: white;
+  font-weight: 600;
+}
+
+/* Unit Selector Action Sheet */
+:deep(.unit-selector-action-sheet) {
+  --background: #ffffff;
+}
+
+:deep(.unit-selector-action-sheet .action-sheet-title) {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0f172a;
+  padding: 20px 16px 8px;
+}
+
+:deep(.unit-selector-action-sheet .action-sheet-sub-title) {
+  font-size: 0.85rem;
+  color: #64748b;
+  padding: 0 16px 12px;
+}
+
+:deep(.unit-selector-action-sheet .action-sheet-button) {
+  font-size: 0.95rem;
+  padding: 16px;
+}
+
+:deep(.unit-selector-action-sheet .unit-selected) {
+  font-weight: 700;
+  color: #0284c7;
+}
+
+:deep(.unit-selector-action-sheet .action-sheet-button ion-icon) {
+  font-size: 1.3rem;
+  margin-right: 12px;
 }
 </style>

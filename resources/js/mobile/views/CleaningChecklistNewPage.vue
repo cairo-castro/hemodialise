@@ -14,58 +14,131 @@
         <div class="progress-fill" :style="{ width: progressPercentage + '%' }"></div>
       </div>
 
+      <!-- Badge de Disponibilidade de Máquinas -->
+      <div v-if="machineAvailability" class="availability-badge" :class="machineAvailability.overall_status">
+        <div class="availability-icon">
+          <ion-icon v-if="machineAvailability.overall_status === 'good'" :icon="checkmarkCircleOutline"></ion-icon>
+          <ion-icon v-else-if="machineAvailability.overall_status === 'critical'" :icon="closeCircleOutline"></ion-icon>
+          <ion-icon v-else :icon="alertCircleOutline"></ion-icon>
+        </div>
+        <div class="availability-info">
+          <span class="availability-label">{{ machineAvailability.message }}</span>
+          <span class="availability-count">
+            {{ machineAvailability.available }} de {{ machineAvailability.total }} disponíveis para limpeza
+          </span>
+        </div>
+      </div>
+
       <div class="form-container">
-        <!-- Step 1: Basic Info -->
+        <!-- Step 1: Máquina e Turno -->
         <div class="step-card">
           <div class="step-header">
             <div class="step-number">1</div>
-            <h2>Informações Básicas</h2>
+            <h2>Máquina e Turno</h2>
           </div>
 
-          <div class="quick-selectors">
-            <!-- Shift Quick Select -->
-            <div class="quick-group">
-              <label class="quick-label">Turno</label>
-              <div class="shift-buttons">
-                <button
-                  v-for="shift in ['1', '2', '3', '4']"
-                  :key="shift"
-                  @click="formData.shift = shift"
-                  :class="['shift-btn', { active: formData.shift === shift }]"
-                >
-                  {{ shift }}º
-                </button>
-              </div>
-            </div>
-
-            <!-- Machine Select -->
-            <div class="quick-group">
-              <label class="quick-label">Máquina</label>
-              <ion-select
-                v-model="formData.machine_id"
-                placeholder="Selecione"
-                interface="action-sheet"
-                class="machine-select"
+          <!-- Machine Selection -->
+          <div class="form-group">
+            <label class="input-label">
+              <ion-icon :icon="medicalOutline"></ion-icon>
+              Selecione a Máquina para Limpeza
+            </label>
+            
+            <!-- Machine Cards Grid -->
+            <div class="machine-grid">
+              <button
+                v-for="machine in availableMachines"
+                :key="machine.id"
+                type="button"
+                class="machine-card"
+                :class="{ selected: formData.machine_id === machine.id }"
+                @click="formData.machine_id = machine.id"
               >
-                <ion-select-option v-for="machine in machines" :key="machine.id" :value="machine.id">
-                  {{ machine.name }}
-                </ion-select-option>
-              </ion-select>
+                <div class="machine-icon">
+                  <ion-icon :icon="hardwareChipOutline"></ion-icon>
+                </div>
+                <div class="machine-info">
+                  <span class="machine-name">{{ machine.name }}</span>
+                  <span class="machine-status">Disponível</span>
+                </div>
+                <div class="machine-check" v-if="formData.machine_id === machine.id">
+                  <ion-icon :icon="checkmarkCircleOutline"></ion-icon>
+                </div>
+              </button>
             </div>
 
-            <!-- Date -->
-            <div class="quick-group">
-              <label class="quick-label">Data</label>
-              <ion-datetime-button datetime="checklist-date" class="date-btn"></ion-datetime-button>
-              <ion-modal :keep-contents-mounted="true">
-                <ion-datetime
-                  id="checklist-date"
-                  v-model="formData.checklist_date"
-                  presentation="date"
-                  :max="maxDate"
-                ></ion-datetime>
-              </ion-modal>
+            <!-- Mensagem se não houver máquinas -->
+            <div v-if="availableMachines.length === 0" class="no-machines-message">
+              <ion-icon :icon="alertCircleOutline"></ion-icon>
+              <p>Nenhuma máquina disponível no momento. Aguarde até que uma máquina fique disponível.</p>
             </div>
+          </div>
+
+          <!-- Shift Selection -->
+          <div class="form-group">
+            <label class="input-label">
+              <ion-icon :icon="timeOutline"></ion-icon>
+              Selecione o Turno da Limpeza
+            </label>
+            <div class="shift-selector">
+              <button
+                type="button"
+                class="shift-btn"
+                :class="{ active: selectedShift === 'matutino' }"
+                @click="selectedShift = 'matutino'"
+              >
+                <ion-icon :icon="sunnyOutline"></ion-icon>
+                <span>Matutino</span>
+                <span class="shift-time">06:00 - 12:00</span>
+              </button>
+              <button
+                type="button"
+                class="shift-btn"
+                :class="{ active: selectedShift === 'vespertino' }"
+                @click="selectedShift = 'vespertino'"
+              >
+                <ion-icon :icon="partlySunnyOutline"></ion-icon>
+                <span>Vespertino</span>
+                <span class="shift-time">12:00 - 18:00</span>
+              </button>
+              <button
+                type="button"
+                class="shift-btn"
+                :class="{ active: selectedShift === 'noturno' }"
+                @click="selectedShift = 'noturno'"
+              >
+                <ion-icon :icon="moonOutline"></ion-icon>
+                <span>Noturno</span>
+                <span class="shift-time">18:00 - 00:00</span>
+              </button>
+              <button
+                type="button"
+                class="shift-btn"
+                :class="{ active: selectedShift === 'madrugada' }"
+                @click="selectedShift = 'madrugada'"
+              >
+                <ion-icon :icon="cloudyNightOutline"></ion-icon>
+                <span>Madrugada</span>
+                <span class="shift-time">00:00 - 06:00</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Date -->
+          <div class="form-group">
+            <label class="input-label">
+              <ion-icon :icon="calendarOutline"></ion-icon>
+              Data da Limpeza
+            </label>
+            <ion-datetime-button datetime="checklist-date" class="date-btn"></ion-datetime-button>
+            <ion-modal :keep-contents-mounted="true">
+              <ion-datetime
+                id="checklist-date"
+                v-model="formData.checklist_date"
+                presentation="date"
+                :max="maxDate"
+              ></ion-datetime>
+            </ion-modal>
           </div>
         </div>
 
@@ -307,6 +380,12 @@ import {
   closeCircleOutline,
   removeCircleOutline,
   informationCircleOutline,
+  alertCircleOutline,
+  sunnyOutline,
+  partlySunnyOutline,
+  moonOutline,
+  cloudyNightOutline,
+  timeOutline,
 } from 'ionicons/icons';
 import { Container } from '../core/di/Container';
 import type { CleaningChecklistCreate } from '../core/domain/entities/CleaningChecklist';
@@ -316,8 +395,9 @@ const createCleaningChecklistUseCase = container.getCreateCleaningChecklistUseCa
 const machineRepository = container.getMachineRepository();
 const router = useRouter();
 
-const machines = ref<any[]>([]);
+const availableMachines = ref<any[]>([]);
 const isSubmitting = ref(false);
+const machineAvailability = ref<any>(null);
 
 const formData = ref<CleaningChecklistCreate>({
   machine_id: 0,
@@ -330,6 +410,16 @@ const formData = ref<CleaningChecklistCreate>({
   serum_support_cleaning: undefined,
   observations: undefined,
 });
+
+// Mapeamento de turnos numéricos para nomes
+const shiftMap: Record<string, '1' | '2' | '3' | '4'> = {
+  'matutino': '1',
+  'vespertino': '2',
+  'noturno': '3',
+  'madrugada': '4',
+};
+
+const selectedShift = ref<string>('matutino');
 
 const maxDate = computed(() => new Date().toISOString());
 
@@ -346,12 +436,17 @@ const progressPercentage = computed(() => {
 
   if (formData.value.machine_id > 0) completed++;
   if (formData.value.checklist_date) completed++;
-  if (formData.value.shift) completed++;
+  if (selectedShift.value) completed++;
   if (formData.value.hd_machine_cleaning) completed++;
   if (formData.value.osmosis_cleaning) completed++;
   if (formData.value.serum_support_cleaning) completed++;
 
   return (completed / total) * 100;
+});
+
+// Computed para contar máquinas disponíveis
+const availableMachinesCount = computed(() => {
+  return availableMachines.value.length;
 });
 
 const completionPercentage = computed(() => {
@@ -374,7 +469,9 @@ const completionMessage = computed(() => {
 
 onMounted(async () => {
   try {
-    machines.value = await machineRepository.getAll();
+    // Buscar apenas máquinas disponíveis
+    availableMachines.value = await machineRepository.getAvailable();
+    await fetchMachineAvailability();
   } catch (error) {
     console.error('Error loading machines:', error);
     const toast = await toastController.create({
@@ -386,8 +483,86 @@ onMounted(async () => {
   }
 });
 
+/**
+ * Buscar disponibilidade de máquinas
+ */
+const fetchMachineAvailability = async () => {
+  try {
+    const response = await fetch('/api/machines/availability', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+        'Accept': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch machine availability');
+    }
+
+    const data = await response.json();
+    machineAvailability.value = data.availability;
+  } catch (error) {
+    console.error('Error fetching machine availability:', error);
+    // Não mostra toast para não poluir UI, apenas loga erro
+  }
+};
+
+/**
+ * Validar disponibilidade antes de criar checklist
+ */
+const checkMachineAvailability = async (): Promise<{ canCreate: boolean }> => {
+  await fetchMachineAvailability();
+
+  if (!machineAvailability.value) {
+    return { canCreate: true }; // Se não conseguiu buscar, permite continuar
+  }
+
+  const { available, overall_status, message } = machineAvailability.value;
+
+  // ❌ Nenhuma máquina disponível
+  if (available === 0) {
+    const alert = await alertController.create({
+      header: 'Máquinas Indisponíveis',
+      message: 'Não há máquinas disponíveis no momento. Por favor, aguarde até que uma máquina fique disponível para realizar a limpeza.',
+      buttons: ['OK'],
+    });
+    await alert.present();
+    return { canCreate: false };
+  }
+
+  // ⚠️ Poucas máquinas disponíveis (confirmação)
+  if (overall_status === 'warning' || overall_status === 'alert') {
+    const alert = await alertController.create({
+      header: 'Atenção',
+      message: `${message}. Apenas ${available} máquina(s) disponível(is). Deseja continuar com o checklist de limpeza?`,
+      buttons: [
+        {
+          text: 'Cancelar',
+          role: 'cancel',
+        },
+        {
+          text: 'Continuar',
+          role: 'confirm',
+        },
+      ],
+    });
+    await alert.present();
+    const { role } = await alert.onDidDismiss();
+    return { canCreate: role === 'confirm' };
+  }
+
+  // ✅ OK - disponibilidade boa
+  return { canCreate: true };
+};
+
 const submitChecklist = async () => {
   if (!isFormValid.value || isSubmitting.value) return;
+
+  // ✅ Validar disponibilidade de máquinas antes de criar
+  const availabilityCheck = await checkMachineAvailability();
+  if (!availabilityCheck.canCreate) {
+    return; // Bloqueado - alerta já foi mostrado
+  }
 
   isSubmitting.value = true;
 
@@ -403,8 +578,12 @@ const submitChecklist = async () => {
       formattedTime = `${String(timeDate.getHours()).padStart(2, '0')}:${String(timeDate.getMinutes()).padStart(2, '0')}`;
     }
 
+    // Mapear turno selecionado para número
+    const shiftNumber = shiftMap[selectedShift.value];
+
     const submitData: CleaningChecklistCreate = {
       ...formData.value,
+      shift: shiftNumber,
       checklist_date: formattedDate,
       chemical_disinfection_time: formattedTime,
     };
@@ -536,62 +715,8 @@ const submitChecklist = async () => {
   margin-left: 8px;
 }
 
-/* Quick Selectors */
-.quick-selectors {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.quick-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.quick-label {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #374151;
-}
-
-/* Shift Buttons */
-.shift-buttons {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 8px;
-}
-
-.shift-btn {
-  padding: 12px;
-  border: 2px solid #e5e7eb;
-  border-radius: 12px;
-  background: white;
-  color: #6b7280;
-  font-weight: 600;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.shift-btn.active {
-  border-color: var(--ion-color-primary);
-  background: var(--ion-color-primary);
-  color: white;
-}
-
-/* Machine Select */
-.machine-select {
-  width: 100%;
-  border: 2px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 12px;
-  background: white;
-  --placeholder-color: #9ca3af;
-}
-
-/* Date Button */
-.date-btn, .time-btn {
+/* Time Button */
+.time-btn {
   --background: white;
   --border-width: 2px;
   --border-color: #e5e7eb;
@@ -872,5 +997,323 @@ const submitChecklist = async () => {
   color: #1e40af;
   font-weight: 600;
   font-size: 0.9rem;
+}
+
+/* Availability Badge */
+.availability-badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  margin: 16px 16px 0 16px;
+  border-radius: 12px;
+  border: 2px solid;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  animation: slideDown 0.4s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.availability-badge.good {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border-color: #10b981;
+}
+
+.availability-badge.alert {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-color: #f59e0b;
+}
+
+.availability-badge.warning {
+  background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%);
+  border-color: #f97316;
+}
+
+.availability-badge.critical {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border-color: #ef4444;
+}
+
+.availability-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.availability-badge.good .availability-icon {
+  background: #10b981;
+}
+
+.availability-badge.alert .availability-icon {
+  background: #f59e0b;
+}
+
+.availability-badge.warning .availability-icon {
+  background: #f97316;
+}
+
+.availability-badge.critical .availability-icon {
+  background: #ef4444;
+}
+
+.availability-icon ion-icon {
+  font-size: 1.5rem;
+  color: white;
+}
+
+.availability-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.availability-label {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #1f2937;
+}
+
+.availability-count {
+  font-size: 0.85rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* Form Group */
+.form-group {
+  margin-bottom: 24px;
+}
+
+.input-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 12px;
+}
+
+.input-label ion-icon {
+  font-size: 1.2rem;
+  color: var(--ion-color-primary);
+}
+
+/* Machine Grid */
+.machine-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.machine-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 16px;
+  background: white;
+  border: 3px solid #e5e7eb;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-height: 140px;
+}
+
+.machine-card:active {
+  transform: scale(0.97);
+}
+
+.machine-card.selected {
+  border-color: var(--ion-color-primary);
+  background: linear-gradient(135deg, rgba(var(--ion-color-primary-rgb), 0.1) 0%, rgba(var(--ion-color-primary-rgb), 0.05) 100%);
+  box-shadow: 0 4px 12px rgba(var(--ion-color-primary-rgb), 0.2);
+}
+
+.machine-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.machine-card.selected .machine-icon {
+  background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-primary-shade) 100%);
+}
+
+.machine-icon ion-icon {
+  font-size: 2rem;
+  color: #6b7280;
+  transition: all 0.3s ease;
+}
+
+.machine-card.selected .machine-icon ion-icon {
+  color: white;
+}
+
+.machine-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: 1;
+}
+
+.machine-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1f2937;
+  text-align: center;
+}
+
+.machine-status {
+  font-size: 0.75rem;
+  color: #10b981;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.machine-check {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+
+.machine-check ion-icon {
+  font-size: 1.5rem;
+  color: var(--ion-color-primary);
+}
+
+/* No Machines Message */
+.no-machines-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px;
+  background: #fef2f2;
+  border: 2px solid #fecaca;
+  border-radius: 12px;
+  text-align: center;
+  margin-top: 12px;
+}
+
+.no-machines-message ion-icon {
+  font-size: 3rem;
+  color: #ef4444;
+}
+
+.no-machines-message p {
+  margin: 0;
+  color: #991b1b;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+/* Shift Selector */
+.shift-selector {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 12px;
+}
+
+@media (min-width: 640px) {
+  .shift-selector {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.shift-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 12px;
+  background: white;
+  border: 3px solid #e5e7eb;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #6b7280;
+  position: relative;
+}
+
+.shift-btn ion-icon {
+  font-size: 2rem;
+  color: #9ca3af;
+  transition: all 0.3s ease;
+}
+
+.shift-btn span:first-of-type {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.shift-time {
+  font-size: 0.7rem;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.shift-btn.active {
+  border-color: var(--ion-color-primary);
+  background: linear-gradient(135deg, rgba(var(--ion-color-primary-rgb), 0.1) 0%, rgba(var(--ion-color-primary-rgb), 0.05) 100%);
+  color: var(--ion-color-primary);
+  box-shadow: 0 4px 12px rgba(var(--ion-color-primary-rgb), 0.2);
+}
+
+.shift-btn.active ion-icon {
+  color: var(--ion-color-primary);
+}
+
+.shift-btn.active .shift-time {
+  color: var(--ion-color-primary);
+}
+
+.shift-btn:active {
+  transform: scale(0.95);
+}
+
+/* Date Button */
+.date-btn {
+  --background: white;
+  --border-width: 3px;
+  --border-color: #e5e7eb;
+  --border-radius: 12px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  width: 100%;
+  height: 48px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.date-btn:hover {
+  --border-color: var(--ion-color-primary);
 }
 </style>

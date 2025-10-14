@@ -1,66 +1,102 @@
 <template>
-  <div class="checklist-item-container">
-    <div class="item-header">
-      <h3 class="item-title">{{ title }}</h3>
-      <p v-if="description" class="item-description">{{ description }}</p>
-    </div>
-
-    <div class="status-selector">
-      <div class="status-options">
-        <button
-          class="status-button conforme"
-          :class="{ active: value === 'C' }"
-          @click="selectStatus('C')"
-          type="button"
-        >
-          <ion-icon :icon="checkmarkCircleOutline" class="status-icon"></ion-icon>
-          <span class="status-label">C</span>
-          <span class="status-text">Conforme</span>
-        </button>
-
-        <button
-          class="status-button nao-conforme"
-          :class="{ active: value === 'NC' }"
-          @click="selectStatus('NC')"
-          type="button"
-        >
-          <ion-icon :icon="closeCircleOutline" class="status-icon"></ion-icon>
-          <span class="status-label">NC</span>
-          <span class="status-text">Não Conforme</span>
-        </button>
-
-        <button
-          class="status-button nao-aplica"
-          :class="{ active: value === 'NA' }"
-          @click="selectStatus('NA')"
-          type="button"
-        >
-          <ion-icon :icon="removeCircleOutline" class="status-icon"></ion-icon>
-          <span class="status-label">NA</span>
-          <span class="status-text">Não se Aplica</span>
-        </button>
+  <div class="checklist-item-card" :class="{ 
+    'has-value': value !== null,
+    'is-conforme': value === 'C',
+    'is-nao-conforme': value === 'NC',
+    'is-nao-aplica': value === 'NA'
+  }">
+    
+    <!-- Header com status visual -->
+    <div class="item-card-header">
+      <div class="header-content">
+        <h3 class="item-card-title">{{ title }}</h3>
+        <p v-if="description" class="item-card-description">{{ description }}</p>
+      </div>
+      <div class="header-badge" v-if="value">
+        <div class="status-badge" :class="value.toLowerCase()">
+          <ion-icon :icon="getStatusIcon(value)"></ion-icon>
+        </div>
       </div>
     </div>
 
+    <!-- Action Buttons Style Dashboard -->
+    <div class="status-actions">
+      <button
+        class="action-status-btn conforme"
+        :class="{ selected: value === 'C' }"
+        @click="selectStatus('C')"
+        type="button"
+      >
+        <div class="action-status-icon success">
+          <ion-icon :icon="checkmarkCircleOutline"></ion-icon>
+        </div>
+        <div class="action-status-content">
+          <span class="action-status-label">Conforme</span>
+          <span class="action-status-hint">Tudo OK</span>
+        </div>
+        <ion-icon v-if="value === 'C'" :icon="checkmarkOutline" class="selected-check"></ion-icon>
+      </button>
+
+      <button
+        class="action-status-btn nao-conforme"
+        :class="{ selected: value === 'NC' }"
+        @click="selectStatus('NC')"
+        type="button"
+      >
+        <div class="action-status-icon danger">
+          <ion-icon :icon="closeCircleOutline"></ion-icon>
+        </div>
+        <div class="action-status-content">
+          <span class="action-status-label">Não Conforme</span>
+          <span class="action-status-hint">Problema</span>
+        </div>
+        <ion-icon v-if="value === 'NC'" :icon="checkmarkOutline" class="selected-check"></ion-icon>
+      </button>
+
+      <button
+        class="action-status-btn nao-aplica"
+        :class="{ selected: value === 'NA' }"
+        @click="selectStatus('NA')"
+        type="button"
+      >
+        <div class="action-status-icon neutral">
+          <ion-icon :icon="removeCircleOutline"></ion-icon>
+        </div>
+        <div class="action-status-content">
+          <span class="action-status-label">Não Aplica</span>
+          <span class="action-status-hint">N/A</span>
+        </div>
+        <ion-icon v-if="value === 'NA'" :icon="checkmarkOutline" class="selected-check"></ion-icon>
+      </button>
+    </div>
+
     <!-- Observação obrigatória para NC -->
-    <div v-if="value === 'NC'" class="observation-section">
-      <ion-item fill="outline" class="observation-input">
-        <ion-label position="floating">Observação Obrigatória *</ion-label>
-        <ion-textarea
-          :value="observation"
-          @ionInput="updateObservation($event.detail.value)"
-          rows="2"
-          placeholder="Descreva o problema identificado..."
-          required
-        ></ion-textarea>
-      </ion-item>
+    <div v-if="value === 'NC'" class="observation-card">
+      <label class="observation-label">
+        <ion-icon :icon="alertCircleOutline"></ion-icon>
+        Descreva o Problema *
+      </label>
+      <textarea
+        :value="observation"
+        @input="updateObservation(($event.target as HTMLTextAreaElement).value)"
+        class="observation-textarea"
+        rows="3"
+        placeholder="Ex: Equipamento apresentando ruído anormal..."
+        required
+      ></textarea>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { IonIcon, IonItem, IonLabel, IonTextarea } from '@ionic/vue';
-import { checkmarkCircleOutline, closeCircleOutline, removeCircleOutline } from 'ionicons/icons';
+import { IonIcon } from '@ionic/vue';
+import { 
+  checkmarkCircleOutline, 
+  closeCircleOutline, 
+  removeCircleOutline,
+  checkmarkOutline,
+  alertCircleOutline
+} from 'ionicons/icons';
 
 interface Props {
   title: string;
@@ -101,206 +137,382 @@ const selectStatus = (status: 'C' | 'NC' | 'NA') => {
 const updateObservation = (value: string) => {
   emit('update:observation', value);
 };
+
+const getStatusIcon = (status: 'C' | 'NC' | 'NA' | null) => {
+  switch (status) {
+    case 'C':
+      return checkmarkCircleOutline;
+    case 'NC':
+      return closeCircleOutline;
+    case 'NA':
+      return removeCircleOutline;
+    default:
+      return checkmarkCircleOutline;
+  }
+};
 </script>
 
 <style scoped>
-.checklist-item-container {
+/* ======================================
+   Checklist Item Card - Dashboard Style
+   ====================================== */
+
+.checklist-item-card {
   background: white;
-  border-radius: 12px;
-  padding: 16px;
+  border-radius: 16px;
+  padding: 20px;
   margin-bottom: 16px;
-  border: 2px solid #e0e0e0;
+  border: 2px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.checklist-item-card.has-value {
+  border-color: #d1d5db;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.checklist-item-card.is-conforme {
+  border-color: #10b981;
+  background: linear-gradient(to bottom, white 0%, #ecfdf5 100%);
+}
+
+.checklist-item-card.is-nao-conforme {
+  border-color: #ef4444;
+  background: linear-gradient(to bottom, white 0%, #fef2f2 100%);
+}
+
+.checklist-item-card.is-nao-aplica {
+  border-color: #6b7280;
+  background: linear-gradient(to bottom, white 0%, #f9fafb 100%);
+}
+
+/* Header Section */
+.item-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.header-content {
+  flex: 1;
+  margin-right: 12px;
+}
+
+.item-card-title {
+  font-size: 17px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 6px 0;
+  line-height: 1.4;
+}
+
+.item-card-description {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.header-badge {
+  flex-shrink: 0;
+}
+
+.status-badge {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  animation: badgePop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes badgePop {
+  0% { transform: scale(0); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.status-badge.c {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+}
+
+.status-badge.nc {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+}
+
+.status-badge.na {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  color: white;
+}
+
+/* Status Actions Grid */
+.status-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 0;
+}
+
+@media (max-width: 768px) {
+  .status-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+.action-status-btn {
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  text-align: left;
+}
+
+.action-status-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.8) 0%, transparent 100%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.action-status-btn:hover::before {
+  opacity: 1;
+}
+
+.action-status-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+  border-color: #d1d5db;
+}
+
+.action-status-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Selected States */
+.action-status-btn.conforme.selected {
+  border-color: #10b981;
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+}
+
+.action-status-btn.nao-conforme.selected {
+  border-color: #ef4444;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+}
+
+.action-status-btn.nao-aplica.selected {
+  border-color: #6b7280;
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+  box-shadow: 0 4px 12px rgba(107, 114, 128, 0.25);
+}
+
+/* Icon Box */
+.action-status-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  flex-shrink: 0;
   transition: all 0.3s ease;
 }
 
-.checklist-item-container:has(.status-button.active) {
-  border-color: var(--selected-color, #007bff);
-  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.15);
+.action-status-icon.success {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  color: #059669;
 }
 
-.item-header {
-  margin-bottom: 16px;
+.action-status-btn.conforme.selected .action-status-icon.success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  transform: scale(1.1);
 }
 
-.item-title {
-  font-size: 16px;
+.action-status-icon.danger {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: #dc2626;
+}
+
+.action-status-btn.nao-conforme.selected .action-status-icon.danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  transform: scale(1.1);
+}
+
+.action-status-icon.neutral {
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  color: #4b5563;
+}
+
+.action-status-btn.nao-aplica.selected .action-status-icon.neutral {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  color: white;
+  transform: scale(1.1);
+}
+
+/* Content */
+.action-status-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.action-status-label {
+  font-size: 15px;
   font-weight: 600;
-  color: #2c3e50;
-  margin: 0 0 4px 0;
-  line-height: 1.4;
+  color: #111827;
+  line-height: 1.3;
 }
 
-.item-description {
+.action-status-hint {
+  font-size: 12px;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.action-status-btn.selected .action-status-label {
+  color: #111827;
+}
+
+.action-status-btn.conforme.selected .action-status-hint {
+  color: #059669;
+}
+
+.action-status-btn.nao-conforme.selected .action-status-hint {
+  color: #dc2626;
+}
+
+.action-status-btn.nao-aplica.selected .action-status-hint {
+  color: #4b5563;
+}
+
+/* Selected Check Icon */
+.selected-check {
+  font-size: 24px;
+  flex-shrink: 0;
+  animation: checkPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes checkPop {
+  0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+}
+
+.action-status-btn.conforme.selected .selected-check {
+  color: #059669;
+}
+
+.action-status-btn.nao-conforme.selected .selected-check {
+  color: #dc2626;
+}
+
+.action-status-btn.nao-aplica.selected .selected-check {
+  color: #4b5563;
+}
+
+/* Observation Card (NC Only) */
+.observation-card {
+  margin-top: 16px;
+  padding: 16px;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border: 2px solid #ef4444;
+  border-radius: 12px;
+  animation: slideDown 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.observation-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 14px;
-  color: #6c757d;
-  margin: 0;
-  line-height: 1.4;
-}
-
-.status-selector {
+  font-weight: 600;
+  color: #dc2626;
   margin-bottom: 12px;
 }
 
-.status-options {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.status-button {
-  flex: 1;
-  min-width: 90px;
-  padding: 12px 8px;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  background: white;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  position: relative;
-  overflow: hidden;
-}
-
-.status-button:active {
-  transform: scale(0.98);
-}
-
-.status-icon {
+.observation-label ion-icon {
   font-size: 20px;
-  transition: all 0.2s ease;
 }
 
-.status-label {
-  font-weight: bold;
+.observation-textarea {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #fca5a5;
+  border-radius: 8px;
   font-size: 14px;
-}
-
-.status-text {
-  font-size: 10px;
-  opacity: 0.8;
-  white-space: nowrap;
-}
-
-/* Conforme - Verde */
-.status-button.conforme {
-  border-color: #28a745;
-  color: #28a745;
-}
-
-.status-button.conforme.active {
-  background: #28a745;
-  color: white;
-  border-color: #28a745;
-  box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
-}
-
-.status-button.conforme:hover:not(.active) {
-  background: #f8f9fa;
-  border-color: #28a745;
-}
-
-/* Não Conforme - Vermelho */
-.status-button.nao-conforme {
-  border-color: #dc3545;
-  color: #dc3545;
-}
-
-.status-button.nao-conforme.active {
-  background: #dc3545;
-  color: white;
-  border-color: #dc3545;
-  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
-}
-
-.status-button.nao-conforme:hover:not(.active) {
-  background: #f8f9fa;
-  border-color: #dc3545;
-}
-
-/* Não se Aplica - Cinza */
-.status-button.nao-aplica {
-  border-color: #6c757d;
-  color: #6c757d;
-}
-
-.status-button.nao-aplica.active {
-  background: #6c757d;
-  color: white;
-  border-color: #6c757d;
-  box-shadow: 0 2px 8px rgba(108, 117, 125, 0.3);
-}
-
-.status-button.nao-aplica:hover:not(.active) {
-  background: #f8f9fa;
-  border-color: #6c757d;
-}
-
-.observation-section {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid #e0e0e0;
-}
-
-.observation-input {
-  --border-radius: 8px;
-  --border-color: #dc3545;
-  --color: #2c3e50;
-}
-
-.observation-input ion-textarea {
-  --color: #2c3e50;
-}
-
-/* Animação para seleção */
-.status-button::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
+  font-family: inherit;
+  line-height: 1.5;
+  background: white;
+  color: #111827;
+  resize: vertical;
   transition: all 0.3s ease;
 }
 
-.status-button.active::before {
-  width: 100%;
-  height: 100%;
+.observation-textarea:focus {
+  outline: none;
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
 }
 
-/* Responsividade */
-@media (max-width: 480px) {
-  .status-options {
-    flex-direction: column;
+.observation-textarea::placeholder {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .checklist-item-card {
+    padding: 16px;
   }
 
-  .status-button {
-    flex-direction: row;
-    justify-content: flex-start;
-    padding: 10px 12px;
-    gap: 8px;
+  .item-card-title {
+    font-size: 16px;
   }
 
-  .status-text {
-    font-size: 12px;
+  .action-status-btn {
+    padding: 14px;
   }
-}
 
-/* Cores CSS custom properties para container */
-.checklist-item-container:has(.conforme.active) {
-  --selected-color: #28a745;
-}
-
-.checklist-item-container:has(.nao-conforme.active) {
-  --selected-color: #dc3545;
-}
-
-.checklist-item-container:has(.nao-aplica.active) {
-  --selected-color: #6c757d;
+  .action-status-icon {
+    width: 44px;
+    height: 44px;
+    font-size: 22px;
+  }
 }
 </style>

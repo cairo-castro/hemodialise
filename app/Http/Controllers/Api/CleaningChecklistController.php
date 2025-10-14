@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreCleaningChecklistRequest;
 use App\Models\CleaningChecklist;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -43,29 +44,9 @@ class CleaningChecklistController extends Controller
         ]);
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreCleaningChecklistRequest $request): JsonResponse
     {
-        $validator = Validator::make($request->all(), [
-            'machine_id' => 'required|exists:machines,id',
-            'checklist_date' => 'required|date',
-            'shift' => 'required|in:1,2,3,4',
-            'chemical_disinfection_time' => 'nullable|date_format:H:i',
-            'chemical_disinfection_completed' => 'boolean',
-            'hd_machine_cleaning' => 'nullable|in:C,NC,NA',
-            'osmosis_cleaning' => 'nullable|in:C,NC,NA',
-            'serum_support_cleaning' => 'nullable|in:C,NC,NA',
-            'observations' => 'nullable|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Dados inválidos',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        $data = $validator->validated();
+        $data = $request->validated();
         $data['user_id'] = Auth::id();
 
         // Check if checklist already exists

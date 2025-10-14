@@ -60,6 +60,13 @@ Route::get('/me', function() {
 Route::middleware('auth:api')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
+    // Rotas para gerenciamento de unidades do usuário
+    Route::prefix('user-units')->group(function () {
+        Route::get('/', [App\Http\Controllers\Api\UserUnitController::class, 'index']);
+        Route::post('/switch', [App\Http\Controllers\Api\UserUnitController::class, 'switch']);
+        Route::get('/current', [App\Http\Controllers\Api\UserUnitController::class, 'current']);
+    });
+
     // Rotas para toggle de views
     Route::prefix('view-toggle')->group(function () {
         Route::get('/user-views', [App\Http\Controllers\ViewToggleController::class, 'getUserViews']);
@@ -69,7 +76,7 @@ Route::middleware('auth:api')->group(function () {
         Route::post('/set-default', [App\Http\Controllers\ViewToggleController::class, 'setDefaultView']);
     });
 
-    Route::middleware('role:tecnico,gestor,coordenador,supervisor,admin')->group(function () {
+    Route::middleware(['role:tecnico,gestor,coordenador,supervisor,admin', 'unit.scope'])->group(function () {
         // Rotas específicas devem vir ANTES do apiResource para evitar conflitos
         Route::get('/checklists/active', [ChecklistController::class, 'active']);
         Route::patch('/checklists/{checklist}/phase', [ChecklistController::class, 'updatePhase']);
@@ -88,6 +95,9 @@ Route::middleware('auth:api')->group(function () {
 
         Route::get('/machines', [MachineController::class, 'index']);
         Route::get('/machines/available', [MachineController::class, 'available']);
+        Route::get('/machines/availability', [MachineController::class, 'availability']);
+        Route::put('/machines/{machine}/status', [MachineController::class, 'updateStatus']);
+        Route::put('/machines/{machine}/toggle-active', [MachineController::class, 'toggleActive']);
 
         // Cleaning Checklist routes
         Route::get('/cleaning-checklists/stats', [CleaningChecklistController::class, 'stats']);
