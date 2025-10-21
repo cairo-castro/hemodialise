@@ -1,8 +1,6 @@
 // Service Worker for Sistema de Hemodiálise
-// Optimized for performance and device detection caching
 
 const CACHE_NAME = 'hemodialise-v1.2';
-const DEVICE_CACHE_NAME = 'hemodialise-device-cache-v1';
 
 // Essential resources to cache immediately
 const ESSENTIAL_CACHE = [
@@ -30,7 +28,7 @@ const NETWORK_FIRST = [
     '/api/logout',
     '/api/checklists',
     '/api/patients',
-    '/api/smart-route/detect'
+
 ];
 
 self.addEventListener('install', event => {
@@ -187,40 +185,7 @@ async function networkOnly(request) {
     }
 }
 
-// Handle device detection caching
-self.addEventListener('message', event => {
-    if (event.data && event.data.type === 'CACHE_DEVICE_INFO') {
-        cacheDeviceInfo(event.data.deviceInfo);
-    } else if (event.data && event.data.type === 'GET_DEVICE_INFO') {
-        getDeviceInfo().then(deviceInfo => {
-            event.ports[0].postMessage({ deviceInfo });
-        });
-    }
-});
 
-async function cacheDeviceInfo(deviceInfo) {
-    try {
-        const cache = await caches.open(DEVICE_CACHE_NAME);
-        const response = new Response(JSON.stringify(deviceInfo));
-        await cache.put('/device-info', response);
-        console.log('Device info cached');
-    } catch (error) {
-        console.error('Failed to cache device info:', error);
-    }
-}
-
-async function getDeviceInfo() {
-    try {
-        const cache = await caches.open(DEVICE_CACHE_NAME);
-        const response = await cache.match('/device-info');
-        if (response) {
-            return await response.json();
-        }
-    } catch (error) {
-        console.error('Failed to get cached device info:', error);
-    }
-    return null;
-}
 
 // Background sync for offline operations
 self.addEventListener('sync', event => {

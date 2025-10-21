@@ -25,7 +25,7 @@ function initializeDesktopApp() {
     }
 }
 
-// Enhanced Client-Side Device Detection (mantido para compatibilidade)
+
 window.deviceDetection = function() {
     return {
         deviceInfo: null,
@@ -216,7 +216,7 @@ window.deviceDetection = function() {
             };
         },
 
-        async sendToServer(endpoint = '/api/device-detection') {
+    
             if (!this.deviceInfo) return null;
 
             try {
@@ -352,11 +352,7 @@ window.loginApp = function() {
         redirectUser(user) {
             const deviceRecommendation = this.deviceDetector?.getRecommendation() || 'preline';
 
-            if (this.deviceDetector) {
-                this.deviceDetector.sendToServer('/api/smart-route/detect').then(serverResponse => {
-                    console.log('Device detection synced with server:', serverResponse);
-                });
-            }
+
 
             if (user.role === 'tecnico' || user.role === 'field_user') {
                 window.location.href = '/mobile/ionic';

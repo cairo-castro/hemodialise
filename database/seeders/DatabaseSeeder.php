@@ -13,30 +13,17 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Ordem: Roles/Permissões → Unidades → Usuários
         $this->call([
+            RolesAndPermissionsSeeder::class,
+            UnitsSeeder::class,
             UserSeeder::class,
         ]);
 
-        // Criar máquinas de exemplo
-        \App\Models\Machine::create(['name' => 'Máquina HD-01', 'identifier' => 'HD-01', 'description' => 'Hemodiálise Turno Manhã']);
-        \App\Models\Machine::create(['name' => 'Máquina HD-02', 'identifier' => 'HD-02', 'description' => 'Hemodiálise Turno Tarde']);
-        \App\Models\Machine::create(['name' => 'Máquina HD-03', 'identifier' => 'HD-03', 'description' => 'Hemodiálise Turno Noite']);
+        // Criar máquinas de exemplo (não criar mais, apenas se necessário)
+        // As unidades já criarão suas próprias máquinas
 
-        // Criar pacientes de exemplo
-        \App\Models\Patient::create([
-            'full_name' => 'João Silva Santos',
-            'birth_date' => '1980-05-15',
-            'medical_record' => '2025001',
-            'blood_type' => 'O+',
-            'allergies' => 'Nenhuma alergia conhecida',
-        ]);
-
-        \App\Models\Patient::create([
-            'full_name' => 'Maria Oliveira Costa',
-            'birth_date' => '1975-08-22',
-            'medical_record' => '2025002',
-            'blood_type' => 'A+',
-            'allergies' => 'Alérgica a penicilina',
-        ]);
+        // Criar pacientes de exemplo (não criar mais, apenas se necessário)
+        // Os usuários das unidades cadastrarão seus próprios pacientes
     }
 }

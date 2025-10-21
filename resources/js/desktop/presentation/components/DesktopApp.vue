@@ -16,9 +16,7 @@
       <DesktopSidebar 
         :user="user"
         :current-view="currentView"
-        :can-toggle-interfaces="canToggleInterfaces"
         @view-change="handleViewChange"
-        @interface-switch="handleInterfaceSwitch"
         @logout="handleLogout"
       />
 
@@ -79,8 +77,7 @@ const loading = ref(true);
 
 // Computed properties
 const {
-  user,
-  canToggleInterfaces
+  user
 } = authStore;
 
 const { 
@@ -131,21 +128,6 @@ const checkAuth = async () => {
 
 const handleViewChange = (view) => {
   appStore.setCurrentView(view);
-};
-
-const handleInterfaceSwitch = (interfaceType) => {
-  console.log('Switching to interface:', interfaceType);
-
-  switch (interfaceType) {
-    case 'mobile':
-      window.location.href = '/mobile/app';
-      break;
-    case 'admin':
-      window.location.href = '/admin';
-      break;
-    default:
-      console.warn('Unknown interface type:', interfaceType);
-  }
 };
 
 const handleLogout = async () => {

@@ -176,11 +176,14 @@ export default {
         // Get CSRF token
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
         console.log('CSRF Token:', csrfToken)
-        
+
         if (!csrfToken) {
-          throw new Error('CSRF token not found')
+          console.error('CSRF token not found - reloading page to get fresh token')
+          // Token não encontrado - recarregar página para obter novo token
+          window.location.reload()
+          return
         }
-        
+
         const response = await fetch('/login', {
           method: 'POST',
           headers: {
@@ -197,6 +200,16 @@ export default {
 
         console.log('Response status:', response.status)
         console.log('Response headers:', Object.fromEntries(response.headers.entries()))
+
+        // Tratar erro 419 (Page Expired / CSRF Token Mismatch)
+        if (response.status === 419) {
+          console.error('CSRF token expired - reloading page')
+          error.value = 'Sessão expirada. Recarregando página...'
+          setTimeout(() => {
+            window.location.reload()
+          }, 1500)
+          return
+        }
 
         const data = await response.json()
         console.log('Response data:', data)

@@ -51,16 +51,35 @@
                 return;
             }
 
+            // Verificar se temos um CSRF token válido
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+            if (!csrfToken) {
+                console.error('CSRF token not found - reloading page');
+                window.location.reload();
+                return;
+            }
+
             fetch('/admin-login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    'X-CSRF-TOKEN': csrfToken
                 },
                 body: JSON.stringify({ token: token })
             })
-            .then(response => response.json())
+            .then(async response => {
+                // Tratar erro 419 (Page Expired / CSRF Token Mismatch)
+                if (response.status === 419) {
+                    console.error('CSRF token expired - reloading page');
+                    window.location.reload();
+                    return null;
+                }
+
+                return response.json();
+            })
             .then(data => {
+                if (!data) return; // Se foi 419, já recarregou a página
+
                 if (data.success) {
                     window.location.href = data.redirect;
                 } else {

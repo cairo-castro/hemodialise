@@ -19,71 +19,72 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // ====================================
         // PERMISSIONS - Definir todas as permissões do sistema
+        // Nomenclatura: resource.action (ex: machines.view, patients.create)
         // ====================================
         $permissions = [
             // Máquinas
-            'view machines',
-            'create machines',
-            'update machines',
-            'delete machines',
-            'manage machine status', // colocar em manutenção, ativar/desativar
-            
+            'machines.view',
+            'machines.create',
+            'machines.update',
+            'machines.delete',
+            'machines.manage-status', // colocar em manutenção, ativar/desativar
+
             // Pacientes
-            'view patients',
-            'create patients',
-            'update patients',
-            'delete patients',
-            'export patients',
-            
+            'patients.view',
+            'patients.create',
+            'patients.update',
+            'patients.delete',
+            'patients.export',
+
             // Checklists de Segurança
-            'view safety checklists',
-            'create safety checklists',
-            'update safety checklists',
-            'delete safety checklists',
-            'advance checklist phase',
-            'interrupt checklist',
-            'pause checklist',
-            'resume checklist',
-            
+            'safety-checklists.view',
+            'safety-checklists.create',
+            'safety-checklists.update',
+            'safety-checklists.delete',
+            'safety-checklists.advance-phase',
+            'safety-checklists.interrupt',
+            'safety-checklists.pause',
+            'safety-checklists.resume',
+
             // Checklists de Limpeza
-            'view cleaning checklists',
-            'create cleaning checklists',
-            'update cleaning checklists',
-            'delete cleaning checklists',
-            
+            'cleaning-checklists.view',
+            'cleaning-checklists.create',
+            'cleaning-checklists.update',
+            'cleaning-checklists.delete',
+
             // Unidades
-            'view units',
-            'create units',
-            'update units',
-            'delete units',
-            'manage unit access', // atribuir usuários a unidades
-            
+            'units.view',
+            'units.create',
+            'units.update',
+            'units.delete',
+            'units.manage-access', // atribuir usuários a unidades
+
             // Usuários
-            'view users',
-            'create users',
-            'update users',
-            'delete users',
-            'assign roles',
-            'assign permissions',
-            
+            'users.view',
+            'users.create',
+            'users.update',
+            'users.delete',
+            'users.assign-roles',
+            'users.assign-permissions',
+
             // Relatórios
-            'view reports',
-            'export reports',
-            'view analytics',
-            
+            'reports.view',
+            'reports.export',
+            'reports.analytics',
+
             // Configurações
-            'manage system settings',
-            'view audit logs',
-            'manage backups',
-            
+            'settings.manage',
+            'audit-logs.view',
+            'backups.manage',
+
             // Acesso às interfaces
-            'access mobile',
-            'access desktop',
-            'access admin',
+            'access.mobile',
+            'access.desktop',
+            'access.admin',
         ];
 
         foreach ($permissions as $permission) {
-            Permission::create(['name' => $permission]);
+            Permission::firstOrCreate(['name' => $permission]);
         }
 
         // ====================================
@@ -91,165 +92,165 @@ class RolesAndPermissionsSeeder extends Seeder
         // ====================================
 
         // NÍVEL GLOBAL - Acesso a todas as unidades
-        
-        $superAdmin = Role::create(['name' => 'super-admin']);
-        $superAdmin->givePermissionTo(Permission::all()); // Todas as permissões
 
-        $gestorGlobal = Role::create(['name' => 'gestor-global']);
-        $gestorGlobal->givePermissionTo([
+        $superAdmin = Role::firstOrCreate(['name' => 'super-admin']);
+        $superAdmin->syncPermissions(Permission::all()); // Todas as permissões
+
+        $gestorGlobal = Role::firstOrCreate(['name' => 'gestor-global']);
+        $gestorGlobal->syncPermissions([
             // Máquinas
-            'view machines',
-            'create machines',
-            'update machines',
-            'manage machine status',
-            
+            'machines.view',
+            'machines.create',
+            'machines.update',
+            'machines.manage-status',
+
             // Pacientes
-            'view patients',
-            'create patients',
-            'update patients',
-            'export patients',
-            
+            'patients.view',
+            'patients.create',
+            'patients.update',
+            'patients.export',
+
             // Checklists
-            'view safety checklists',
-            'create safety checklists',
-            'update safety checklists',
-            'advance checklist phase',
-            'interrupt checklist',
-            'pause checklist',
-            'resume checklist',
-            'view cleaning checklists',
-            'create cleaning checklists',
-            'update cleaning checklists',
-            
+            'safety-checklists.view',
+            'safety-checklists.create',
+            'safety-checklists.update',
+            'safety-checklists.advance-phase',
+            'safety-checklists.interrupt',
+            'safety-checklists.pause',
+            'safety-checklists.resume',
+            'cleaning-checklists.view',
+            'cleaning-checklists.create',
+            'cleaning-checklists.update',
+
             // Unidades
-            'view units',
-            
+            'units.view',
+
             // Usuários
-            'view users',
-            
+            'users.view',
+
             // Relatórios
-            'view reports',
-            'export reports',
-            'view analytics',
-            
+            'reports.view',
+            'reports.export',
+            'reports.analytics',
+
             // Interfaces
-            'access mobile',
-            'access desktop',
-            'access admin',
+            'access.mobile',
+            'access.desktop',
+            'access.admin',
         ]);
 
         // NÍVEL UNIDADE - Acesso apenas à sua unidade
-        
-        $gestorUnidade = Role::create(['name' => 'gestor-unidade']);
-        $gestorUnidade->givePermissionTo([
+
+        $gestorUnidade = Role::firstOrCreate(['name' => 'gestor-unidade']);
+        $gestorUnidade->syncPermissions([
             // Máquinas
-            'view machines',
-            'manage machine status',
-            
+            'machines.view',
+            'machines.manage-status',
+
             // Pacientes
-            'view patients',
-            'create patients',
-            'update patients',
-            
+            'patients.view',
+            'patients.create',
+            'patients.update',
+
             // Checklists
-            'view safety checklists',
-            'create safety checklists',
-            'update safety checklists',
-            'advance checklist phase',
-            'interrupt checklist',
-            'pause checklist',
-            'resume checklist',
-            'view cleaning checklists',
-            'create cleaning checklists',
-            'update cleaning checklists',
-            
+            'safety-checklists.view',
+            'safety-checklists.create',
+            'safety-checklists.update',
+            'safety-checklists.advance-phase',
+            'safety-checklists.interrupt',
+            'safety-checklists.pause',
+            'safety-checklists.resume',
+            'cleaning-checklists.view',
+            'cleaning-checklists.create',
+            'cleaning-checklists.update',
+
             // Relatórios
-            'view reports',
-            'export reports',
-            
+            'reports.view',
+            'reports.export',
+
             // Interfaces
-            'access mobile',
-            'access desktop',
-            'access admin',
+            'access.mobile',
+            'access.desktop',
+            'access.admin',
         ]);
 
-        $coordenador = Role::create(['name' => 'coordenador']);
-        $coordenador->givePermissionTo([
+        $coordenador = Role::firstOrCreate(['name' => 'coordenador']);
+        $coordenador->syncPermissions([
             // Máquinas
-            'view machines',
-            'manage machine status',
-            
+            'machines.view',
+            'machines.manage-status',
+
             // Pacientes
-            'view patients',
-            'create patients',
-            'update patients',
-            
+            'patients.view',
+            'patients.create',
+            'patients.update',
+
             // Checklists
-            'view safety checklists',
-            'create safety checklists',
-            'update safety checklists',
-            'advance checklist phase',
-            'interrupt checklist',
-            'pause checklist',
-            'resume checklist',
-            'view cleaning checklists',
-            'create cleaning checklists',
-            'update cleaning checklists',
-            
+            'safety-checklists.view',
+            'safety-checklists.create',
+            'safety-checklists.update',
+            'safety-checklists.advance-phase',
+            'safety-checklists.interrupt',
+            'safety-checklists.pause',
+            'safety-checklists.resume',
+            'cleaning-checklists.view',
+            'cleaning-checklists.create',
+            'cleaning-checklists.update',
+
             // Relatórios
-            'view reports',
-            
+            'reports.view',
+
             // Interfaces
-            'access mobile',
-            'access desktop',
+            'access.mobile',
+            'access.desktop',
         ]);
 
-        $supervisor = Role::create(['name' => 'supervisor']);
-        $supervisor->givePermissionTo([
+        $supervisor = Role::firstOrCreate(['name' => 'supervisor']);
+        $supervisor->syncPermissions([
             // Máquinas
-            'view machines',
-            'manage machine status',
-            
+            'machines.view',
+            'machines.manage-status',
+
             // Pacientes
-            'view patients',
-            
+            'patients.view',
+
             // Checklists
-            'view safety checklists',
-            'create safety checklists',
-            'update safety checklists',
-            'advance checklist phase',
-            'pause checklist',
-            'resume checklist',
-            'view cleaning checklists',
-            'create cleaning checklists',
-            'update cleaning checklists',
-            
+            'safety-checklists.view',
+            'safety-checklists.create',
+            'safety-checklists.update',
+            'safety-checklists.advance-phase',
+            'safety-checklists.pause',
+            'safety-checklists.resume',
+            'cleaning-checklists.view',
+            'cleaning-checklists.create',
+            'cleaning-checklists.update',
+
             // Relatórios
-            'view reports',
-            
+            'reports.view',
+
             // Interfaces
-            'access mobile',
-            'access desktop',
+            'access.mobile',
+            'access.desktop',
         ]);
 
-        $tecnico = Role::create(['name' => 'tecnico']);
-        $tecnico->givePermissionTo([
+        $tecnico = Role::firstOrCreate(['name' => 'tecnico']);
+        $tecnico->syncPermissions([
             // Máquinas
-            'view machines',
-            
+            'machines.view',
+
             // Pacientes
-            'view patients',
-            
+            'patients.view',
+
             // Checklists
-            'view safety checklists',
-            'create safety checklists',
-            'update safety checklists',
-            'advance checklist phase',
-            'view cleaning checklists',
-            'create cleaning checklists',
-            
+            'safety-checklists.view',
+            'safety-checklists.create',
+            'safety-checklists.update',
+            'safety-checklists.advance-phase',
+            'cleaning-checklists.view',
+            'cleaning-checklists.create',
+
             // Interfaces
-            'access mobile',
+            'access.mobile',
         ]);
 
         $this->command->info('Roles and Permissions created successfully!');

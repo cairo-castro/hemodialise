@@ -20,14 +20,12 @@
     <!-- CSRF Token para API calls -->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <!-- User data for interface switcher -->
     @auth
     <script>
         window.USER_DATA = {
             id: {{ auth()->user()->id }},
             name: "{{ auth()->user()->name }}",
-            role: "{{ auth()->user()->role }}",
-            can_switch_interfaces: {{ in_array(auth()->user()->role, ['admin', 'gestor', 'coordenador', 'supervisor']) ? 'true' : 'false' }}
+            role: "{{ auth()->user()->role }}"
         };
     </script>
     @else

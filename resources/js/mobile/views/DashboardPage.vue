@@ -9,11 +9,6 @@
             <ion-icon :icon="isDarkMode ? sunnyOutline : moonOutline" slot="icon-only"></ion-icon>
           </ion-button>
 
-          <!-- Interface Switch -->
-          <ion-button @click="showInterfaceSelector" fill="clear" class="interface-switch-btn">
-            <ion-icon :icon="swapHorizontalOutline" slot="icon-only"></ion-icon>
-          </ion-button>
-
           <!-- Logout Button -->
           <ion-button @click="handleLogout" fill="clear">
             <ion-icon :icon="logOutOutline" slot="icon-only"></ion-icon>
@@ -703,59 +698,6 @@ const showComingSoon = async () => {
   await toast.present();
 };
 
-const showInterfaceSelector = async () => {
-  const actionSheet = await actionSheetController.create({
-    header: 'Mudar Interface',
-    subHeader: 'Escolha a interface que deseja usar',
-    buttons: [
-      {
-        text: '📱 Mobile (Atual)',
-        icon: 'phone-portrait-outline',
-        data: {
-          interface: 'mobile'
-        },
-        handler: () => {
-          console.log('Mobile interface selected (already current)');
-        }
-      },
-      {
-        text: '🖥️ Desktop',
-        icon: 'desktop-outline',
-        data: {
-          interface: 'desktop'
-        },
-        handler: () => {
-          console.log('Switching to desktop interface...');
-          // Redirect to desktop interface
-          window.location.href = '/desktop';
-        }
-      },
-      {
-        text: '⚙️ Admin (Filament)',
-        icon: 'settings-outline',
-        data: {
-          interface: 'admin'
-        },
-        handler: () => {
-          console.log('Switching to admin interface...');
-          // Redirect to admin interface
-          window.location.href = '/admin';
-        }
-      },
-      {
-        text: 'Cancelar',
-        icon: 'close-outline',
-        role: 'cancel',
-        data: {
-          action: 'cancel'
-        }
-      }
-    ]
-  });
-
-  await actionSheet.present();
-};
-
 // Dark mode functionality
 const initializeDarkMode = () => {
   // Check if user has a preference saved
@@ -1285,15 +1227,6 @@ onMounted(async () => {
   .btn-subtitle {
     font-size: 0.8rem;
   }
-}
-
-/* Interface Switch Button */
-.interface-switch-btn {
-  margin-right: 0.5rem;
-}
-
-.interface-switch-btn ion-icon {
-  opacity: 0.9;
 }
 
 /* Custom Toast */

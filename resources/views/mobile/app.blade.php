@@ -84,44 +84,7 @@
         }
     </style>
 
-    @vite(['resources/js/mobile/main.ts', 'resources/css/app.css', 'resources/js/device-detection.js'], 'mobile-assets')
-
-    <!-- Device Detection Inline - garantir que funciona mesmo sem build -->
-    <script>
-        (function() {
-            function setCookie(name, value) {
-                document.cookie = name + "=" + value + "; path=/; max-age=" + (30*24*60*60) + "; SameSite=Lax";
-            }
-            function updateAndCheck() {
-                const width = window.innerWidth;
-                setCookie('screen_width', width);
-                setCookie('screen_height', window.innerHeight);
-
-                const path = window.location.pathname;
-                const isMobile = width <= 768;
-                const isDesktop = width > 768;
-                const inMobile = path.startsWith('/mobile');
-                const inDesktop = path.startsWith('/desktop');
-
-                console.log('[Device Detection] Width:', width + 'px, Path:', path);
-
-                if (isMobile && inDesktop) {
-                    console.log('[Device Detection] Redirecting to /mobile');
-                    window.location.href = '/mobile';
-                } else if (isDesktop && inMobile) {
-                    console.log('[Device Detection] Redirecting to /desktop');
-                    window.location.href = '/desktop';
-                }
-            }
-
-            updateAndCheck();
-            let timeout;
-            window.addEventListener('resize', function() {
-                clearTimeout(timeout);
-                timeout = setTimeout(updateAndCheck, 300);
-            });
-        })();
-    </script>
+    @vite(['resources/js/mobile/main.ts', 'resources/css/app.css'], 'mobile-assets')
 </head>
 <body>
     <!-- Desktop Warning -->

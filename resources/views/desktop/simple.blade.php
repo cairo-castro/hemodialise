@@ -26,10 +26,6 @@
                     <p class="text-green-700">Role: {{ auth()->user()->role }}</p>
                 </div>
 
-                <div class="mb-6">
-                    <h2 class="text-xl font-semibold text-gray-700 mb-2">Troca de Interface</h2>
-                    <x-interface-switcher currentInterface="preline" :userRole="auth()->user()->role" position="inline" />
-                </div>
             @else
                 <div class="mb-6 p-4 bg-red-100 border border-red-400 rounded">
                     <h3 class="text-red-800 font-semibold">Não Autenticado via Sessão Laravel</h3>

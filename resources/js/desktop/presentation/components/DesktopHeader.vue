@@ -20,21 +20,6 @@
       </div>
 
       <div class="flex items-center space-x-4">
-        <!-- Interface Switcher -->
-        <div class="flex items-center space-x-2">
-          <label for="desktop-interface-switcher" class="text-sm font-medium text-gray-700">
-            Interface:
-          </label>
-          <select
-            id="desktop-interface-switcher"
-            @change="switchInterface($event.target.value)"
-            class="block w-32 text-sm border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring-blue-500"
-          >
-            <option value="admin">🛠️ Admin</option>
-            <option value="desktop" selected>🖥️ Desktop</option>
-            <option value="mobile">📱 Mobile</option>
-          </select>
-        </div>
 
         <!-- Real-time Status -->
         <div class="flex items-center space-x-2">
@@ -96,18 +81,6 @@ defineProps({
 });
 
 const emit = defineEmits(['logout']);
-
-const switchInterface = (interfaceType) => {
-  const urls = {
-    'admin': '/admin-bridge',
-    'desktop': '/desktop',
-    'mobile': '/mobile'
-  };
-
-  if (urls[interfaceType]) {
-    window.location.href = urls[interfaceType];
-  }
-};
 </script>
 
 <style scoped>

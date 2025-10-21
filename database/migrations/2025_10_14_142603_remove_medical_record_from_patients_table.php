@@ -12,10 +12,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('patients', function (Blueprint $table) {
-            // Remove unique constraint first if it exists
-            $table->dropUnique(['medical_record']);
-            // Remove the medical_record column
-            $table->dropColumn('medical_record');
+            // Check if column exists before trying to drop it
+            if (Schema::hasColumn('patients', 'medical_record')) {
+                // Try to drop unique constraint if it exists (suppress error if it doesn't)
+                try {
+                    $table->dropUnique(['medical_record']);
+                } catch (\Exception $e) {
+                    // Constraint doesn't exist, continue
+                }
+                // Remove the medical_record column
+                $table->dropColumn('medical_record');
+            }
         });
     }
 

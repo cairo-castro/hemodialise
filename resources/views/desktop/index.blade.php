@@ -6,44 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Hemodiálise - Desktop</title>
 
-    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/device-detection.js'])
-
-    <!-- Device Detection Inline - garantir que funciona mesmo sem build -->
-    <script>
-        (function() {
-            function setCookie(name, value) {
-                document.cookie = name + "=" + value + "; path=/; max-age=" + (30*24*60*60) + "; SameSite=Lax";
-            }
-            function updateAndCheck() {
-                const width = window.innerWidth;
-                setCookie('screen_width', width);
-                setCookie('screen_height', window.innerHeight);
-
-                const path = window.location.pathname;
-                const isMobile = width <= 768;
-                const isDesktop = width > 768;
-                const inMobile = path.startsWith('/mobile');
-                const inDesktop = path.startsWith('/desktop');
-
-                console.log('[Device Detection] Width:', width + 'px, Path:', path);
-
-                if (isMobile && inDesktop) {
-                    console.log('[Device Detection] Redirecting to /mobile');
-                    window.location.href = '/mobile';
-                } else if (isDesktop && inMobile) {
-                    console.log('[Device Detection] Redirecting to /desktop');
-                    window.location.href = '/desktop';
-                }
-            }
-
-            updateAndCheck();
-            let timeout;
-            window.addEventListener('resize', function() {
-                clearTimeout(timeout);
-                timeout = setTimeout(updateAndCheck, 300);
-            });
-        })();
-    </script>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
         .sidebar-transition {
@@ -105,36 +68,6 @@
                     <div class="text-xs text-white/60" x-text="user?.unit?.name || 'Acesso Global'"></div>
                 </div>
 
-                <!-- View Toggle -->
-                <div class="mb-6" x-show="canToggleViews">
-                    <div x-show="sidebarOpen" class="text-xs text-white/70 mb-2">Alternar Visualização</div>
-                    <div class="space-y-1">
-                        <button @click="switchView('mobile')"
-                                class="w-full flex items-center px-3 py-2 text-sm rounded-lg hover:bg-white/10 transition-colors"
-                                :class="sidebarOpen ? 'justify-start' : 'justify-center'">
-                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 011 1v9a1 1 0 01-1 1H5a1 1 0 01-1-1V7zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"></path>
-                            </svg>
-                            <span x-show="sidebarOpen" class="ml-3">Mobile</span>
-                        </button>
-                        <button @click="switchView('desktop')"
-                                class="w-full flex items-center px-3 py-2 text-sm rounded-lg bg-white/20"
-                                :class="sidebarOpen ? 'justify-start' : 'justify-center'">
-                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"></path>
-                            </svg>
-                            <span x-show="sidebarOpen" class="ml-3">Desktop</span>
-                        </button>
-                        <button @click="switchView('admin')"
-                                class="w-full flex items-center px-3 py-2 text-sm rounded-lg hover:bg-white/10 transition-colors"
-                                :class="sidebarOpen ? 'justify-start' : 'justify-center'">
-                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 8a2 2 0 110 4 2 2 0 010-4zM10 14a2 2 0 110 4 2 2 0 010-4z"></path>
-                            </svg>
-                            <span x-show="sidebarOpen" class="ml-3">Administração</span>
-                        </button>
-                    </div>
-                </div>
 
                 <!-- Navigation Menu -->
                 <nav class="space-y-1">
@@ -364,7 +297,6 @@
                 user: null,
                 sidebarOpen: true,
                 currentView: 'dashboard',
-                canToggleViews: false,
 
                 async init() {
                     await this.checkAuth();
@@ -381,7 +313,7 @@
                     }
 
                     try {
-                        const response = await fetch('/api/view-toggle/user-views', {
+                        const response = await fetch('/api/me', {
                             headers: {
                                 'Authorization': 'Bearer ' + token,
                                 'Accept': 'application/json',
@@ -391,8 +323,6 @@
                         if (response.ok) {
                             const data = await response.json();
                             this.user = data.user;
-                            this.canToggleViews = data.can_toggle;
-
                             // Verificar se tem permissão para desktop
                             if (!this.user.canAccessDesktop && !['gestor', 'coordenador', 'supervisor', 'admin'].includes(this.user.role)) {
                                 window.location.href = '/mobile';
@@ -441,25 +371,6 @@
                     }
                 },
 
-                async switchView(view) {
-                    try {
-                        const response = await fetch(`/api/view-toggle/switch-to-${view}`, {
-                            method: 'POST',
-                            headers: {
-                                'Authorization': 'Bearer ' + localStorage.getItem('token'),
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                            }
-                        });
-
-                        const data = await response.json();
-                        if (data.redirect) {
-                            window.location.href = data.redirect;
-                        }
-                    } catch (error) {
-                        console.error('Erro ao alternar view:', error);
-                    }
-                },
 
                 async logout() {
                     try {

@@ -67,15 +67,6 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/current', [App\Http\Controllers\Api\UserUnitController::class, 'current']);
     });
 
-    // Rotas para toggle de views
-    Route::prefix('view-toggle')->group(function () {
-        Route::get('/user-views', [App\Http\Controllers\ViewToggleController::class, 'getUserViews']);
-        Route::post('/switch-to-mobile', [App\Http\Controllers\ViewToggleController::class, 'switchToMobile']);
-        Route::post('/switch-to-desktop', [App\Http\Controllers\ViewToggleController::class, 'switchToDesktop']);
-        Route::post('/switch-to-admin', [App\Http\Controllers\ViewToggleController::class, 'switchToAdmin']);
-        Route::post('/set-default', [App\Http\Controllers\ViewToggleController::class, 'setDefaultView']);
-    });
-
     Route::middleware(['role:tecnico,gestor,coordenador,supervisor,admin', 'unit.scope'])->group(function () {
         // Rotas específicas devem vir ANTES do apiResource para evitar conflitos
         Route::get('/checklists/active', [ChecklistController::class, 'active']);

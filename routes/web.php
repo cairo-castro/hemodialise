@@ -9,23 +9,13 @@ use App\Http\Controllers\Frontend\AuthController;
 use App\Http\Controllers\MobileController;
 use App\Http\Controllers\JwtAuthController;
 use App\Http\Controllers\AdminController;
-use App\Http\Controllers\SmartRouteController;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
-// Smart Route System - Intelligent Device Detection and Redirection
-Route::middleware(['device.detection', 'smart.redirect'])->group(function () {
-    // Main entry point with intelligent routing
-    Route::get('/', [SmartRouteController::class, 'home'])->name('home');
-});
-
-// Smart Route API endpoints
-Route::prefix('api/smart-route')->name('smart-route.')->group(function () {
-    Route::post('/detect', [SmartRouteController::class, 'detectDevice'])->name('detect');
-    Route::post('/switch', [SmartRouteController::class, 'switchInterface'])->name('switch');
-    Route::get('/preferences', [SmartRouteController::class, 'getUserPreferences'])->name('preferences');
-    Route::post('/reset', [SmartRouteController::class, 'resetPreferences'])->name('reset');
-});
+// Main entry point - redirect to login
+Route::get('/', function () {
+    return redirect()->route('login');
+})->name('home');
 
 // Mobile/Ionic interface - única interface mobile
 Route::prefix('mobile')->name('mobile.')->group(function () {
@@ -74,19 +64,25 @@ Route::post('/logout', function(Request $request) {
 })->name('logout');
 
 Route::get('/logout', function(Request $request) {
-    // Logout via GET para Filament
+    // Logout via GET - limpar completamente a sessão
     auth()->logout();
+    $request->session()->flush(); // Remove todos os dados da sessão
     $request->session()->invalidate();
     $request->session()->regenerateToken();
-    return redirect('/login?logout=true');
+
+    // Hard redirect sem parâmetros para forçar reload completo
+    return redirect('/login')->with('logout_success', true);
 });
 
 // Override Filament logout route
 Route::post('/admin/logout', function(Request $request) {
     auth()->logout();
+    $request->session()->flush(); // Remove todos os dados da sessão
     $request->session()->invalidate();
     $request->session()->regenerateToken();
-    return redirect('/login?logout=true');
+
+    // Hard redirect sem parâmetros para forçar reload completo
+    return redirect('/login')->with('logout_success', true);
 })->name('filament.admin.auth.logout');
 
 // Interface performance testing route

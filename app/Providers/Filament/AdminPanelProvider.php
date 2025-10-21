@@ -59,10 +59,6 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
                 \App\Http\Middleware\FilamentAccessMiddleware::class,
-            ])
-            ->renderHook(
-                'panels::user-menu.before',
-                fn (): string => view('filament.interface-switcher')->render(),
-            );
+            ]);
     }
 }

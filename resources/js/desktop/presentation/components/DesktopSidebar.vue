@@ -71,29 +71,6 @@
           </div>
         </div>
       </div>
-
-      <!-- Interface Toggle -->
-      <div v-if="canToggleInterfaces" class="mb-6">
-        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Alternar Interface</p>
-        <div class="space-y-1">
-          <button 
-            @click="$emit('interface-switch', 'mobile')" 
-            class="w-full flex items-center px-3 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <svg class="w-4 h-4 mr-3" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 011 1v9a1 1 0 01-1 1H5a1 1 0 01-1-1V7z"/>
-            </svg>
-            Interface Mobile
-          </button>
-          <button 
-            @click="$emit('interface-switch', 'admin')" 
-            class="w-full flex items-center px-3 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <svg class="w-4 h-4 mr-3" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 8a2 2 0 110 4 2 2 0 010-4zM10 14a2 2 0 110 4 2 2 0 010-4z"/>
-            </svg>
-            Painel Admin
-          </button>
         </div>
       </div>
     </div>
@@ -222,7 +199,7 @@ const props = defineProps({
   canToggleInterfaces: Boolean
 });
 
-const emit = defineEmits(['view-change', 'interface-switch', 'logout', 'unit-changed']);
+const emit = defineEmits(['view-change', 'logout', 'unit-changed']);
 
 const availableUnits = ref([]);
 const currentUnit = ref(null);
