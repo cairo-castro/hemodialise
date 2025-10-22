@@ -15,8 +15,8 @@ WORKDIR /app
 COPY package.json ./
 COPY package-lock.json* ./
 
-# Install Node dependencies (production only)
-RUN npm ci --only=production --no-audit --no-fund
+# Install Node dependencies (all dependencies needed for build)
+RUN npm ci --no-audit --no-fund
 
 # Copy source code
 COPY resources ./resources
