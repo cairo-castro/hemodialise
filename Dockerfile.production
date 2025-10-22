@@ -9,75 +9,56 @@
 # ==============================================
 FROM node:20-alpine AS node-builder
 
-WORKDIR /app
+WORKDIR /build
 
-# Update npm to latest version
+# Atualizar npm para versão mais recente
 RUN npm install -g npm@latest
 
-# Copy package files for better layer caching
-COPY package.json ./
-COPY package-lock.json ./
+# Copiar arquivos de dependências
+COPY package.json package-lock.json ./
 
-# Install Node dependencies (all dependencies needed for build)
-# Using npm install instead of ci to handle peer dependency conflicts
-RUN npm install --no-audit --no-fund --legacy-peer-deps
+# Instalar dependências (incluindo devDependencies para build)
+RUN npm ci --legacy-peer-deps || npm install --legacy-peer-deps
 
-# Copy source code needed for build
-COPY resources ./resources
-COPY public ./public
-COPY vite.config.js ./
+# Copiar arquivos necessários para o build
+COPY resources/ ./resources/
+COPY public/ ./public/
+COPY vite.config.js ./vite.config.js
+COPY tsconfig.json ./tsconfig.json
+COPY ionic-frontend/ ./ionic-frontend/
 
-# Copy config files if they exist
-COPY tsconfig.json* ./
-
-# Copy ionic-frontend directory for mobile build
-COPY ionic-frontend ./ionic-frontend
-
-# Build production assets
-# Build desktop assets (main Laravel/Vite build) - explicitly use desktop mode
-RUN npm run build:desktop
-
-# Build mobile assets (Ionic/Vue build)
-RUN npm run build:mobile || echo "Mobile build failed, continuing..."
+# Build dos assets de produção
+RUN npm run build:desktop || { echo "Desktop build failed"; exit 1; }
+RUN npm run build:mobile || echo "Mobile build skipped"
 
 # ==============================================
 # Stage 2: PHP Composer Dependencies
 # ==============================================
 FROM php:8.2-cli-alpine AS composer-builder
 
-WORKDIR /app
+WORKDIR /build
 
-# Install system dependencies needed for PHP extensions
+# Instalar dependências do sistema necessárias
 RUN apk add --no-cache \
     libzip-dev \
     libpng-dev \
-    libjpeg-turbo-dev \
-    freetype-dev \
-    oniguruma-dev \
     icu-dev \
-    icu-data-full \
     git \
     unzip
 
-# Install PHP extensions required by Laravel/Filament
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j$(nproc) \
-    pdo \
+# Instalar extensões PHP necessárias
+RUN docker-php-ext-install -j$(nproc) \
     zip \
-    gd \
-    mbstring \
-    bcmath \
     intl \
-    exif
+    bcmath
 
-# Install Composer
+# Copiar binário do Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Copy composer files
-COPY composer.json ./
-COPY composer.lock* ./
+# Copiar arquivos de dependências
+COPY composer.json composer.lock ./
 
-# Install PHP dependencies (production only, optimized)
+# Instalar dependências PHP (production only)
 RUN composer install \
     --no-dev \
     --no-interaction \
@@ -93,41 +74,48 @@ RUN composer install \
 FROM php:8.2-fpm-alpine AS production
 
 LABEL maintainer="Sistema Hemodiálise - Qualidade"
-LABEL version="1.0"
+LABEL version="2.0"
 LABEL description="Sistema de Gestão de Hemodiálise - Produção Dokploy"
 
-# Install system dependencies
+# Instalar dependências do sistema
 RUN apk add --no-cache \
     nginx \
     supervisor \
     mariadb-client \
+    libzip \
+    libpng \
+    libjpeg-turbo \
+    freetype \
+    oniguruma \
+    icu \
+    icu-data-full \
+    curl \
+    bash \
+    su-exec \
+    netcat-openbsd
+
+# Instalar extensões PHP (MariaDB/MySQL support)
+RUN apk add --no-cache --virtual .build-deps \
     libzip-dev \
     libpng-dev \
     libjpeg-turbo-dev \
     freetype-dev \
     oniguruma-dev \
-    curl \
-    zip \
-    unzip \
-    git \
-    bash \
-    su-exec \
-    netcat-openbsd
-
-# Install PHP extensions (MariaDB/MySQL support)
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    icu-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) \
-    pdo \
-    pdo_mysql \
-    mysqli \
-    zip \
-    gd \
-    mbstring \
-    opcache \
-    bcmath \
-    exif
+        pdo_mysql \
+        mysqli \
+        zip \
+        gd \
+        mbstring \
+        opcache \
+        bcmath \
+        exif \
+        intl \
+    && apk del .build-deps
 
-# Configure OPcache for production (aggressive caching)
+# Configurar OPcache para produção (performance)
 RUN { \
     echo 'opcache.enable=1'; \
     echo 'opcache.memory_consumption=256'; \
@@ -136,11 +124,9 @@ RUN { \
     echo 'opcache.validate_timestamps=0'; \
     echo 'opcache.save_comments=1'; \
     echo 'opcache.fast_shutdown=1'; \
-    echo 'opcache.enable_cli=0'; \
-    echo 'opcache.revalidate_freq=0'; \
-    } > /usr/local/etc/php/conf.d/opcache-prod.ini
+    } > /usr/local/etc/php/conf.d/opcache.ini
 
-# Configure PHP for production
+# Configuração PHP para produção
 RUN { \
     echo 'memory_limit=512M'; \
     echo 'upload_max_filesize=50M'; \
@@ -150,37 +136,28 @@ RUN { \
     echo 'max_input_vars=3000'; \
     echo 'expose_php=Off'; \
     echo 'display_errors=Off'; \
-    echo 'display_startup_errors=Off'; \
     echo 'log_errors=On'; \
-    echo 'error_log=/var/www/html/storage/logs/php_errors.log'; \
     echo 'date.timezone=America/Sao_Paulo'; \
     } > /usr/local/etc/php/conf.d/production.ini
 
-# Create non-root user
-RUN addgroup -g 1000 laravel \
-    && adduser -D -u 1000 -G laravel laravel
+# Criar usuário não-root
+RUN addgroup -g 1000 laravel && \
+    adduser -D -u 1000 -G laravel laravel
 
-# Set working directory
+# Definir diretório de trabalho
 WORKDIR /var/www/html
 
-# Copy application code
+# Copiar código da aplicação
 COPY --chown=laravel:laravel . .
 
-# Copy Composer dependencies
-COPY --from=composer-builder --chown=laravel:laravel /app/vendor ./vendor
+# Copiar dependências do Composer
+COPY --from=composer-builder --chown=laravel:laravel /build/vendor ./vendor
 
-# Create public directories
-RUN mkdir -p public/desktop public/mobile-assets
+# Copiar assets buildados do Node.js
+COPY --from=node-builder --chown=laravel:laravel /build/public/desktop ./public/desktop
+COPY --from=node-builder --chown=laravel:laravel /build/public/mobile-assets ./public/mobile-assets
 
-# Copy built assets from Node stage
-# Desktop build goes to public/desktop (buildDirectory: 'desktop')
-COPY --from=node-builder --chown=laravel:laravel /app/public/desktop ./public/desktop
-
-# Try to copy mobile assets if they exist
-RUN --mount=type=bind,from=node-builder,source=/app/public/mobile-assets,target=/tmp/mobile-assets \
-    cp -r /tmp/mobile-assets/* ./public/mobile-assets/ 2>/dev/null || echo "No mobile assets to copy"
-
-# Create required directories with proper permissions
+# Criar diretórios necessários com permissões corretas
 RUN mkdir -p \
     storage/framework/cache/data \
     storage/framework/sessions \
@@ -189,46 +166,45 @@ RUN mkdir -p \
     storage/logs \
     storage/app/public \
     bootstrap/cache \
-    && chown -R laravel:laravel storage bootstrap/cache \
-    && chmod -R 775 storage bootstrap/cache \
-    && chmod -R 755 public
+    public/desktop \
+    public/mobile-assets && \
+    chown -R laravel:laravel storage bootstrap/cache && \
+    chmod -R 775 storage bootstrap/cache && \
+    chmod -R 755 public
 
-# Configure Nginx for production
-COPY docker/nginx/nginx.conf /etc/nginx/nginx.conf
-COPY docker/nginx/default.conf /etc/nginx/http.d/default.conf
+# Configurar Nginx
+COPY --chown=root:root docker/nginx/nginx.conf /etc/nginx/nginx.conf
+COPY --chown=root:root docker/nginx/default.conf /etc/nginx/http.d/default.conf
 
-# Configure Supervisor
-COPY docker/supervisor/supervisord.conf /etc/supervisord.conf
+# Configurar Supervisor
+COPY --chown=root:root docker/supervisor/supervisord.conf /etc/supervisord.conf
 
-# Configure PHP-FPM to run as laravel user
-RUN sed -i 's/user = www-data/user = laravel/g' /usr/local/etc/php-fpm.d/www.conf \
-    && sed -i 's/group = www-data/group = laravel/g' /usr/local/etc/php-fpm.d/www.conf \
-    && sed -i 's/listen = 127.0.0.1:9000/listen = \/var\/run\/php-fpm.sock/g' /usr/local/etc/php-fpm.d/www.conf \
-    && sed -i 's/;listen.owner = www-data/listen.owner = laravel/g' /usr/local/etc/php-fpm.d/www.conf \
-    && sed -i 's/;listen.group = www-data/listen.group = laravel/g' /usr/local/etc/php-fpm.d/www.conf \
-    && sed -i 's/;listen.mode = 0660/listen.mode = 0660/g' /usr/local/etc/php-fpm.d/www.conf
+# Configurar PHP-FPM
+RUN sed -i 's/user = www-data/user = laravel/g' /usr/local/etc/php-fpm.d/www.conf && \
+    sed -i 's/group = www-data/group = laravel/g' /usr/local/etc/php-fpm.d/www.conf && \
+    sed -i 's/listen = 127.0.0.1:9000/listen = \/var\/run\/php-fpm.sock/g' /usr/local/etc/php-fpm.d/www.conf && \
+    sed -i 's/;listen.owner = www-data/listen.owner = laravel/g' /usr/local/etc/php-fpm.d/www.conf && \
+    sed -i 's/;listen.group = www-data/listen.group = laravel/g' /usr/local/etc/php-fpm.d/www.conf && \
+    sed -i 's/;listen.mode = 0660/listen.mode = 0660/g' /usr/local/etc/php-fpm.d/www.conf
 
-# Optimize PHP-FPM for production
-RUN echo 'pm = dynamic' >> /usr/local/etc/php-fpm.d/www.conf \
-    && echo 'pm.max_children = 50' >> /usr/local/etc/php-fpm.d/www.conf \
-    && echo 'pm.start_servers = 5' >> /usr/local/etc/php-fpm.d/www.conf \
-    && echo 'pm.min_spare_servers = 5' >> /usr/local/etc/php-fpm.d/www.conf \
-    && echo 'pm.max_spare_servers = 15' >> /usr/local/etc/php-fpm.d/www.conf \
-    && echo 'pm.max_requests = 500' >> /usr/local/etc/php-fpm.d/www.conf
+# Otimizar PHP-FPM
+RUN echo 'pm = dynamic' >> /usr/local/etc/php-fpm.d/www.conf && \
+    echo 'pm.max_children = 50' >> /usr/local/etc/php-fpm.d/www.conf && \
+    echo 'pm.start_servers = 5' >> /usr/local/etc/php-fpm.d/www.conf && \
+    echo 'pm.min_spare_servers = 5' >> /usr/local/etc/php-fpm.d/www.conf && \
+    echo 'pm.max_spare_servers = 15' >> /usr/local/etc/php-fpm.d/www.conf && \
+    echo 'pm.max_requests = 500' >> /usr/local/etc/php-fpm.d/www.conf
 
-# Copy and configure production entrypoint script
-COPY docker/entrypoint.production.sh /usr/local/bin/entrypoint.sh
-RUN chmod +x /usr/local/bin/entrypoint.sh
+# Script de entrypoint
+COPY --chown=root:root --chmod=755 docker/entrypoint.production.sh /usr/local/bin/entrypoint.sh
 
-# Expose HTTP port
+# Expor porta HTTP
 EXPOSE 80
 
-# Health check endpoint (Dokploy compatible)
+# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD curl -f http://localhost/up || exit 1
 
-# Entrypoint
+# Entrypoint e comando
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-
-# Start supervisor (controlled by entrypoint)
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
