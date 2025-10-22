@@ -59,6 +59,7 @@ Thumbs.db
 # Scripts
 *.sh
 !docker/entrypoint.sh
+!docker/entrypoint.production.sh
 
 # Package files
 package-lock.json

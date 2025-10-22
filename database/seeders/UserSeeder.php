@@ -28,6 +28,34 @@ class UserSeeder extends Seeder
         );
         $admin->syncRoles(['super-admin']);
 
+        // GERENTE GLOBAL - Gestão em todas as unidades
+        $gerente = \App\Models\User::updateOrCreate(
+            ['email' => 'joenvilly.azevedo@emserh.ma.gov.br'],
+            [
+                'name' => 'Joenvilly Azevedo',
+                'password' => bcrypt('A123456*'),
+                'role' => 'gestor',
+                'default_view' => 'desktop',
+                'unit_id' => null, // Usuário global - sem unidade específica
+                'email_verified_at' => now(),
+            ]
+        );
+        $gerente->syncRoles(['gestor-unidade']);
+
+        // COORDENADOR GLOBAL - Coordenação em todas as unidades
+        $coordenador = \App\Models\User::updateOrCreate(
+            ['email' => 'andre.campos@emserh.ma.gov.br'],
+            [
+                'name' => 'André Campos',
+                'password' => bcrypt('A123456*'),
+                'role' => 'coordenador',
+                'default_view' => 'desktop',
+                'unit_id' => null, // Usuário global - sem unidade específica
+                'email_verified_at' => now(),
+            ]
+        );
+        $coordenador->syncRoles(['coordenador']);
+
         // USUÁRIOS DAS UNIDADES - Dados do Excel
         $users = [
             [
@@ -306,10 +334,15 @@ class UserSeeder extends Seeder
 
         $this->command->info('');
         $this->command->info('Users created successfully from Excel data!');
-        $this->command->info('Total users: ' . (count($users) + 1) . ' (including admin)');
+        $this->command->info('Total users: ' . (count($users) + 3) . ' (including admin, gerente and coordenador)');
         $this->command->info('');
-        $this->command->info('CREDENCIAIS:');
-        $this->command->info('Admin Global: admin@hemodialise.ma.gov.br / admin123');
+        $this->command->info('CREDENCIAIS USUÁRIOS GLOBAIS:');
+        $this->command->info('┌────────────────────────────────────────────────────────────────────┐');
+        $this->command->info('│ Admin Global:       admin@hemodialise.ma.gov.br / admin123         │');
+        $this->command->info('│ Gerente Global:     joenvilly.azevedo@emserh.ma.gov.br / A123456*  │');
+        $this->command->info('│ Coordenador Global: andre.campos@emserh.ma.gov.br / A123456*      │');
+        $this->command->info('└────────────────────────────────────────────────────────────────────┘');
+        $this->command->info('');
         $this->command->info('Usuários das unidades: [email] / senha123');
     }
 }
