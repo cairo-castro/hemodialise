@@ -14,8 +14,8 @@ WORKDIR /build
 # Copiar arquivos de dependências
 COPY package.json package-lock.json ./
 
-# Instalar dependências de produção apenas - otimizado
-RUN npm ci --only=production --no-audit --no-fund --cache /tmp/npm-cache --legacy-peer-deps && \
+# Instalar todas as dependências (incluindo devDependencies) para poder compilar
+RUN npm ci --legacy-peer-deps && \
     rm -rf /tmp/npm-cache
 
 # Copiar arquivos necessários para o build
