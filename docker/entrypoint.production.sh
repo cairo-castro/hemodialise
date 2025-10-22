@@ -63,10 +63,6 @@ su-exec laravel php artisan view:cache --no-interaction
 echo "  → Caching events..."
 su-exec laravel php artisan event:cache --no-interaction || true
 
-# Optimize autoloader
-echo "  → Optimizing Composer autoloader..."
-su-exec laravel composer dump-autoload --optimize --classmap-authoritative --no-dev
-
 # Run database migrations
 if [ "${RUN_MIGRATIONS:-true}" = "true" ]; then
     echo ""
