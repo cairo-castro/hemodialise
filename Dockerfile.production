@@ -34,8 +34,8 @@ COPY tsconfig.json* ./
 COPY ionic-frontend ./ionic-frontend
 
 # Build production assets
-# Build desktop assets (main Laravel/Vite build)
-RUN npm run build
+# Build desktop assets (main Laravel/Vite build) - explicitly use desktop mode
+RUN npm run build:desktop
 
 # Build mobile assets (Ionic/Vue build)
 RUN npm run build:mobile || echo "Mobile build failed, continuing..."
