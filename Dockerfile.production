@@ -29,6 +29,11 @@ COPY ionic-frontend/ ./ionic-frontend/
 RUN npm run build:desktop && \
     npm run build:mobile
 
+# Verificar se os diretórios de build foram criados corretamente
+RUN ls -la public/ && \
+    ls -la public/desktop/ && \
+    ls -la public/mobile-assets/
+
 # ==============================================
 # Stage 2: PHP Composer Dependencies
 # ==============================================
@@ -144,7 +149,6 @@ COPY --from=composer-builder --chown=laravel:laravel /build/vendor ./vendor
 # Copiar assets buildados do Node.js
 COPY --from=node-builder --chown=laravel:laravel /build/public/desktop ./public/desktop
 COPY --from=node-builder --chown=laravel:laravel /build/public/mobile-assets ./public/mobile-assets
-COPY --from=node-builder --chown=laravel:laravel /build/public/build ./public/build
 
 # O arquivo .env.production será fornecido via docker-compose.yml como environment file,
 # então não precisamos copiá-lo diretamente para o container
