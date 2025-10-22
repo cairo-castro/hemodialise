@@ -31,9 +31,35 @@ RUN npm run build:mobile && npm run build
 # ==============================================
 # Stage 2: PHP Composer Dependencies
 # ==============================================
-FROM composer:2 AS composer-builder
+FROM php:8.2-cli-alpine AS composer-builder
 
 WORKDIR /app
+
+# Install system dependencies needed for PHP extensions
+RUN apk add --no-cache \
+    libzip-dev \
+    libpng-dev \
+    libjpeg-turbo-dev \
+    freetype-dev \
+    oniguruma-dev \
+    icu-dev \
+    icu-data-full \
+    git \
+    unzip
+
+# Install PHP extensions required by Laravel/Filament
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) \
+    pdo \
+    zip \
+    gd \
+    mbstring \
+    bcmath \
+    intl \
+    exif
+
+# Install Composer
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 # Copy composer files
 COPY composer.json ./
