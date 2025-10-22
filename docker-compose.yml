@@ -1,44 +1,41 @@
 version: '3.8'
 
-# Pega as variáveis de ambiente do arquivo .env.production
 services:
   app:
     build:
       context: .
-      dockerfile: Dockerfile.production
+      dockerfile: Dockerfile
+      args:
+        - PHP_VERSION=8.2
     ports:
-      - "80:80"  # Porta padrão para produção
-    env_file:
-      - .env.production  # Usa o arquivo .env.production
+      - "8000:80"
     environment:
-      # Variáveis de ambiente principais
       - APP_ENV=production
       - APP_DEBUG=false
-      - APP_URL=https://qualidadehd.direcaoclinica.com.br
+      - APP_KEY=${APP_KEY}
+      - APP_URL=http://localhost:8000
       
-      # Database - usando MariaDB
-      - DB_CONNECTION=mariadb
-      - DB_HOST=mariadb  # Nome do serviço MariaDB
-      - DB_PORT=3306
-      - DB_DATABASE=hemodialise_gqa
-      - DB_USERNAME=Usr_QltGest@2025
-      - DB_PASSWORD=Qlt!H0sp#2025
+      # Database
+      - DB_CONNECTION=pgsql
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_DATABASE=hemodialise
+      - DB_USERNAME=hemodialise
+      - DB_PASSWORD=hemodialise_secruseet
       
-      # Configurações de cache e sessão para produção
-      - CACHE_DRIVER=database
-      - SESSION_DRIVER=database
-      - SESSION_LIFETIME=480
-      - SESSION_SECURE_COOKIE=true
+      # Cache & Session
+      - CACHE_DRIVER=file
+      - SESSION_DRIVER=file
       - QUEUE_CONNECTION=database
       
       # JWT
       - JWT_SECRET=${JWT_SECRET:-your-secret-key-change-in-production}
       
-      # Flags de inicialização
+      # Initialization
       - RUN_MIGRATIONS=true
       - RUN_SEEDERS=false
     depends_on:
-      mariadb:
+      postgres:
         condition: service_healthy
     volumes:
       - app-storage:/var/www/html/storage
@@ -50,32 +47,28 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 60s  # Reduzido para mais velocidade
+      start_period: 40s
 
-  mariadb:
-    image: mariadb:10.11
-    env_file:
-      - .env.production  # Usa o mesmo arquivo .env.production para consistência
+  postgres:
+    image: postgres:16-alpine
     environment:
-      - MARIADB_DATABASE=hemodialise_gqa
-      - MARIADB_USER=Usr_QltGest@2025
-      - MARIADB_PASSWORD=Qlt!H0sp#2025
-      - MARIADB_RANDOM_ROOT_PASSWORD=true
+      - POSTGRES_DB=hemodialise
+      - POSTGRES_USER=hemodialise
+      - POSTGRES_PASSWORD=hemodialise_secret
     ports:
-      - "3306:3306"
+      - "5432:5432"
     volumes:
-      - mariadb-data:/var/lib/mysql
+      - postgres-data:/var/lib/postgresql/data
     networks:
       - hemodialise-network
     healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      test: ["CMD-SHELL", "pg_isready -U hemodialise"]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 30s
 
 volumes:
-  mariadb-data:
+  postgres-data:
     driver: local
   app-storage:
     driver: local

@@ -146,8 +146,8 @@ COPY --from=node-builder --chown=laravel:laravel /build/public/desktop ./public/
 COPY --from=node-builder --chown=laravel:laravel /build/public/mobile-assets ./public/mobile-assets
 COPY --from=node-builder --chown=laravel:laravel /build/public/build ./public/build
 
-# Copiar o arquivo .env.production para o container
-COPY --chown=laravel:laravel .env.production .env.production
+# O arquivo .env.production será fornecido via docker-compose.yml como environment file,
+# então não precisamos copiá-lo diretamente para o container
 
 # Criar diretórios necessários com permissões corretas
 RUN mkdir -p \
@@ -186,9 +186,6 @@ RUN echo 'pm = dynamic' >> /usr/local/etc/php-fpm.d/www.conf && \
     echo 'pm.min_spare_servers = 5' >> /usr/local/etc/php-fpm.d/www.conf && \
     echo 'pm.max_spare_servers = 15' >> /usr/local/etc/php-fpm.d/www.conf && \
     echo 'pm.max_requests = 500' >> /usr/local/etc/php-fpm.d/www.conf
-
-# Copiar script para gerenciar o .env
-COPY --chown=root:root --chmod=755 docker/copy-env.sh /usr/local/bin/copy-env.sh
 
 # Script de entrypoint
 COPY --chown=root:root --chmod=755 docker/entrypoint.production.sh /usr/local/bin/entrypoint.sh

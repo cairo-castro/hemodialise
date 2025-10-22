@@ -6,10 +6,6 @@ echo "Starting Hemodialise Production Application"
 echo "Domain: qualidadehd.direcaoclinica.com.br"
 echo "=============================================="
 
-# Copiar .env.production para .env se necessário
-echo "Checking environment file..."
-/usr/local/bin/copy-env.sh
-
 # Function to wait for MariaDB
 wait_for_database() {
     echo "Waiting for MariaDB at $DB_HOST:${DB_PORT}..."
