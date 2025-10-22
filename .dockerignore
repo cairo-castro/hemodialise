@@ -61,8 +61,7 @@ Thumbs.db
 !docker/entrypoint.sh
 !docker/entrypoint.production.sh
 
-# Package files (exceto composer.lock que é necessário para build)
-package-lock.json
+# Package files (necessários para build determinístico)
 yarn.lock
 pnpm-lock.yaml
 
