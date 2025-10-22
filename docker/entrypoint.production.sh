@@ -6,11 +6,15 @@ echo "Starting Hemodialise Production Application"
 echo "Domain: qualidadehd.direcaoclinica.com.br"
 echo "=============================================="
 
+# Copiar .env.production para .env se necessário
+echo "Checking environment file..."
+/usr/local/bin/copy-env.sh
+
 # Function to wait for MariaDB
 wait_for_database() {
     echo "Waiting for MariaDB at $DB_HOST:${DB_PORT}..."
     
-    max_attempts=60
+    max_attempts=30  # Reduzido para mais velocidade
     attempt=0
     
     while [ $attempt -lt $max_attempts ]; do
@@ -50,7 +54,7 @@ su-exec laravel php artisan config:clear --no-interaction || true
 su-exec laravel php artisan route:clear --no-interaction || true
 su-exec laravel php artisan view:clear --no-interaction || true
 
-# Cache configuration, routes, and views
+# Only cache configuration, routes, and views if not already cached
 echo "  → Caching configuration..."
 su-exec laravel php artisan config:cache --no-interaction
 
@@ -63,34 +67,51 @@ su-exec laravel php artisan view:cache --no-interaction
 echo "  → Caching events..."
 su-exec laravel php artisan event:cache --no-interaction || true
 
-# Run database migrations
+# Check if migrations have already been run using a marker file
+MIGRATION_MARKER="/var/www/html/storage/migrations_completed"
 if [ "${RUN_MIGRATIONS:-true}" = "true" ]; then
-    echo ""
-    echo "Running database migrations..."
-    su-exec laravel php artisan migrate --force --no-interaction
-    
-    if [ $? -eq 0 ]; then
-        echo "✓ Migrations completed successfully"
+    # Only run migrations if marker file doesn't exist
+    if [ ! -f "$MIGRATION_MARKER" ]; then
+        echo ""
+        echo "Running database migrations for the first time..."
+        su-exec laravel php artisan migrate --force --no-interaction
+        
+        if [ $? -eq 0 ]; then
+            echo "✓ Migrations completed successfully"
+            # Create marker file to prevent running migrations again
+            touch "$MIGRATION_MARKER"
+            chown laravel:laravel "$MIGRATION_MARKER"
+        else
+            echo "✗ Migration failed!"
+            exit 1
+        fi
     else
-        echo "✗ Migration failed!"
-        exit 1
+        echo ""
+        echo "⚠ Skipping migrations (already completed)"
     fi
 else
     echo ""
     echo "⚠ Skipping migrations (RUN_MIGRATIONS=false)"
 fi
 
-# Run seeders (only if explicitly enabled)
-if [ "${RUN_SEEDERS:-false}" = "true" ]; then
+# Run seeders (only if explicitly enabled and never run before)
+SEEDER_MARKER="/var/www/html/storage/seeders_completed"
+if [ "${RUN_SEEDERS:-false}" = "true" ] && [ ! -f "$SEEDER_MARKER" ]; then
     echo ""
-    echo "Running database seeders..."
+    echo "Running database seeders for the first time..."
     su-exec laravel php artisan db:seed --force --no-interaction
     
     if [ $? -eq 0 ]; then
         echo "✓ Seeders completed successfully"
+        # Create marker file to prevent running seeders again
+        touch "$SEEDER_MARKER"
+        chown laravel:laravel "$SEEDER_MARKER"
     else
         echo "⚠ Seeder execution had issues (this may be normal)"
     fi
+elif [ "${RUN_SEEDERS:-false}" = "true" ]; then
+    echo ""
+    echo "⚠ Skipping seeders (already completed)"
 else
     echo ""
     echo "Skipping seeders (RUN_SEEDERS=false)"
