@@ -1,0 +1,73 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Dependencies
+node_modules/
+vendor/
+
+# Build artifacts
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Laravel
+/bootstrap/cache/*
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/logs/*
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Testing
+/tests/
+/cypress/
+/.phpunit.result.cache
+/coverage/
+
+# Documentation (optional - remove if you want docs in image)
+/docs/
+*.md
+!README.md
+
+# Excel files (source data)
+*.xlsx
+*.xls
+*.csv
+*.Zone.Identifier
+
+# Python scripts
+*.py
+
+# Scripts
+*.sh
+!docker/entrypoint.sh
+
+# Package files
+package-lock.json
+composer.lock
+yarn.lock
+pnpm-lock.yaml
+
+# Ionic frontend source (built assets are copied)
+/ionic-frontend/node_modules
+/ionic-frontend/src
+/ionic-frontend/tests
+/ionic-frontend/cypress

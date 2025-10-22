@@ -1,0 +1,80 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - PHP_VERSION=8.2
+    ports:
+      - "8000:80"
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - APP_KEY=${APP_KEY}
+      - APP_URL=http://localhost:8000
+      
+      # Database
+      - DB_CONNECTION=pgsql
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_DATABASE=hemodialise
+      - DB_USERNAME=hemodialise
+      - DB_PASSWORD=hemodialise_secret
+      
+      # Cache & Session
+      - CACHE_DRIVER=file
+      - SESSION_DRIVER=file
+      - QUEUE_CONNECTION=database
+      
+      # JWT
+      - JWT_SECRET=${JWT_SECRET:-your-secret-key-change-in-production}
+      
+      # Initialization
+      - RUN_MIGRATIONS=true
+      - RUN_SEEDERS=false
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - app-storage:/var/www/html/storage
+      - app-cache:/var/www/html/bootstrap/cache
+    networks:
+      - hemodialise-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/up"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_DB=hemodialise
+      - POSTGRES_USER=hemodialise
+      - POSTGRES_PASSWORD=hemodialise_secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - hemodialise-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hemodialise"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres-data:
+    driver: local
+  app-storage:
+    driver: local
+  app-cache:
+    driver: local
+
+networks:
+  hemodialise-network:
+    driver: bridge
