@@ -34,7 +34,7 @@ RUN npm run build:mobile || echo "Mobile build skipped"
 # ==============================================
 # Stage 2: PHP Composer Dependencies
 # ==============================================
-FROM php:8.2-cli-alpine AS composer-builder
+FROM php:8.3-cli-alpine AS composer-builder
 
 WORKDIR /build
 
@@ -71,7 +71,7 @@ RUN composer install \
 # ==============================================
 # Stage 3: Production Runtime (MariaDB Support)
 # ==============================================
-FROM php:8.2-fpm-alpine AS production
+FROM php:8.3-fpm-alpine AS production
 
 LABEL maintainer="Sistema Hemodiálise - Qualidade"
 LABEL version="2.0"
