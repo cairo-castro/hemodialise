@@ -169,10 +169,16 @@ COPY --chown=laravel:laravel . .
 # Copy Composer dependencies
 COPY --from=composer-builder --chown=laravel:laravel /app/vendor ./vendor
 
+# Create public directories
+RUN mkdir -p public/desktop public/mobile-assets
+
 # Copy built assets from Node stage
-COPY --from=node-builder --chown=laravel:laravel /app/public/build ./public/build
-COPY --from=node-builder --chown=laravel:laravel /app/public/mobile-assets ./public/mobile-assets
-COPY --from=node-builder --chown=laravel:laravel /app/public/ionic-build ./public/ionic-build
+# Desktop build goes to public/desktop (buildDirectory: 'desktop')
+COPY --from=node-builder --chown=laravel:laravel /app/public/desktop ./public/desktop
+
+# Try to copy mobile assets if they exist
+RUN --mount=type=bind,from=node-builder,source=/app/public/mobile-assets,target=/tmp/mobile-assets \
+    cp -r /tmp/mobile-assets/* ./public/mobile-assets/ 2>/dev/null || echo "No mobile assets to copy"
 
 # Create required directories with proper permissions
 RUN mkdir -p \
