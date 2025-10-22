@@ -172,6 +172,17 @@
 
           <!-- Action Buttons -->
           <div v-if="!machine.current_checklist" class="machine-actions" @click.stop>
+            <!-- Botão de Editar - sempre visível -->
+            <ion-button
+              fill="clear"
+              size="small"
+              color="medium"
+              @click="openEditMachineModal(machine)"
+            >
+              <ion-icon slot="start" :icon="createOutline"></ion-icon>
+              Editar
+            </ion-button>
+
             <!-- Máquina disponível: pode ir para manutenção -->
             <ion-button
               v-if="machine.is_active && machine.status === 'available'"
@@ -227,6 +238,123 @@
       </div>
       
       </div>
+
+      <!-- FAB Button para adicionar máquina -->
+      <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+        <ion-fab-button @click="openCreateMachineModal">
+          <ion-icon :icon="addOutline"></ion-icon>
+        </ion-fab-button>
+      </ion-fab>
+
+      <!-- Modal de Criar/Editar Máquina -->
+      <ion-modal :is-open="showMachineModal" @didDismiss="closeMachineModal">
+        <ion-header>
+          <ion-toolbar>
+            <ion-title>{{ isEditMode ? 'Editar Máquina' : 'Nova Máquina' }}</ion-title>
+            <ion-buttons slot="end">
+              <ion-button @click="closeMachineModal">Cancelar</ion-button>
+            </ion-buttons>
+          </ion-toolbar>
+        </ion-header>
+        <ion-content class="machine-modal-content">
+          <form @submit.prevent="saveMachine" class="machine-form">
+            <div class="form-section">
+              <h3 class="section-title">Informações Básicas</h3>
+              
+              <div class="form-group">
+                <ion-label position="stacked" class="form-label">
+                  <ion-icon :icon="hardwareChipOutline"></ion-icon>
+                  Nome da Máquina *
+                </ion-label>
+                <ion-input
+                  v-model="machineForm.name"
+                  type="text"
+                  placeholder="Ex: Máquina 01"
+                  required
+                  :disabled="isSaving"
+                  class="custom-input"
+                ></ion-input>
+              </div>
+
+              <div class="form-group">
+                <ion-label position="stacked" class="form-label">
+                  <ion-icon :icon="barcodeOutline"></ion-icon>
+                  Identificador/Código *
+                </ion-label>
+                <ion-input
+                  v-model="machineForm.identifier"
+                  type="text"
+                  placeholder="Ex: MAQ-001"
+                  required
+                  :disabled="isSaving"
+                  class="custom-input"
+                ></ion-input>
+              </div>
+
+              <div class="form-group">
+                <ion-label position="stacked" class="form-label">
+                  <ion-icon :icon="documentTextOutline"></ion-icon>
+                  Descrição
+                </ion-label>
+                <ion-textarea
+                  v-model="machineForm.description"
+                  placeholder="Informações adicionais sobre a máquina"
+                  :rows="4"
+                  :disabled="isSaving"
+                  class="custom-textarea"
+                ></ion-textarea>
+              </div>
+
+              <div class="form-group" v-if="!isEditMode">
+                <ion-label position="stacked" class="form-label">
+                  <ion-icon :icon="locationOutline"></ion-icon>
+                  Unidade *
+                </ion-label>
+                <ion-select
+                  v-model="machineForm.unit_id"
+                  placeholder="Selecione a unidade"
+                  interface="action-sheet"
+                  :disabled="isSaving || availableUnits.length === 1"
+                  class="custom-select"
+                >
+                  <ion-select-option
+                    v-for="unit in availableUnits"
+                    :key="unit.id"
+                    :value="unit.id"
+                  >
+                    {{ unit.name }}
+                  </ion-select-option>
+                </ion-select>
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <ion-button
+                expand="block"
+                type="submit"
+                :disabled="isSaving || !isFormValid"
+                class="submit-button"
+              >
+                <ion-icon slot="start" :icon="isSaving ? syncOutline : saveOutline"></ion-icon>
+                {{ isSaving ? 'Salvando...' : (isEditMode ? 'Atualizar Máquina' : 'Criar Máquina') }}
+              </ion-button>
+              
+              <ion-button
+                v-if="isEditMode"
+                expand="block"
+                fill="outline"
+                color="danger"
+                @click="confirmDeleteMachine"
+                :disabled="isSaving"
+                class="delete-button"
+              >
+                <ion-icon slot="start" :icon="trashOutline"></ion-icon>
+                Excluir Máquina
+              </ion-button>
+            </div>
+          </form>
+        </ion-content>
+      </ion-modal>
     </ion-content>
   </ion-page>
 </template>
@@ -253,7 +381,15 @@ import {
   IonSegment,
   IonSegmentButton,
   IonLabel,
-  toastController
+  IonFab,
+  IonFabButton,
+  IonModal,
+  IonInput,
+  IonTextarea,
+  IonSelect,
+  IonSelectOption,
+  toastController,
+  alertController
 } from '@ionic/vue';
 import {
   refreshOutline,
@@ -266,7 +402,15 @@ import {
   eyeOutline,
   calendarOutline,
   hardwareChipOutline,
-  chevronForwardOutline
+  chevronForwardOutline,
+  addOutline,
+  saveOutline,
+  syncOutline,
+  trashOutline,
+  barcodeOutline,
+  documentTextOutline,
+  locationOutline,
+  createOutline
 } from 'ionicons/icons';
 
 import { Container } from '../core/di/Container';
@@ -283,6 +427,19 @@ const isLoading = ref(false);
 const filterType = ref('all');
 const currentDate = ref('');
 const currentTime = ref('');
+
+// CRUD State
+const showMachineModal = ref(false);
+const isEditMode = ref(false);
+const isSaving = ref(false);
+const availableUnits = ref<any[]>([]);
+const machineForm = ref({
+  id: null as number | null,
+  name: '',
+  identifier: '',
+  description: '',
+  unit_id: null as number | null
+});
 
 // Update time
 const updateTime = () => {
@@ -628,6 +785,211 @@ const getEmptyStateMessage = () => {
       return 'Nenhuma máquina cadastrada';
   }
 };
+
+// ====================================
+// CRUD Methods
+// ====================================
+
+// Computed para validação do formulário
+const isFormValid = computed(() => {
+  return machineForm.value.name.trim() !== '' &&
+         machineForm.value.identifier.trim() !== '' &&
+         (isEditMode.value || machineForm.value.unit_id !== null);
+});
+
+// Carregar unidades disponíveis
+const loadAvailableUnits = async () => {
+  try {
+    const response = await fetch('/api/user-units', {
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+      }
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      availableUnits.value = data.units || [];
+      
+      // Se há unidade atual, usar ela como padrão
+      if (data.current_unit_id && !isEditMode.value) {
+        machineForm.value.unit_id = data.current_unit_id;
+      } else if (availableUnits.value.length === 1) {
+        machineForm.value.unit_id = availableUnits.value[0].id;
+      }
+    }
+  } catch (error) {
+    console.error('Erro ao carregar unidades:', error);
+  }
+};
+
+// Abrir modal para criar máquina
+const openCreateMachineModal = async () => {
+  isEditMode.value = false;
+  machineForm.value = {
+    id: null,
+    name: '',
+    identifier: '',
+    description: '',
+    unit_id: null
+  };
+  
+  await loadAvailableUnits();
+  showMachineModal.value = true;
+};
+
+// Abrir modal para editar máquina
+const openEditMachineModal = async (machine: any) => {
+  isEditMode.value = true;
+  machineForm.value = {
+    id: machine.id,
+    name: machine.name,
+    identifier: machine.identifier,
+    description: machine.description || '',
+    unit_id: machine.unit_id
+  };
+  
+  await loadAvailableUnits();
+  showMachineModal.value = true;
+};
+
+// Fechar modal
+const closeMachineModal = () => {
+  showMachineModal.value = false;
+  machineForm.value = {
+    id: null,
+    name: '',
+    identifier: '',
+    description: '',
+    unit_id: null
+  };
+};
+
+// Salvar máquina (criar ou atualizar)
+const saveMachine = async () => {
+  if (!isFormValid.value) return;
+  
+  isSaving.value = true;
+  
+  try {
+    const url = isEditMode.value 
+      ? `/api/machines/${machineForm.value.id}`
+      : '/api/machines';
+      
+    const method = isEditMode.value ? 'PUT' : 'POST';
+    
+    const response = await fetch(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+      },
+      body: JSON.stringify({
+        name: machineForm.value.name,
+        identifier: machineForm.value.identifier,
+        description: machineForm.value.description,
+        unit_id: machineForm.value.unit_id
+      })
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      const toast = await toastController.create({
+        message: data.message || (isEditMode.value ? 'Máquina atualizada com sucesso!' : 'Máquina criada com sucesso!'),
+        duration: 3000,
+        color: 'success',
+        position: 'top'
+      });
+      await toast.present();
+      
+      closeMachineModal();
+      await loadMachines(); // Recarregar lista
+    } else {
+      throw new Error(data.message || 'Erro ao salvar máquina');
+    }
+  } catch (error: any) {
+    const toast = await toastController.create({
+      message: error.message || 'Erro ao salvar máquina. Tente novamente.',
+      duration: 4000,
+      color: 'danger',
+      position: 'top'
+    });
+    await toast.present();
+  } finally {
+    isSaving.value = false;
+  }
+};
+
+// Confirmar exclusão de máquina
+const confirmDeleteMachine = async () => {
+  const alert = await alertController.create({
+    header: 'Confirmar Exclusão',
+    message: `Tem certeza que deseja excluir a máquina <strong>${machineForm.value.name}</strong>? Esta ação irá desativá-la.`,
+    buttons: [
+      {
+        text: 'Cancelar',
+        role: 'cancel'
+      },
+      {
+        text: 'Excluir',
+        role: 'destructive',
+        handler: async () => {
+          await deleteMachine();
+        }
+      }
+    ]
+  });
+  
+  await alert.present();
+};
+
+// Excluir máquina
+const deleteMachine = async () => {
+  if (!machineForm.value.id) return;
+  
+  isSaving.value = true;
+  
+  try {
+    const response = await fetch(`/api/machines/${machineForm.value.id}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+      }
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      const toast = await toastController.create({
+        message: data.message || 'Máquina removida com sucesso!',
+        duration: 3000,
+        color: 'success',
+        position: 'top'
+      });
+      await toast.present();
+      
+      closeMachineModal();
+      await loadMachines(); // Recarregar lista
+    } else {
+      throw new Error(data.message || 'Erro ao excluir máquina');
+    }
+  } catch (error: any) {
+    const toast = await toastController.create({
+      message: error.message || 'Erro ao excluir máquina. Tente novamente.',
+      duration: 4000,
+      color: 'danger',
+      position: 'top'
+    });
+    await toast.present();
+  } finally {
+    isSaving.value = false;
+  }
+};
+
+// ====================================
+// End CRUD Methods
+// ====================================
 
 // Lifecycle
 onMounted(() => {
@@ -1212,5 +1574,134 @@ onMounted(() => {
   font-size: 0.9rem;
   color: #6b7280;
   line-height: 1.5;
+}
+
+/* ====================================
+   CRUD Modal Styles
+   ==================================== */
+
+/* Modal Content */
+.machine-modal-content {
+  --background: #f8f9fa;
+}
+
+/* Machine Form */
+.machine-form {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-section {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.section-title {
+  margin: 0 0 1.25rem 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1f2937;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+.form-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.form-label ion-icon {
+  font-size: 1.1rem;
+  color: var(--ion-color-primary);
+}
+
+.custom-input,
+.custom-textarea,
+.custom-select {
+  --background: #f9fafb;
+  --border-color: #e5e7eb;
+  --border-width: 2px;
+  --border-style: solid;
+  --border-radius: 12px;
+  --padding-start: 1rem;
+  --padding-end: 1rem;
+  --padding-top: 0.875rem;
+  --padding-bottom: 0.875rem;
+  font-size: 1rem;
+  color: #1f2937;
+}
+
+.custom-input:focus-within,
+.custom-textarea:focus-within,
+.custom-select:focus-within {
+  --border-color: var(--ion-color-primary);
+  --background: white;
+}
+
+.custom-textarea {
+  --padding-top: 1rem;
+  --padding-bottom: 1rem;
+}
+
+/* Form Actions */
+.form-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.submit-button {
+  --background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-primary-shade) 100%);
+  --box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+  font-weight: 700;
+  text-transform: none;
+  letter-spacing: 0.3px;
+  height: 48px;
+  margin: 0;
+}
+
+.delete-button {
+  height: 44px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0.3px;
+  margin: 0;
+}
+
+.submit-button ion-icon,
+.delete-button ion-icon {
+  font-size: 1.25rem;
+}
+
+/* FAB Button */
+ion-fab-button {
+  --background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-primary-shade) 100%);
+  --box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
+}
+
+ion-fab-button::part(native) {
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
+}
+
+ion-fab-button ion-icon {
+  font-size: 1.75rem;
 }
 </style>

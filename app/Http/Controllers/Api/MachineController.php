@@ -4,10 +4,248 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Machine;
+use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 
 class MachineController extends Controller
 {
+    /**
+     * Criar nova máquina
+     */
+    public function store(Request $request): JsonResponse
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'name' => 'required|string|max:255',
+                'identifier' => 'required|string|max:50|unique:machines,identifier',
+                'description' => 'nullable|string|max:500',
+                'unit_id' => 'required|integer|exists:units,id',
+            ], [
+                'name.required' => 'O nome da máquina é obrigatório.',
+                'identifier.required' => 'O identificador é obrigatório.',
+                'identifier.unique' => 'Já existe uma máquina com este identificador.',
+                'unit_id.required' => 'A unidade é obrigatória.',
+                'unit_id.exists' => 'Unidade inválida.',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Dados inválidos.',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            // Verificar se o usuário tem acesso à unidade
+            $user = $request->user();
+            if (!$user->canAccessUnit($request->input('unit_id'))) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Você não tem permissão para criar máquinas nesta unidade.'
+                ], 403);
+            }
+
+            $machine = Machine::create([
+                'name' => $request->input('name'),
+                'identifier' => $request->input('identifier'),
+                'description' => $request->input('description'),
+                'unit_id' => $request->input('unit_id'),
+                'status' => 'available',
+                'active' => true,
+            ]);
+
+            Log::info("Máquina criada", [
+                'machine_id' => $machine->id,
+                'machine_name' => $machine->name,
+                'unit_id' => $machine->unit_id,
+                'user_id' => $user->id,
+                'user_name' => $user->name
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Máquina criada com sucesso.',
+                'machine' => $machine
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao criar máquina.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Exibir máquina específica
+     */
+    public function show(Machine $machine): JsonResponse
+    {
+        try {
+            // Carregar relacionamentos
+            $machine->load('unit');
+            
+            $currentChecklist = $machine->getCurrentChecklist();
+            $checklistData = null;
+            
+            if ($currentChecklist) {
+                $currentChecklist->load('patient');
+                $checklistData = [
+                    'id' => $currentChecklist->id,
+                    'current_phase' => $currentChecklist->current_phase,
+                    'patient_name' => $currentChecklist->patient->full_name ?? null,
+                    'started_at' => $currentChecklist->created_at,
+                    'is_paused' => method_exists($currentChecklist, 'isPaused') ? $currentChecklist->isPaused() : false,
+                ];
+            }
+
+            return response()->json([
+                'success' => true,
+                'machine' => [
+                    'id' => $machine->id,
+                    'name' => $machine->name,
+                    'identifier' => $machine->identifier,
+                    'description' => $machine->description,
+                    'status' => $machine->status,
+                    'is_active' => $machine->active,
+                    'unit' => $machine->unit,
+                    'current_checklist' => $checklistData,
+                    'created_at' => $machine->created_at,
+                    'updated_at' => $machine->updated_at,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao carregar máquina.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Atualizar máquina
+     */
+    public function update(Request $request, Machine $machine): JsonResponse
+    {
+        try {
+            $validator = Validator::make($request->all(), [
+                'name' => 'required|string|max:255',
+                'identifier' => 'required|string|max:50|unique:machines,identifier,' . $machine->id,
+                'description' => 'nullable|string|max:500',
+            ], [
+                'name.required' => 'O nome da máquina é obrigatório.',
+                'identifier.required' => 'O identificador é obrigatório.',
+                'identifier.unique' => 'Já existe uma máquina com este identificador.',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Dados inválidos.',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            // Verificar se o usuário tem acesso à unidade da máquina
+            $user = $request->user();
+            if (!$user->canAccessUnit($machine->unit_id)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Você não tem permissão para editar máquinas desta unidade.'
+                ], 403);
+            }
+
+            $oldData = $machine->toArray();
+
+            $machine->update([
+                'name' => $request->input('name'),
+                'identifier' => $request->input('identifier'),
+                'description' => $request->input('description'),
+            ]);
+
+            Log::info("Máquina atualizada", [
+                'machine_id' => $machine->id,
+                'old_data' => $oldData,
+                'new_data' => $machine->toArray(),
+                'user_id' => $user->id,
+                'user_name' => $user->name
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Máquina atualizada com sucesso.',
+                'machine' => $machine
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao atualizar máquina.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Deletar máquina (soft delete via active = false)
+     */
+    public function destroy(Request $request, Machine $machine): JsonResponse
+    {
+        try {
+            // Verificar se o usuário tem acesso à unidade da máquina
+            $user = $request->user();
+            if (!$user->canAccessUnit($machine->unit_id)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Você não tem permissão para excluir máquinas desta unidade.'
+                ], 403);
+            }
+
+            // Validar se máquina está ocupada
+            if ($machine->status === 'occupied') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Não é possível excluir uma máquina ocupada. Finalize a sessão primeiro.'
+                ], 422);
+            }
+
+            // Validar se máquina está reservada
+            if ($machine->status === 'reserved') {
+                $currentChecklist = $machine->getCurrentChecklist();
+                if ($currentChecklist) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Máquina reservada para um checklist. Cancele o checklist primeiro.'
+                    ], 422);
+                }
+            }
+
+            // Soft delete - apenas desativa
+            $machine->active = false;
+            $machine->save();
+
+            Log::info("Máquina deletada (soft delete)", [
+                'machine_id' => $machine->id,
+                'machine_name' => $machine->name,
+                'user_id' => $user->id,
+                'user_name' => $user->name
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Máquina removida com sucesso.'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao excluir máquina.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function available(): JsonResponse
     {
         try {
@@ -205,7 +443,7 @@ class MachineController extends Controller
             $machine->save();
 
             // Log da alteração (opcional - você pode criar uma tabela de logs)
-            \Log::info("Status da máquina alterado", [
+            Log::info("Status da máquina alterado", [
                 'machine_id' => $machine->id,
                 'machine_name' => $machine->name,
                 'old_status' => $oldStatus,
@@ -260,7 +498,7 @@ class MachineController extends Controller
                 $machine->status = 'available'; // Volta como disponível
                 $machine->save();
 
-                \Log::info("Máquina ativada", [
+                Log::info("Máquina ativada", [
                     'machine_id' => $machine->id,
                     'machine_name' => $machine->name,
                     'reason' => $reason,
@@ -302,7 +540,7 @@ class MachineController extends Controller
             $machine->active = false;
             $machine->save();
 
-            \Log::info("Máquina desativada", [
+            Log::info("Máquina desativada", [
                 'machine_id' => $machine->id,
                 'machine_name' => $machine->name,
                 'reason' => $reason,

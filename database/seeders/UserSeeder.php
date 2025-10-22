@@ -275,9 +275,20 @@ class UserSeeder extends Seeder
                     'role' => $userData['role'],
                     'default_view' => $userData['role'] === 'tecnico' ? 'mobile' : 'desktop',
                     'unit_id' => $unit->id,
+                    'current_unit_id' => $unit->id, // Define também a unidade atual
                     'email_verified_at' => now(),
                 ]
             );
+
+            // Associar usuário à unidade na tabela pivot (user_unit)
+            // Isso é necessário para o sistema de múltiplas unidades
+            if (!$user->units()->where('unit_id', $unit->id)->exists()) {
+                $user->units()->attach($unit->id, [
+                    'is_primary' => true,
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ]);
+            }
 
             // Atribuir role do Spatie Permission
             $spatieRole = match($userData['role']) {

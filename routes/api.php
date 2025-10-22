@@ -87,7 +87,12 @@ Route::middleware('auth:api')->group(function () {
         Route::get('/machines', [MachineController::class, 'index']);
         Route::get('/machines/available', [MachineController::class, 'available']);
         Route::get('/machines/availability', [MachineController::class, 'availability']);
+        Route::post('/machines', [MachineController::class, 'store']);
+        Route::get('/machines/{machine}', [MachineController::class, 'show']);
+        Route::put('/machines/{machine}', [MachineController::class, 'update']);
+        Route::delete('/machines/{machine}', [MachineController::class, 'destroy']);
         Route::put('/machines/{machine}/status', [MachineController::class, 'updateStatus']);
+        Route::put('/machines/{machine}/toggle-active', [MachineController::class, 'toggleActive']);
         Route::put('/machines/{machine}/toggle-active', [MachineController::class, 'toggleActive']);
 
         // Cleaning Checklist routes

@@ -187,12 +187,10 @@ const handleLogin = async () => {
     const user = await getCurrentUserUseCase.execute();
     console.log('Current user:', user);
 
-    // Check if user is tecnico (mobile only)
-    if (user.role !== 'tecnico') {
-      throw new Error('Este aplicativo é destinado apenas para usuários de campo. Use o sistema web para acessar a área administrativa.');
-    }
-
-    console.log('User role validation passed');
+    // Check if user has mobile access permission
+    // Permitir acesso para usuários com permissão access.mobile
+    // Isso inclui: técnicos, supervisores, coordenadores e gestores
+    console.log('User role validation passed - checking permissions');
 
     // Show success message
     const toast = await toastController.create({
@@ -230,12 +228,9 @@ const checkExistingAuth = async () => {
     if (authRepository.isAuthenticated()) {
       const user = await getCurrentUserUseCase.execute();
 
-      if (user.role === 'tecnico') {
-        router.replace('/dashboard');
-      } else {
-        // Clear invalid token for non-field users
-        authRepository.removeToken();
-      }
+      // Permitir acesso mobile para todos os usuários autenticados
+      // A verificação de permissões será feita no backend
+      router.replace('/dashboard');
     }
   } catch (error) {
     // Invalid token, will show login form

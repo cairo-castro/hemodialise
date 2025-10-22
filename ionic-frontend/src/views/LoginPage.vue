@@ -182,10 +182,8 @@ const handleLogin = async () => {
     // Get user info
     const user = await getCurrentUserUseCase.execute();
 
-    // Check if user is field_user (mobile only)
-    if (user.role !== 'field_user') {
-      throw new Error('Este aplicativo é destinado apenas para usuários de campo. Use o sistema web para acessar a área administrativa.');
-    }
+    // Permitir acesso mobile para todos os usuários autenticados
+    // A verificação de permissões será feita no backend
 
     // Show success message
     const toast = await toastController.create({
@@ -217,12 +215,9 @@ const checkExistingAuth = async () => {
     if (authRepository.isAuthenticated()) {
       const user = await getCurrentUserUseCase.execute();
 
-      if (user.role === 'field_user') {
-        router.replace('/dashboard');
-      } else {
-        // Clear invalid token for non-field users
-        authRepository.removeToken();
-      }
+      // Permitir acesso mobile para todos os usuários autenticados
+      // A verificação de permissões será feita no backend
+      router.replace('/dashboard');
     }
   } catch (error) {
     // Invalid token, will show login form
