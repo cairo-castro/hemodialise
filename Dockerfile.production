@@ -53,7 +53,8 @@ RUN apk add --no-cache \
     libzip \
     icu-libs \
     icu-data-full \
-    git
+    git \
+    unzip
 
 # Install build dependencies and PHP extensions
 RUN apk add --no-cache --virtual .build-deps \
@@ -69,13 +70,16 @@ RUN apk add --no-cache --virtual .build-deps \
 # Verify extensions are loaded
 RUN php -m | grep -E 'zip|intl|bcmath'
 
-# Copy Composer binary
+# Copy Composer binary from official image
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Verify Composer installation
+RUN composer --version
 
 # Copy dependency files only (better caching)
 COPY composer.json composer.lock ./
 
-# Install PHP dependencies with cache optimization
+# Install PHP dependencies with optimizations
 RUN --mount=type=cache,target=/tmp/composer \
     composer install \
         --no-dev \
@@ -85,6 +89,17 @@ RUN --mount=type=cache,target=/tmp/composer \
         --prefer-dist \
         --optimize-autoloader \
         --classmap-authoritative
+
+# Copy application code to run post-autoload-dump scripts
+COPY . .
+
+# Generate optimized autoloader with application structure
+RUN composer dump-autoload \
+        --optimize \
+        --classmap-authoritative \
+        --no-dev \
+    && echo "✅ Autoload optimized successfully!" \
+    && ls -lah vendor/composer/autoload_*.php
 
 # ==============================================
 # Stage 3: Production Runtime (MariaDB Support)
@@ -119,6 +134,10 @@ RUN apk add --no-cache \
     freetype \
     oniguruma \
     icu-libs \
+    icu-data-full \
+    # Composer dependencies
+    git \
+    unzip \
     # Utilities
     curl \
     bash \
@@ -144,6 +163,12 @@ RUN apk add --no-cache \
         intl \
     && apk del .build-deps \
     && rm -rf /var/cache/apk/* /tmp/*
+
+# Copy Composer binary for production maintenance
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+# Verify Composer is available
+RUN composer --version && echo "✅ Composer installed for production maintenance"
 
 # Configure PHP OPcache for production performance
 RUN { \
@@ -210,7 +235,6 @@ RUN mkdir -p \
     public/desktop \
     public/mobile-assets \
     && chown -R laravel:laravel storage bootstrap/cache public/desktop public/mobile-assets \
-
     && chmod -R 775 storage bootstrap/cache \
     && chmod -R 755 public \
     && find storage -type f -exec chmod 664 {} \; 2>/dev/null || true \

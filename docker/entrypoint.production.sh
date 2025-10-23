@@ -56,6 +56,40 @@ chown -R laravel:laravel /var/www/html/storage /var/www/html/bootstrap/cache
 chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 echo ""
+echo "Step 3: Verifying Composer autoload..."
+
+# Verify autoload files exist
+if [ ! -f "/var/www/html/vendor/autoload.php" ]; then
+    echo "❌ ERROR: Composer autoload not found!"
+    echo "Running composer dump-autoload..."
+    su-exec laravel composer dump-autoload --optimize --classmap-authoritative --no-dev
+fi
+
+# Verify critical classes are autoloadable
+echo "  → Checking AuthController class..."
+su-exec laravel php -r "
+require '/var/www/html/vendor/autoload.php';
+if (class_exists('App\Http\Controllers\Api\AuthController')) {
+    echo '✓ Api\AuthController is autoloadable\n';
+} else {
+    echo '❌ ERROR: Api\AuthController not found in autoload!\n';
+    exit(1);
+}
+if (class_exists('App\Http\Controllers\Frontend\AuthController')) {
+    echo '✓ Frontend\AuthController is autoloadable\n';
+} else {
+    echo '❌ ERROR: Frontend\AuthController not found in autoload!\n';
+    exit(1);
+}
+"
+
+if [ $? -ne 0 ]; then
+    echo "❌ Autoload verification failed! Regenerating..."
+    su-exec laravel composer dump-autoload --optimize --classmap-authoritative --no-dev
+    echo "✓ Autoload regenerated successfully"
+fi
+
+echo ""
 echo "Optimizing Laravel for production..."
 
 # Clear all caches first
