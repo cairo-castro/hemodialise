@@ -25,12 +25,36 @@ COPY vite.config.js ./vite.config.js
 COPY tsconfig.json ./tsconfig.json
 COPY ionic-frontend/ ./ionic-frontend/
 
-# Build production assets
-RUN npm run build:desktop && \
-    npm run build:mobile && \
-    # Verify build outputs
-    ls -la public/desktop/ && \
-    ls -la public/mobile-assets/
+# Build production assets with better error handling
+RUN set -e; \
+    echo "=== Building Desktop Assets ==="; \
+    npm run build:desktop || { echo "❌ Desktop build failed!"; exit 1; }; \
+    \
+    echo "=== Building Mobile Assets ==="; \
+    npm run build:mobile || { echo "❌ Mobile build failed!"; exit 1; }; \
+    \
+    echo "=== Verifying Build Outputs ==="; \
+    if [ -d "public/build/desktop" ]; then \
+        echo "✅ Desktop: public/build/desktop"; \
+        ls -la public/build/desktop/ | head -10; \
+    else \
+        echo "❌ Desktop build directory NOT found!"; \
+        echo "Searching for build outputs:"; \
+        find public -type d -name "desktop" -o -name "build" 2>/dev/null || true; \
+        exit 1; \
+    fi; \
+    \
+    if [ -d "public/mobile-assets" ]; then \
+        echo "✅ Mobile: public/mobile-assets"; \
+        ls -la public/mobile-assets/ | head -10; \
+    else \
+        echo "❌ Mobile assets directory NOT found!"; \
+        echo "Searching for build outputs:"; \
+        find public -type d -name "mobile*" 2>/dev/null || true; \
+        exit 1; \
+    fi; \
+    \
+    echo "✅ Frontend builds completed successfully!"
 
 # ==============================================
 # Stage 2: PHP Composer Dependencies
@@ -175,7 +199,7 @@ COPY --chown=laravel:laravel . .
 
 # Copy built dependencies from previous stages
 COPY --from=composer-builder --chown=laravel:laravel /build/vendor ./vendor
-COPY --from=node-builder --chown=laravel:laravel /build/public/desktop ./public/desktop
+COPY --from=node-builder --chown=laravel:laravel /build/public/build/desktop ./public/build/desktop
 COPY --from=node-builder --chown=laravel:laravel /build/public/mobile-assets ./public/mobile-assets
 
 # ⚠️  IMPORTANT: Environment Variables
@@ -193,9 +217,10 @@ RUN mkdir -p \
     storage/logs \
     storage/app/public \
     bootstrap/cache \
-    public/desktop \
+    public/build/desktop \
     public/mobile-assets \
-    && chown -R laravel:laravel storage bootstrap/cache \
+    && chown -R laravel:laravel storage bootstrap/cache public/build \
+
     && chmod -R 775 storage bootstrap/cache \
     && chmod -R 755 public \
     && find storage -type f -exec chmod 664 {} \; 2>/dev/null || true \
