@@ -225,7 +225,9 @@ COPY --chown=root:root docker/supervisor/supervisord.conf /etc/supervisord.conf
 
 # Configure PHP-FPM for production with Unix socket (best practice)
 # Socket is more performant and secure than TCP
-RUN sed -i 's/user = www-data/user = laravel/g' /usr/local/etc/php-fpm.d/www.conf && \
+# CACHE BUST: 2025-10-23-1900 - Force rebuild to apply listen.group fix
+RUN echo "Configuring PHP-FPM with Unix socket - Build: 2025-10-23-1900" && \
+    sed -i 's/user = www-data/user = laravel/g' /usr/local/etc/php-fpm.d/www.conf && \
     sed -i 's/group = www-data/group = laravel/g' /usr/local/etc/php-fpm.d/www.conf && \
     sed -i 's/listen = 127.0.0.1:9000/listen = \/var\/run\/php-fpm.sock/g' /usr/local/etc/php-fpm.d/www.conf && \
     sed -i 's/;listen.owner = www-data/listen.owner = nginx/g' /usr/local/etc/php-fpm.d/www.conf && \
@@ -240,7 +242,8 @@ RUN sed -i 's/user = www-data/user = laravel/g' /usr/local/etc/php-fpm.d/www.con
         echo 'pm.max_spare_servers = 15'; \
         echo 'pm.max_requests = 500'; \
         echo 'pm.process_idle_timeout = 10s'; \
-    } >> /usr/local/etc/php-fpm.d/www.conf
+    } >> /usr/local/etc/php-fpm.d/www.conf && \
+    echo "PHP-FPM configuration completed - listen.group=nginx applied"
 
 # Ensure /var/run directory has correct permissions for socket creation
 RUN mkdir -p /var/run && chmod 755 /var/run
