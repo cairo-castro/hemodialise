@@ -26,18 +26,18 @@ class AuthController extends Controller
 
             $user = Auth::user();
 
-            // Determinar redirecionamento baseado no role
-            $redirectUrl = '/dashboard'; // fallback
+            // Smart redirect simplificado: apenas /mobile ou /desktop
+            $redirectUrl = '/desktop'; // fallback padrão
             
             if ($user->isTecnico()) {
                 // Técnicos SEMPRE mobile
                 $redirectUrl = '/mobile';
-            } else if ($user->canAccessAdmin()) {
-                // Usuários com permissão admin vão para Filament
-                $redirectUrl = '/admin';
+            } else if ($user->default_view === 'mobile') {
+                // Usuários com preferência mobile
+                $redirectUrl = '/mobile';
             } else {
-                // Fallback para desktop
-                $redirectUrl = '/desktop/preline';
+                // Todos os outros vão para desktop
+                $redirectUrl = '/desktop';
             }
 
             // Retornar JSON para Vue.js
@@ -49,7 +49,8 @@ class AuthController extends Controller
                     'user' => [
                         'name' => $user->name,
                         'email' => $user->email,
-                        'role' => $user->role
+                        'role' => $user->role,
+                        'default_view' => $user->default_view
                     ]
                 ]);
             }

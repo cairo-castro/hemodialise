@@ -5,6 +5,10 @@
       <div class="min-h-screen flex items-center justify-center p-4">
         <div class="w-full max-w-md bg-white rounded-lg shadow-lg p-6">
           <div class="text-center mb-6">
+            <!-- Logo Mobile -->
+            <div class="mb-4">
+              <img src="/images/logo-hemodialise.png" alt="Logo Hemodiálise" class="h-16 mx-auto" onerror="this.style.display='none'">
+            </div>
             <h1 class="text-2xl font-bold text-gray-800">Sistema Hemodiálise</h1>
             <p class="text-gray-600">Acesso Mobile</p>
           </div>
@@ -52,10 +56,10 @@
           </form>
 
           <div class="mt-6 text-center">
-            <p class="text-sm text-gray-500">Credenciais de teste:</p>
+            <p class="text-sm text-gray-500">Credenciais de acesso:</p>
             <div class="text-xs text-gray-400 space-y-1">
-              <p><strong>Técnico:</strong> tecnico.joao@hemodialise.com / tecnico123</p>
-              <p><strong>Supervisor:</strong> supervisor@hemodialise.com / super123</p>
+              <p><strong>Admin:</strong> admin@hemodialise.ma.gov.br / admin123</p>
+              <p><strong>Unidades:</strong> Email da planilha / senha123</p>
             </div>
           </div>
         </div>
@@ -68,6 +72,10 @@
         <!-- Left side - Image/Brand -->
         <div class="hidden lg:flex lg:w-1/2 bg-blue-600 items-center justify-center">
           <div class="text-center text-white">
+            <!-- Logo Desktop -->
+            <div class="mb-6">
+              <img src="/images/logo-hemodialise-white.png" alt="Logo Hemodiálise" class="h-24 mx-auto" onerror="this.src='/images/logo-hemodialise.png'">
+            </div>
             <h1 class="text-4xl font-bold mb-4">Sistema Hemodiálise</h1>
             <p class="text-xl text-blue-100">Gestão Completa e Segura</p>
             <div class="mt-8">
@@ -84,6 +92,10 @@
         <div class="w-full lg:w-1/2 flex items-center justify-center p-8">
           <div class="w-full max-w-md">
             <div class="text-center mb-8">
+              <!-- Logo no formulário desktop -->
+              <div class="mb-4 lg:hidden">
+                <img src="/images/logo-hemodialise.png" alt="Logo Hemodiálise" class="h-16 mx-auto" onerror="this.style.display='none'">
+              </div>
               <h2 class="text-3xl font-bold text-gray-800">Bem-vindo</h2>
               <p class="text-gray-600 mt-2">Faça login para acessar o sistema</p>
             </div>
@@ -138,12 +150,12 @@
             </form>
 
             <div class="mt-8 text-center border-t pt-6">
-              <p class="text-sm text-gray-500 mb-2">Credenciais de teste:</p>
+              <p class="text-sm text-gray-500 mb-2">Credenciais de acesso:</p>
               <div class="text-xs text-gray-400 space-y-1">
-                <p><strong>Admin:</strong> admin@hemodialise.com / admin123</p>
-                <p><strong>Gestor:</strong> gestor@hemodialise.com / gestor123</p>
-                <p><strong>Coordenador:</strong> coordenador@hemodialise.com / coord123</p>
-                <p><strong>Supervisor:</strong> supervisor@hemodialise.com / super123</p>
+                <p><strong>Admin:</strong> admin@hemodialise.ma.gov.br / admin123</p>
+                <p><strong>Gerente:</strong> joenvilly.azevedo@emserh.ma.gov.br / A123456*</p>
+                <p><strong>Coordenador:</strong> andre.campos@emserh.ma.gov.br / A123456*</p>
+                <p><strong>Unidades:</strong> Email da planilha / senha123</p>
               </div>
             </div>
           </div>
