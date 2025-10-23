@@ -11,6 +11,9 @@ FROM node:20-alpine AS node-builder
 
 WORKDIR /build
 
+# Update npm to latest version
+RUN npm install -g npm@latest
+
 # Copy dependency files only (better caching)
 COPY package.json package-lock.json ./
 
@@ -222,8 +225,8 @@ RUN sed -i 's/user = www-data/user = laravel/g' /usr/local/etc/php-fpm.d/www.con
     sed -i 's/;listen.owner = www-data/listen.owner = laravel/g' /usr/local/etc/php-fpm.d/www.conf && \
     sed -i 's/;listen.group = www-data/listen.group = laravel/g' /usr/local/etc/php-fpm.d/www.conf && \
     sed -i 's/;listen.mode = 0660/listen.mode = 0660/g' /usr/local/etc/php-fpm.d/www.conf && \
-    # PHP-FPM process manager optimization
     { \
+        # PHP-FPM process manager optimization
         echo 'pm = dynamic'; \
         echo 'pm.max_children = 50'; \
         echo 'pm.start_servers = 5'; \
