@@ -150,8 +150,8 @@ COPY --from=composer-builder --chown=laravel:laravel /build/vendor ./vendor
 COPY --from=node-builder --chown=laravel:laravel /build/public/desktop ./public/desktop
 COPY --from=node-builder --chown=laravel:laravel /build/public/mobile-assets ./public/mobile-assets
 
-# ⚠️  Environment variables are injected by Dokploy at runtime
-# DO NOT copy .env file here - configure in Dokploy UI instead
+# Environment variables are injected by Dokploy at runtime
+# No .env file is copied - all configuration comes from Dokploy UI
 # See DOKPLOY-ENV-GUIDE.md for complete setup instructions
 
 # Criar diretórios necessários com permissões corretas
