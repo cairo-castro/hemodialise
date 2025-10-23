@@ -18,7 +18,15 @@ return new class extends Migration
         // - Vespertino: 12:00 - 18:00
         // - Noturno: 18:00 - 00:00
         // - Madrugada: 00:00 - 06:00
-        DB::statement("ALTER TABLE safety_checklists MODIFY COLUMN shift ENUM('matutino', 'vespertino', 'noturno', 'madrugada') NOT NULL");
+
+        // SQLite não suporta MODIFY COLUMN ou ENUM
+        // O novo valor 'madrugada' já pode ser usado sem modificar a estrutura
+        // pois SQLite não valida ENUMs como MySQL/MariaDB
+
+        // Para MySQL/MariaDB, só executamos se não for SQLite
+        if (DB::connection()->getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE safety_checklists MODIFY COLUMN shift ENUM('matutino', 'vespertino', 'noturno', 'madrugada') NOT NULL");
+        }
     }
 
     /**
@@ -27,6 +35,9 @@ return new class extends Migration
     public function down(): void
     {
         // Remove 'madrugada' do enum (volta para 3 turnos)
-        DB::statement("ALTER TABLE safety_checklists MODIFY COLUMN shift ENUM('matutino', 'vespertino', 'noturno') NOT NULL");
+        // Só executa para MySQL/MariaDB
+        if (DB::connection()->getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE safety_checklists MODIFY COLUMN shift ENUM('matutino', 'vespertino', 'noturno') NOT NULL");
+        }
     }
 };
