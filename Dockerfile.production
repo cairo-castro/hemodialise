@@ -220,9 +220,14 @@ COPY --chown=root:root docker/nginx/default.conf /etc/nginx/http.d/default.conf
 # Configure Supervisor
 COPY --chown=root:root docker/supervisor/supervisord.conf /etc/supervisord.conf
 
-# Configure PHP-FPM for production
+# Configure PHP-FPM for production with Unix socket (best practice)
+# Socket is more performant and secure than TCP
 RUN sed -i 's/user = www-data/user = laravel/g' /usr/local/etc/php-fpm.d/www.conf && \
     sed -i 's/group = www-data/group = laravel/g' /usr/local/etc/php-fpm.d/www.conf && \
+    sed -i 's/listen = 127.0.0.1:9000/listen = \/var\/run\/php-fpm.sock/g' /usr/local/etc/php-fpm.d/www.conf && \
+    sed -i 's/;listen.owner = www-data/listen.owner = nginx/g' /usr/local/etc/php-fpm.d/www.conf && \
+    sed -i 's/;listen.group = www-data/listen.group = nginx/g' /usr/local/etc/php-fpm.d/www.conf && \
+    sed -i 's/;listen.mode = 0660/listen.mode = 0660/g' /usr/local/etc/php-fpm.d/www.conf && \
     { \
         # PHP-FPM process manager optimization
         echo 'pm = dynamic'; \
@@ -233,6 +238,9 @@ RUN sed -i 's/user = www-data/user = laravel/g' /usr/local/etc/php-fpm.d/www.con
         echo 'pm.max_requests = 500'; \
         echo 'pm.process_idle_timeout = 10s'; \
     } >> /usr/local/etc/php-fpm.d/www.conf
+
+# Ensure /var/run directory has correct permissions for socket creation
+RUN mkdir -p /var/run && chmod 755 /var/run
 
 # Copy and set permissions for entrypoint script
 COPY --chown=root:root --chmod=755 docker/entrypoint.production.sh /usr/local/bin/entrypoint.sh
