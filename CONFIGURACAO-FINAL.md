@@ -15,10 +15,10 @@
 - Host permitido: `%` (qualquer IP Docker)
 
 ### 2. ✅ Frontend Build
-- Desktop: `public/build/desktop` ✅ (corrigido)
+- Desktop: `public/desktop` ✅ (CORRIGIDO - era public/build/desktop)
 - Mobile: `public/mobile-assets` ✅
-- Error handling melhorado
-- Logs detalhados no build
+- Builds funcionando corretamente
+- Paths confirmados nos logs
 
 ### 3. ✅ Extensões PHP
 - `intl`, `zip`, `bcmath` instaladas corretamente
@@ -166,12 +166,19 @@ git push origin main
 Você deve ver no log:
 ```
 === Building Desktop Assets ===
-✅ Desktop: public/build/desktop
+vite v5.2.0 building for production...
+✓ built in XXs
 
 === Building Mobile Assets ===
-✅ Mobile: public/mobile-assets
+vite v5.2.0 building for production...
+✓ built in XXs
 
-✅ Frontend builds completed successfully!
+=== Verifying Build Outputs ===
+Desktop output:
+public/desktop
+Mobile output:
+public/mobile-assets
+✅ Frontend builds completed!
 ```
 
 E também:
