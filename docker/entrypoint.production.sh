@@ -152,6 +152,28 @@ echo "=============================================="
 echo "✓ Application setup completed successfully!"
 echo "=============================================="
 echo ""
+
+# Ensure /var/run exists with correct permissions for PHP-FPM socket
+echo "Preparing PHP-FPM socket directory..."
+mkdir -p /var/run
+chmod 755 /var/run
+
+# Verify PHP-FPM configuration for socket
+if grep -q "listen = /var/run/php-fpm.sock" /usr/local/etc/php-fpm.d/www.conf; then
+    echo "✓ PHP-FPM configured to use Unix socket"
+
+    # Ensure socket permissions are configured
+    if ! grep -q "^listen.owner" /usr/local/etc/php-fpm.d/www.conf; then
+        echo "⚠️  Adding missing socket permissions..."
+        echo "listen.owner = nginx" >> /usr/local/etc/php-fpm.d/www.conf
+        echo "listen.group = nginx" >> /usr/local/etc/php-fpm.d/www.conf
+        echo "listen.mode = 0660" >> /usr/local/etc/php-fpm.d/www.conf
+    fi
+else
+    echo "✓ PHP-FPM configured to use TCP"
+fi
+
+echo ""
 echo "Starting services via Supervisor..."
 echo "  - Nginx (HTTP Server)"
 echo "  - PHP-FPM (Application Server)"
