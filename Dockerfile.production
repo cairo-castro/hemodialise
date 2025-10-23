@@ -184,8 +184,10 @@ COPY --chown=laravel:laravel . .
 
 # Copy built dependencies from previous stages
 COPY --from=composer-builder --chown=laravel:laravel /build/vendor ./vendor
-COPY --from=node-builder --chown=laravel:laravel /build/public/desktop ./public/desktop
-COPY --from=node-builder --chown=laravel:laravel /build/public/mobile-assets ./public/mobile-assets
+
+# Copy ALL frontend build outputs (desktop, build, mobile-assets)
+# This ensures we get the assets regardless of where Vite places them
+COPY --from=node-builder --chown=laravel:laravel /build/public/ ./public/
 
 # ⚠️  IMPORTANT: Environment Variables
 # All configuration is injected by Dokploy at runtime via Environment Variables
