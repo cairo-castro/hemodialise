@@ -1,6 +1,6 @@
 # ==============================================
 # DOCKERFILE PRODUÇÃO - SISTEMA HEMODIÁLISE
-# Otimizado para Dokploy com MariaDB
+# Optimized for Dokploy with DevOps Best Practices
 # Domain: qualidadehd.direcaoclinica.com.br
 # ==============================================
 
@@ -11,26 +11,24 @@ FROM node:20-alpine AS node-builder
 
 WORKDIR /build
 
-# Copiar arquivos de dependências
+# Copy dependency files only (better caching)
 COPY package.json package-lock.json ./
 
-# Instalar todas as dependências (incluindo devDependencies) para poder compilar
-RUN npm ci --legacy-peer-deps && \
-    rm -rf /tmp/npm-cache
+# Install dependencies with cache optimization
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --legacy-peer-deps --no-audit --no-fund
 
-# Copiar arquivos necessários para o build
+# Copy source files for build
 COPY resources/ ./resources/
 COPY public/ ./public/
 COPY vite.config.js ./vite.config.js
 COPY tsconfig.json ./tsconfig.json
 COPY ionic-frontend/ ./ionic-frontend/
 
-# Build dos assets de produção
+# Build production assets
 RUN npm run build:desktop && \
-    npm run build:mobile
-
-# Verificar se os diretórios de build foram criados corretamente
-RUN ls -la public/ && \
+    npm run build:mobile && \
+    # Verify build outputs
     ls -la public/desktop/ && \
     ls -la public/mobile-assets/
 
@@ -41,63 +39,79 @@ FROM php:8.3-cli-alpine AS composer-builder
 
 WORKDIR /build
 
-# Instalar dependências do sistema necessárias
-RUN apk add --no-cache \
+# Install system dependencies (minimal set)
+RUN apk add --no-cache --virtual .build-deps \
     libzip-dev \
     libpng-dev \
     icu-dev \
-    git
+    git \
+    && docker-php-ext-install -j$(nproc) \
+        zip \
+        intl \
+        bcmath \
+    && apk del .build-deps
 
-# Instalar extensões PHP necessárias
-RUN docker-php-ext-install -j$(nproc) \
-    zip \
-    intl \
-    bcmath
-
-# Copiar binário do Composer
+# Copy Composer binary
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Copiar arquivos de dependências
+# Copy dependency files only (better caching)
 COPY composer.json composer.lock ./
 
-# Instalar dependências PHP (production only)
-RUN composer install \
-    --no-dev \
-    --no-interaction \
-    --no-scripts \
-    --no-progress \
-    --prefer-dist \
-    --optimize-autoloader \
-    --classmap-authoritative
+# Install PHP dependencies with cache optimization
+RUN --mount=type=cache,target=/tmp/composer \
+    composer install \
+        --no-dev \
+        --no-interaction \
+        --no-scripts \
+        --no-progress \
+        --prefer-dist \
+        --optimize-autoloader \
+        --classmap-authoritative
 
 # ==============================================
 # Stage 3: Production Runtime (MariaDB Support)
 # ==============================================
 FROM php:8.3-fpm-alpine AS production
 
-LABEL maintainer="Sistema Hemodiálise - Qualidade"
-LABEL version="2.0"
-LABEL description="Sistema de Gestão de Hemodiálise - Produção Dokploy"
+# Metadata
+LABEL maintainer="Sistema Hemodiálise - Qualidade" \
+      version="3.0" \
+      description="Sistema de Gestão de Hemodiálise - Dokploy Production" \
+      org.opencontainers.image.source="https://github.com/cairo-castro/hemodialise"
 
-# Instalar dependências do sistema
+# Set environment defaults (can be overridden by Dokploy)
+ENV APP_ENV=production \
+    PHP_OPCACHE_ENABLE=1 \
+    PHP_OPCACHE_VALIDATE_TIMESTAMPS=0
+
+# Install runtime dependencies and PHP extensions in single layer
 RUN apk add --no-cache \
+    # Web servers & process management
     nginx \
     supervisor \
+    # Database client
     mariadb-client \
-    libzip-dev \
-    libpng-dev \
-    libjpeg-turbo-dev \
-    freetype-dev \
-    oniguruma-dev \
-    icu-dev \
+    # Runtime libraries
+    libzip \
+    libpng \
+    libjpeg-turbo \
+    freetype \
+    oniguruma \
+    icu-libs \
+    # Utilities
     curl \
     bash \
     su-exec \
-    netcat-openbsd
-
-# Instalar extensões PHP (MariaDB/MySQL support) - otimizado
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg && \
-    docker-php-ext-install -j$(nproc) \
+    netcat-openbsd \
+    && apk add --no-cache --virtual .build-deps \
+        libzip-dev \
+        libpng-dev \
+        libjpeg-turbo-dev \
+        freetype-dev \
+        oniguruma-dev \
+        icu-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) \
         pdo_mysql \
         mysqli \
         zip \
@@ -106,10 +120,13 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg && \
         opcache \
         bcmath \
         exif \
-        intl
+        intl \
+    && apk del .build-deps \
+    && rm -rf /var/cache/apk/* /tmp/*
 
-# Configurar OPcache para produção (performance)
+# Configure PHP OPcache for production performance
 RUN { \
+    echo '[opcache]'; \
     echo 'opcache.enable=1'; \
     echo 'opcache.memory_consumption=256'; \
     echo 'opcache.interned_strings_buffer=16'; \
@@ -117,10 +134,12 @@ RUN { \
     echo 'opcache.validate_timestamps=0'; \
     echo 'opcache.save_comments=1'; \
     echo 'opcache.fast_shutdown=1'; \
+    echo 'opcache.enable_cli=0'; \
     } > /usr/local/etc/php/conf.d/opcache.ini
 
-# Configuração PHP para produção
+# Configure PHP for production
 RUN { \
+    echo '[PHP]'; \
     echo 'memory_limit=512M'; \
     echo 'upload_max_filesize=50M'; \
     echo 'post_max_size=50M'; \
@@ -129,32 +148,34 @@ RUN { \
     echo 'max_input_vars=3000'; \
     echo 'expose_php=Off'; \
     echo 'display_errors=Off'; \
+    echo 'display_startup_errors=Off'; \
     echo 'log_errors=On'; \
+    echo 'error_reporting=E_ALL & ~E_DEPRECATED & ~E_STRICT'; \
     echo 'date.timezone=America/Sao_Paulo'; \
     } > /usr/local/etc/php/conf.d/production.ini
 
-# Criar usuário não-root
+# Create non-root user for security
 RUN addgroup -g 1000 laravel && \
     adduser -D -u 1000 -G laravel laravel
 
-# Definir diretório de trabalho
+# Set working directory
 WORKDIR /var/www/html
 
-# Copiar código da aplicação
+# Copy application code (exclude patterns in .dockerignore)
 COPY --chown=laravel:laravel . .
 
-# Copiar dependências do Composer
+# Copy built dependencies from previous stages
 COPY --from=composer-builder --chown=laravel:laravel /build/vendor ./vendor
-
-# Copiar assets buildados do Node.js
 COPY --from=node-builder --chown=laravel:laravel /build/public/desktop ./public/desktop
 COPY --from=node-builder --chown=laravel:laravel /build/public/mobile-assets ./public/mobile-assets
 
-# Environment variables are injected by Dokploy at runtime
-# No .env file is copied - all configuration comes from Dokploy UI
+# ⚠️  IMPORTANT: Environment Variables
+# All configuration is injected by Dokploy at runtime via Environment Variables
+# No .env file is copied to maintain security and follow 12-factor app methodology
+# Configure variables in: Dokploy UI > Projects > qualidade > Environment Variables
 # See DOKPLOY-ENV-GUIDE.md for complete setup instructions
 
-# Criar diretórios necessários com permissões corretas
+# Create required directories with correct permissions
 RUN mkdir -p \
     storage/framework/cache/data \
     storage/framework/sessions \
@@ -164,44 +185,53 @@ RUN mkdir -p \
     storage/app/public \
     bootstrap/cache \
     public/desktop \
-    public/mobile-assets && \
-    chown -R laravel:laravel storage bootstrap/cache && \
-    chmod -R 775 storage bootstrap/cache && \
-    chmod -R 755 public
+    public/mobile-assets \
+    && chown -R laravel:laravel storage bootstrap/cache \
+    && chmod -R 775 storage bootstrap/cache \
+    && chmod -R 755 public \
+    && find storage -type f -exec chmod 664 {} \; 2>/dev/null || true \
+    && find bootstrap/cache -type f -exec chmod 664 {} \; 2>/dev/null || true
 
-# Configurar Nginx
+# Configure Nginx
 COPY --chown=root:root docker/nginx/nginx.conf /etc/nginx/nginx.conf
 COPY --chown=root:root docker/nginx/default.conf /etc/nginx/http.d/default.conf
 
-# Configurar Supervisor
+# Configure Supervisor
 COPY --chown=root:root docker/supervisor/supervisord.conf /etc/supervisord.conf
 
-# Configurar PHP-FPM
+# Configure PHP-FPM for production
 RUN sed -i 's/user = www-data/user = laravel/g' /usr/local/etc/php-fpm.d/www.conf && \
     sed -i 's/group = www-data/group = laravel/g' /usr/local/etc/php-fpm.d/www.conf && \
     sed -i 's/listen = 127.0.0.1:9000/listen = \/var\/run\/php-fpm.sock/g' /usr/local/etc/php-fpm.d/www.conf && \
     sed -i 's/;listen.owner = www-data/listen.owner = laravel/g' /usr/local/etc/php-fpm.d/www.conf && \
     sed -i 's/;listen.group = www-data/listen.group = laravel/g' /usr/local/etc/php-fpm.d/www.conf && \
-    sed -i 's/;listen.mode = 0660/listen.mode = 0660/g' /usr/local/etc/php-fpm.d/www.conf
+    sed -i 's/;listen.mode = 0660/listen.mode = 0660/g' /usr/local/etc/php-fpm.d/www.conf && \
+    # PHP-FPM process manager optimization
+    { \
+        echo 'pm = dynamic'; \
+        echo 'pm.max_children = 50'; \
+        echo 'pm.start_servers = 5'; \
+        echo 'pm.min_spare_servers = 5'; \
+        echo 'pm.max_spare_servers = 15'; \
+        echo 'pm.max_requests = 500'; \
+        echo 'pm.process_idle_timeout = 10s'; \
+    } >> /usr/local/etc/php-fpm.d/www.conf
 
-# Otimizar PHP-FPM
-RUN echo 'pm = dynamic' >> /usr/local/etc/php-fpm.d/www.conf && \
-    echo 'pm.max_children = 50' >> /usr/local/etc/php-fpm.d/www.conf && \
-    echo 'pm.start_servers = 5' >> /usr/local/etc/php-fpm.d/www.conf && \
-    echo 'pm.min_spare_servers = 5' >> /usr/local/etc/php-fpm.d/www.conf && \
-    echo 'pm.max_spare_servers = 15' >> /usr/local/etc/php-fpm.d/www.conf && \
-    echo 'pm.max_requests = 500' >> /usr/local/etc/php-fpm.d/www.conf
-
-# Script de entrypoint
+# Copy and set permissions for entrypoint script
 COPY --chown=root:root --chmod=755 docker/entrypoint.production.sh /usr/local/bin/entrypoint.sh
+COPY --chown=root:root --chmod=755 docker/validate-env.sh /var/www/html/docker/validate-env.sh
 
-# Expor porta HTTP
+# Expose HTTP port
 EXPOSE 80
 
-# Health check otimizado para mais velocidade
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+# Health check with proper configuration
+HEALTHCHECK --interval=30s \
+            --timeout=10s \
+            --start-period=60s \
+            --retries=3 \
     CMD curl -f http://localhost/up || exit 1
 
-# Entrypoint e comando
+# Entrypoint and command
+# Note: Runs as root initially for supervisor/nginx, then drops to laravel user via su-exec
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
