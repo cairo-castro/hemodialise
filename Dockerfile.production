@@ -93,9 +93,12 @@ FROM php:8.3-fpm-alpine AS production
 
 # Metadata
 LABEL maintainer="Sistema Hemodiálise - Qualidade" \
-      version="3.1" \
-      description="Sistema de Gestão de Hemodiálise - Dokploy Production (Fixed PHP Extensions)" \
+      version="3.2" \
+      description="Sistema de Gestão de Hemodiálise - Dokploy Production (Fixed PHP-FPM Socket)" \
       org.opencontainers.image.source="https://github.com/cairo-castro/hemodialise"
+
+# Force cache invalidation for PHP-FPM socket fix - 2025-10-23
+RUN echo "Build timestamp: 2025-10-23-1845"
 
 # Set environment defaults (can be overridden by Dokploy)
 ENV APP_ENV=production \
