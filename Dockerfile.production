@@ -150,8 +150,8 @@ COPY --from=composer-builder --chown=laravel:laravel /build/vendor ./vendor
 COPY --from=node-builder --chown=laravel:laravel /build/public/desktop ./public/desktop
 COPY --from=node-builder --chown=laravel:laravel /build/public/mobile-assets ./public/mobile-assets
 
-# Variáveis de ambiente serão fornecidas pelo Dokploy
-# O arquivo .env será criado pelo entrypoint se necessário
+# Copiar arquivo de ambiente Docker para produção
+COPY --chown=laravel:laravel .env.docker .env
 
 # Criar diretórios necessários com permissões corretas
 RUN mkdir -p \
