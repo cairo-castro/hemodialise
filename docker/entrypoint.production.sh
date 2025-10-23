@@ -5,35 +5,50 @@ echo "=============================================="
 echo "Starting Hemodialise Production Application"
 echo "Domain: qualidadehd.direcaoclinica.com.br"
 echo "=============================================="
+echo ""
+
+# Validate environment variables first
+echo "Step 1: Validating environment variables..."
+if [ -f "/var/www/html/docker/validate-env.sh" ]; then
+    chmod +x /var/www/html/docker/validate-env.sh
+    /var/www/html/docker/validate-env.sh
+    if [ $? -ne 0 ]; then
+        echo ""
+        echo "❌ Environment validation failed!"
+        echo "See DOKPLOY-ENV-GUIDE.md for setup instructions"
+        exit 1
+    fi
+else
+    echo "⚠️  Warning: validate-env.sh not found, skipping validation"
+fi
+
+echo ""
+echo "Step 2: Checking database connection..."
 
 # Function to wait for MariaDB
 wait_for_database() {
     echo "Waiting for MariaDB at $DB_HOST:${DB_PORT}..."
-    
-    max_attempts=30  # Reduzido para mais velocidade
+
+    max_attempts=30
     attempt=0
-    
+
     while [ $attempt -lt $max_attempts ]; do
         if nc -z "$DB_HOST" "${DB_PORT}" 2>/dev/null; then
             echo "✓ Database connection established!"
             return 0
         fi
-        
+
         attempt=$((attempt + 1))
         echo "  Waiting for database... (attempt $attempt/$max_attempts)"
         sleep 2
     done
-    
+
     echo "✗ ERROR: Database connection timeout after $max_attempts attempts"
     exit 1
 }
 
-# Wait for database if DB_HOST is set
-if [ -n "$DB_HOST" ]; then
-    wait_for_database
-else
-    echo "⚠ Warning: DB_HOST not set, skipping database check"
-fi
+# Wait for database
+wait_for_database
 
 echo ""
 echo "Setting up application permissions..."
