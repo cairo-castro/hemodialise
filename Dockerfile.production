@@ -39,17 +39,26 @@ FROM php:8.3-cli-alpine AS composer-builder
 
 WORKDIR /build
 
-# Install system dependencies (minimal set)
+# Install runtime libraries FIRST (must persist after build-deps are removed)
+RUN apk add --no-cache \
+    libzip \
+    icu-libs \
+    icu-data-full \
+    git
+
+# Install build dependencies and PHP extensions
 RUN apk add --no-cache --virtual .build-deps \
     libzip-dev \
-    libpng-dev \
     icu-dev \
-    git \
     && docker-php-ext-install -j$(nproc) \
         zip \
         intl \
         bcmath \
-    && apk del .build-deps
+    && apk del .build-deps \
+    && rm -rf /var/cache/apk/* /tmp/*
+
+# Verify extensions are loaded
+RUN php -m | grep -E 'zip|intl|bcmath'
 
 # Copy Composer binary
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -75,8 +84,8 @@ FROM php:8.3-fpm-alpine AS production
 
 # Metadata
 LABEL maintainer="Sistema Hemodiálise - Qualidade" \
-      version="3.0" \
-      description="Sistema de Gestão de Hemodiálise - Dokploy Production" \
+      version="3.1" \
+      description="Sistema de Gestão de Hemodiálise - Dokploy Production (Fixed PHP Extensions)" \
       org.opencontainers.image.source="https://github.com/cairo-castro/hemodialise"
 
 # Set environment defaults (can be overridden by Dokploy)
