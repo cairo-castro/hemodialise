@@ -150,8 +150,8 @@ COPY --from=composer-builder --chown=laravel:laravel /build/vendor ./vendor
 COPY --from=node-builder --chown=laravel:laravel /build/public/desktop ./public/desktop
 COPY --from=node-builder --chown=laravel:laravel /build/public/mobile-assets ./public/mobile-assets
 
-# O arquivo .env.production será fornecido via docker-compose.yml como environment file,
-# então não precisamos copiá-lo diretamente para o container
+# Copiar arquivo .env.production como .env para garantir configuração correta
+COPY --chown=laravel:laravel .env.production .env
 
 # Criar diretórios necessários com permissões corretas
 RUN mkdir -p \
