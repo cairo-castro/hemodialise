@@ -9,16 +9,28 @@ use App\Http\Controllers\Frontend\AuthController;
 use App\Http\Controllers\MobileController;
 use App\Http\Controllers\JwtAuthController;
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\DesktopController;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
-// Main entry point - redirect to login
-Route::get('/', function () {
-    return redirect()->route('login');
+// Main entry point - redirect based on authentication and device
+Route::get('/', function (Request $request) {
+    // Se não estiver autenticado, vai para login
+    if (!auth()->check()) {
+        return redirect()->route('login');
+    }
+    
+    // Se estiver autenticado, detecta dispositivo e redireciona
+    $userAgent = $request->header('User-Agent', '');
+    $isMobile = stripos($userAgent, 'Mobile') !== false || 
+               stripos($userAgent, 'Android') !== false || 
+               stripos($userAgent, 'iPhone') !== false;
+    
+    return redirect($isMobile ? '/mobile' : '/desktop');
 })->name('home');
 
 // Mobile/Ionic interface - única interface mobile
-Route::prefix('mobile')->name('mobile.')->group(function () {
+Route::prefix('mobile')->name('mobile.')->middleware('auth')->group(function () {
     // Catch-all route for SPA navigation (Vue Router handles all routes)
     // This must be a single route that serves the SPA for ALL paths
     Route::get('/{any?}', function () {
@@ -26,12 +38,12 @@ Route::prefix('mobile')->name('mobile.')->group(function () {
     })->where('any', '.*')->name('spa');
 });
 
-// Desktop interface routes - without smart redirect middleware to avoid loops
-Route::prefix('desktop')->name('desktop.')->group(function () {
+// Desktop interface routes - with authentication middleware
+Route::prefix('desktop')->name('desktop.')->middleware('auth')->group(function () {
     // Desktop/Preline interface - gestão
-    Route::get('/', [App\Http\Controllers\DesktopController::class, 'index'])->name('index');
-    Route::get('/preline', [App\Http\Controllers\DesktopController::class, 'preline'])->name('preline');
-    Route::get('/simple', [App\Http\Controllers\DesktopController::class, 'simple'])->name('simple');
+    Route::get('/', [DesktopController::class, 'index'])->name('index');
+    Route::get('/preline', [DesktopController::class, 'preline'])->name('preline');
+    Route::get('/simple', [DesktopController::class, 'simple'])->name('simple');
 });
 
 

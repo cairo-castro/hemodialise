@@ -5,12 +5,7 @@
         <ion-buttons slot="start">
           <ion-back-button default-href="/dashboard"></ion-back-button>
         </ion-buttons>
-        <ion-title>
-          <div class="header-title">
-            <ion-icon :icon="peopleOutline"></ion-icon>
-            <span>Pacientes</span>
-          </div>
-        </ion-title>
+        <ion-title>Pacientes</ion-title>
         <ion-buttons slot="end">
           <ion-button @click="showCreateModal = true" class="add-button">
             <ion-icon :icon="addOutline" slot="icon-only"></ion-icon>

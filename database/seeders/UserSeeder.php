@@ -40,7 +40,7 @@ class UserSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
-        $gerente->syncRoles(['gestor-unidade']);
+        $gerente->syncRoles(['gestor-global']);
 
         // COORDENADOR GLOBAL - Coordenação em todas as unidades
         $coordenador = \App\Models\User::updateOrCreate(

@@ -9,8 +9,22 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
-    public function showLogin()
+    public function showLogin(Request $request)
     {
+        // Se já estiver autenticado, redirecionar para a interface apropriada
+        if (Auth::check()) {
+            $isMobileDevice = $this->isMobile($request);
+            $redirectUrl = $isMobileDevice ? '/mobile' : '/desktop';
+            
+            \Log::info('User already authenticated, redirecting', [
+                'user' => Auth::user()->email,
+                'device' => $isMobileDevice ? 'mobile' : 'desktop',
+                'redirect' => $redirectUrl
+            ]);
+            
+            return redirect($redirectUrl);
+        }
+        
         return view('frontend.auth.login');
     }
 
@@ -26,19 +40,18 @@ class AuthController extends Controller
 
             $user = Auth::user();
 
-            // Smart redirect simplificado: apenas /mobile ou /desktop
-            $redirectUrl = '/desktop'; // fallback padrão
+            // Detectar dispositivo e redirecionar apropriadamente
+            $isMobileDevice = $this->isMobile($request);
             
-            if ($user->isTecnico()) {
-                // Técnicos SEMPRE mobile
-                $redirectUrl = '/mobile';
-            } else if ($user->default_view === 'mobile') {
-                // Usuários com preferência mobile
-                $redirectUrl = '/mobile';
-            } else {
-                // Todos os outros vão para desktop
-                $redirectUrl = '/desktop';
-            }
+            // Redirecionar baseado no DISPOSITIVO, não no tipo de usuário
+            $redirectUrl = $isMobileDevice ? '/mobile' : '/desktop';
+            
+            \Log::info('Login redirect', [
+                'user' => $user->email,
+                'device' => $isMobileDevice ? 'mobile' : 'desktop',
+                'redirect' => $redirectUrl,
+                'user_agent' => $request->header('User-Agent')
+            ]);
 
             // Retornar JSON para Vue.js
             if ($request->expectsJson() || $request->header('Content-Type') === 'application/json') {
@@ -77,15 +90,30 @@ class AuthController extends Controller
 
     private function isMobile(Request $request)
     {
-        $userAgent = $request->header('User-Agent');
+        $userAgent = $request->header('User-Agent', '');
 
         // Debug: Log para verificar
-        \Log::info('User Agent: ' . $userAgent);
+        \Log::info('User Agent Detection', ['user_agent' => $userAgent]);
 
-        $isMobile = preg_match('/(android|iphone|ipad|mobile|tablet)/i', $userAgent) &&
-                   !preg_match('/(windows|mac|linux|desktop)/i', $userAgent);
+        // Detecção mais precisa de dispositivos móveis
+        $mobileKeywords = [
+            'Mobile', 'Android', 'iPhone', 'iPad', 'iPod', 
+            'BlackBerry', 'Windows Phone', 'webOS', 'Opera Mini',
+            'IEMobile', 'Mobile Safari'
+        ];
 
-        \Log::info('Is Mobile: ' . ($isMobile ? 'true' : 'false'));
+        $isMobile = false;
+        foreach ($mobileKeywords as $keyword) {
+            if (stripos($userAgent, $keyword) !== false) {
+                $isMobile = true;
+                break;
+            }
+        }
+
+        // Excluir tablets grandes que podem preferir versão desktop
+        // mas manter iPad como mobile para melhor experiência
+        
+        \Log::info('Is Mobile Result', ['is_mobile' => $isMobile]);
 
         return $isMobile;
     }

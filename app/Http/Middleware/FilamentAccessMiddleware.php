@@ -12,21 +12,43 @@ class FilamentAccessMiddleware
     {
         $user = $request->user();
 
-        // Verificar se está logado
-        if (!$user) {
-            // Se não está logado, vai para nosso login centralizado
-            return redirect('/login');
+        // Allow access to Filament login page
+        if ($request->routeIs('filament.admin.auth.login')) {
+            return $next($request);
         }
 
-        // Verificar se tem permissão para acessar o Filament
-        if (!$user->canAccessAdmin()) {
-            // Redireciona técnicos para mobile, outros para desktop
-            if ($user->isTecnico()) {
-                return redirect('/mobile');
-            } else {
-                return redirect('/desktop');
-            }
+        // Verificar se está logado
+        if (!$user) {
+            // Redirect to Filament's login page instead of our centralized login
+            return redirect()->route('filament.admin.auth.login');
         }
+
+        // Verificar se tem permissão para acessar o Filament Admin
+        // Apenas usuários GLOBAIS: super-admin, gestor-global ou coordenador global
+        if (!$user->canAccessAdmin()) {
+            \Log::warning('Tentativa de acesso ao admin negada', [
+                'user_id' => $user->id,
+                'email' => $user->email,
+                'role' => $user->role,
+                'unit_id' => $user->unit_id
+            ]);
+
+            // Redirecionar baseado no dispositivo do usuário
+            $userAgent = $request->header('User-Agent', '');
+            $isMobile = stripos($userAgent, 'Mobile') !== false || 
+                       stripos($userAgent, 'Android') !== false || 
+                       stripos($userAgent, 'iPhone') !== false;
+
+            $redirectUrl = $isMobile ? '/mobile' : '/desktop';
+            
+            return redirect($redirectUrl)->with('error', 'Acesso negado. Apenas usuários globais podem acessar o painel administrativo.');
+        }
+
+        \Log::info('Acesso ao admin concedido', [
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'role' => $user->role
+        ]);
 
         return $next($request);
     }

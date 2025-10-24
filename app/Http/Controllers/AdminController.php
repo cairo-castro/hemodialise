@@ -42,9 +42,10 @@ class AdminController extends Controller
             // Verificar se tem permissão para acessar admin
             if (!$user->canAccessAdmin()) {
                 return response()->json([
-                    'error' => 'Acesso negado - permissões insuficientes',
+                    'error' => 'Acesso negado - apenas usuários globais (Admin, Gestor Global, Coordenador Global) podem acessar',
                     'user_role' => $user->role,
-                    'required_roles' => ['gestor', 'coordenador', 'supervisor', 'admin']
+                    'unit_id' => $user->unit_id,
+                    'required' => 'Usuário global (sem unidade vinculada ou role super-admin/gestor-global)'
                 ], 403);
             }
 

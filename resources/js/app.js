@@ -50,27 +50,28 @@ function initializeDesktopApp() {
     }
 }
 
-// Try multiple initialization strategies
+// Initialize only once when DOM is ready
 console.log('Configurando inicialização...');
 
-// Strategy 1: DOM Content Loaded
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM Content Loaded - tentando inicializar...');
+let initialized = false;
+
+function tryInitialize() {
+    if (initialized) {
+        console.log('App já inicializado, ignorando chamada duplicada');
+        return;
+    }
+    initialized = true;
+    console.log('Inicializando app pela primeira vez...');
     initializeDesktopApp();
-});
+}
 
-// Strategy 2: Window Load (fallback)
-window.addEventListener('load', () => {
-    console.log('Window Load - tentando inicializar como fallback...');
-    setTimeout(initializeDesktopApp, 100);
-});
-
-// Strategy 3: Immediate check (if DOM already loaded)
+// Single initialization strategy
 if (document.readyState === 'loading') {
-    console.log('DOM ainda carregando, aguardando...');
+    console.log('DOM ainda carregando, aguardando DOMContentLoaded...');
+    document.addEventListener('DOMContentLoaded', tryInitialize);
 } else {
     console.log('DOM já carregado, inicializando imediatamente...');
-    setTimeout(initializeDesktopApp, 100);
+    tryInitialize();
 }
 
 console.log('App.js configurado completamente');

@@ -31,16 +31,21 @@ import '@ionic/vue/css/display.css';
  */
 
 /*
- * Ionic 8 Dark Mode - System preference based theming
- * Automatically detects system preference and applies appropriate theme
+ * Ionic 8 Dark Mode - Class-based theming (manual control)
+ * Allows manual dark mode toggle via .ion-palette-dark class
+ * Applied to <html> element via useDarkMode() composable
  */
-import '@ionic/vue/css/palettes/dark.system.css';
+import './theme/dark.css';
 
 /* Theme variables */
 import './theme/variables.css';
 
 const app = createApp(App)
-  .use(IonicVue)
+  .use(IonicVue, {
+    // Configuração de tradução para português
+    backButtonText: 'Voltar',
+    mode: 'ios', // ou 'md' para Material Design
+  })
   .use(router);
 
 // Global auth service

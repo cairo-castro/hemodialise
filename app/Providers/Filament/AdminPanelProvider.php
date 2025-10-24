@@ -26,8 +26,10 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login(false)
+            ->login()
             ->brandName('Sistema Hemodiálise')
+            ->brandLogo(asset('hemodialise_logo.png'))
+            ->brandLogoHeight('2.5rem')
             ->favicon(asset('favicon.ico'))
             ->colors([
                 'primary' => Color::Blue,

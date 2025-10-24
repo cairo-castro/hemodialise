@@ -16,4 +16,14 @@
 
 <script setup lang="ts">
 import { IonApp, IonRouterOutlet } from '@ionic/vue';
+import { onMounted } from 'vue';
+import { useDarkMode } from '@mobile/composables/useDarkMode';
+
+// Initialize dark mode globally when app starts
+const { initializeDarkMode } = useDarkMode();
+
+onMounted(() => {
+  initializeDarkMode();
+  console.log('Mobile App mounted - Dark mode initialized');
+});
 </script>

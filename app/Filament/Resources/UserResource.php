@@ -45,12 +45,33 @@ class UserResource extends Resource
                     ])
                     ->required()
                     ->label('Função'),
+                Forms\Components\Checkbox::make('is_global')
+                    ->label('Usuário Global (acesso a todas as unidades)')
+                    ->helperText('Usuários globais não são associados a uma unidade específica')
+                    ->reactive()
+                    ->afterStateUpdated(function ($state, callable $set) {
+                        if ($state) {
+                            // Se global, limpar unit_id
+                            $set('unit_id', null);
+                        }
+                    })
+                    ->default(false),
                 Forms\Components\Select::make('unit_id')
                     ->relationship('unit', 'name')
                     ->label('Unidade Principal')
+                    ->helperText('Unidade principal do usuário. Deixe em branco para usuários globais.')
                     ->searchable()
                     ->preload()
-                    ->required(),
+                    ->hidden(fn (callable $get) => $get('is_global') === true)
+                    ->required(fn (callable $get) => $get('is_global') !== true),
+                Forms\Components\Select::make('units')
+                    ->relationship('units', 'name')
+                    ->label('Unidades Adicionais')
+                    ->helperText('Outras unidades que o usuário pode acessar (além da principal)')
+                    ->multiple()
+                    ->searchable()
+                    ->preload()
+                    ->hidden(fn (callable $get) => $get('is_global') === true),
                 Forms\Components\TextInput::make('password')
                     ->password()
                     ->required()
@@ -88,7 +109,15 @@ class UserResource extends Resource
                     ->label('Unidade Principal')
                     ->searchable()
                     ->sortable()
-                    ->default('Sem Unidade'),
+                    ->default('Global')
+                    ->badge()
+                    ->color(fn ($record) => $record->unit_id === null ? 'success' : 'gray'),
+                Tables\Columns\TextColumn::make('units.name')
+                    ->label('Unidades Adicionais')
+                    ->badge()
+                    ->separator(',')
+                    ->default('-')
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

@@ -130,12 +130,18 @@ class User extends Authenticatable implements JWTSubject
 
     public function canAccessAdmin(): bool
     {
-        $canAccess = in_array($this->role, ['gestor', 'coordenador', 'supervisor', 'admin']);
+        // Apenas usuários GLOBAIS podem acessar o admin
+        // super-admin, gestor-global e coordenadores globais
+        $canAccess = $this->hasRole(['super-admin', 'gestor-global']) || 
+                     ($this->role === 'coordenador' && $this->unit_id === null);
+        
         \Log::info('User canAccessAdmin check', [
             'user_id' => $this->id,
             'role' => $this->role,
+            'unit_id' => $this->unit_id,
             'can_access' => $canAccess
         ]);
+        
         return $canAccess;
     }
 

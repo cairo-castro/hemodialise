@@ -57,15 +57,15 @@ Route::get('/me', function() {
     return response()->json(['error' => 'Unauthenticated'], 401);
 });
 
+// User units routes that work with both JWT and session auth
+Route::prefix('user-units')->middleware('auth:web,api')->group(function () {
+    Route::get('/', [App\Http\Controllers\Api\UserUnitController::class, 'index']);
+    Route::post('/switch', [App\Http\Controllers\Api\UserUnitController::class, 'switch']);
+    Route::get('/current', [App\Http\Controllers\Api\UserUnitController::class, 'current']);
+});
+
 Route::middleware('auth:api')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
-
-    // Rotas para gerenciamento de unidades do usuário
-    Route::prefix('user-units')->group(function () {
-        Route::get('/', [App\Http\Controllers\Api\UserUnitController::class, 'index']);
-        Route::post('/switch', [App\Http\Controllers\Api\UserUnitController::class, 'switch']);
-        Route::get('/current', [App\Http\Controllers\Api\UserUnitController::class, 'current']);
-    });
 
     Route::middleware(['role:tecnico,gestor,coordenador,supervisor,admin', 'unit.scope'])->group(function () {
         // Rotas específicas devem vir ANTES do apiResource para evitar conflitos

@@ -45,10 +45,20 @@ export class HttpClient {
      */
     async request(url, options = {}) {
         const fullUrl = this.baseUrl + url;
-        
+
+        // Get CSRF token from meta tag
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
         try {
             const response = await fetch(fullUrl, {
                 timeout: 10000, // 10 segundos
+                credentials: 'include', // Include cookies for session auth
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    ...(csrfToken && { 'X-CSRF-TOKEN': csrfToken }),
+                    ...options.headers
+                },
                 ...options
             });
 

@@ -235,6 +235,7 @@ import {
 import { Container } from '@mobile/core/di/Container';
 import { User } from '@mobile/core/domain/entities/User';
 import ActiveChecklistCard from '../components/ActiveChecklistCard.vue';
+import { useDarkMode } from '@mobile/composables/useDarkMode';
 
 const router = useRouter();
 const container = Container.getInstance();
@@ -243,6 +244,9 @@ const container = Container.getInstance();
 const getCurrentUserUseCase = container.getCurrentUserUseCase();
 const logoutUseCase = container.getLogoutUseCase();
 
+// Dark mode composable (global state)
+const { isDarkMode, toggleDarkMode: toggleDarkModeGlobal } = useDarkMode();
+
 // Reactive state
 const user = ref<User | null>(null);
 const isOnline = ref(navigator.onLine);
@@ -250,7 +254,6 @@ const statsLoaded = ref(false);
 const todayCount = ref(0);
 const totalMachines = ref(3); // Default fallback
 const loading = ref(false);
-const isDarkMode = ref(false);
 
 // New state for active checklists and machines
 const activeChecklists = ref([]);
@@ -698,38 +701,9 @@ const showComingSoon = async () => {
   await toast.present();
 };
 
-// Dark mode functionality
-const initializeDarkMode = () => {
-  // Check if user has a preference saved
-  const savedPreference = localStorage.getItem('dark-mode');
-
-  if (savedPreference !== null) {
-    isDarkMode.value = savedPreference === 'true';
-  } else {
-    // Use system preference if no saved preference
-    isDarkMode.value = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  }
-
-  // Apply the theme
-  applyDarkMode();
-};
-
-const applyDarkMode = () => {
-  if (isDarkMode.value) {
-    document.body.classList.add('dark');
-  } else {
-    document.body.classList.remove('dark');
-  }
-};
-
+// Dark mode toggle with toast feedback
 const toggleDarkMode = async () => {
-  isDarkMode.value = !isDarkMode.value;
-
-  // Save preference
-  localStorage.setItem('dark-mode', isDarkMode.value.toString());
-
-  // Apply theme
-  applyDarkMode();
+  toggleDarkModeGlobal();
 
   // Show feedback toast
   const toast = await toastController.create({
@@ -739,8 +713,6 @@ const toggleDarkMode = async () => {
     position: 'bottom'
   });
   await toast.present();
-
-  console.log('Dark mode toggled:', isDarkMode.value);
 };
 
 // Network status monitoring
@@ -751,9 +723,6 @@ const updateOnlineStatus = () => {
 // Lifecycle
 onMounted(async () => {
   console.log('Dashboard mounted, loading data...');
-
-  // Initialize dark mode first
-  initializeDarkMode();
 
   // Show loading state
   loading.value = true;

@@ -5,12 +5,7 @@
         <ion-buttons slot="start">
           <ion-back-button default-href="/checklist/new"></ion-back-button>
         </ion-buttons>
-        <ion-title>
-          <div class="modal-title-dash">
-            <ion-icon :icon="personAddOutline"></ion-icon>
-            <span>Novo Paciente</span>
-          </div>
-        </ion-title>
+        <ion-title>Novo Paciente</ion-title>
       </ion-toolbar>
     </ion-header>
 
