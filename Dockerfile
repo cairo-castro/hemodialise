@@ -124,7 +124,10 @@ COPY --chown=laravel:laravel . .
 # Copiar dependências do Composer
 COPY --from=composer-builder --chown=laravel:laravel /app/vendor ./vendor
 
-# Copiar assets buildados do Node
+# Copiar assets buildados do Node (DEPOIS de copiar o código para não sobrescrever)
+# Remove os diretórios primeiro para garantir que vamos usar os buildados
+RUN rm -rf ./public/build ./public/desktop ./public/mobile-assets || true
+
 COPY --from=node-builder --chown=laravel:laravel /app/public/build ./public/build
 COPY --from=node-builder --chown=laravel:laravel /app/public/desktop ./public/desktop
 COPY --from=node-builder --chown=laravel:laravel /app/public/mobile-assets ./public/mobile-assets
