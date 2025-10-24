@@ -88,15 +88,14 @@ export default defineConfig(({ mode }) => {
         );
     }
 
-    // Default configuration (development)
+    // Default configuration (development and Filament)
     else {
         config.plugins.push(
             laravel({
                 input: [
                     'resources/css/app.css',
                     'resources/js/app.js',
-                    'resources/js/auth/login.js',
-                    'resources/js/mobile/main.ts'
+                    'resources/js/auth/login.js'
                 ],
                 refresh: true,
             })
