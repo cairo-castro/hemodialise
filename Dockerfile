@@ -13,18 +13,25 @@ WORKDIR /app
 # Copiar apenas package files para aproveitar cache do Docker
 COPY package*.json ./
 
-# Instalar dependências Node
-RUN npm ci --only=production
+# Instalar dependências Node (incluindo devDependencies para o build)
+RUN npm ci
 
-# Copiar código fonte necessário
+# Copiar código fonte necessário para o build
 COPY resources ./resources
 COPY public ./public
 COPY vite.config.js ./
-COPY tsconfig.json ./
-COPY ionic-frontend ./ionic-frontend
 
-# Build dos assets (mobile e desktop)
-RUN npm run build:mobile && npm run build
+# Build dos assets com verificação de erro
+RUN set -e; \
+    echo "=== Building Default Assets (Filament) ==="; \
+    npm run build || { echo "❌ Default build failed!"; exit 1; }; \
+    echo "=== Building Desktop Assets ==="; \
+    npm run build:desktop || { echo "❌ Desktop build failed!"; exit 1; }; \
+    echo "=== Building Mobile Assets ==="; \
+    npm run build:mobile || { echo "❌ Mobile build failed!"; exit 1; }; \
+    echo "=== Verifying Build Outputs ==="; \
+    ls -la public/ || true; \
+    echo "✅ Frontend builds completed!"
 
 # ==============================================
 # Stage 2: Composer Dependencies
@@ -119,6 +126,7 @@ COPY --from=composer-builder --chown=laravel:laravel /app/vendor ./vendor
 
 # Copiar assets buildados do Node
 COPY --from=node-builder --chown=laravel:laravel /app/public/build ./public/build
+COPY --from=node-builder --chown=laravel:laravel /app/public/desktop ./public/desktop
 COPY --from=node-builder --chown=laravel:laravel /app/public/mobile-assets ./public/mobile-assets
 
 # Criar diretórios necessários com permissões corretas
