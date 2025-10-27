@@ -28,14 +28,23 @@ COPY vite.config.js ./vite.config.js
 COPY tsconfig.json ./tsconfig.json
 COPY ionic-frontend/ ./ionic-frontend/
 
-# Build production assets
+# Create output directories before build
+RUN mkdir -p public/build public/desktop public/mobile-assets
+
+# Build production assets with detailed error reporting
 RUN set -e; \
     echo "=== Building Default/Filament Assets ==="; \
-    npm run build || { echo "❌ Default build failed!"; exit 1; }; \
+    npm run build 2>&1 || { echo "❌ Default build failed! Check error above."; exit 1; }; \
+    echo "✅ Default build completed"; \
+    echo ""; \
     echo "=== Building Desktop Assets ==="; \
-    npm run build:desktop || { echo "❌ Desktop build failed!"; exit 1; }; \
+    npm run build:desktop 2>&1 || { echo "❌ Desktop build failed! Check error above."; exit 1; }; \
+    echo "✅ Desktop build completed"; \
+    echo ""; \
     echo "=== Building Mobile Assets ==="; \
-    npm run build:mobile || { echo "❌ Mobile build failed!"; exit 1; }; \
+    npm run build:mobile 2>&1 || { echo "❌ Mobile build failed! Check error above."; exit 1; }; \
+    echo "✅ Mobile build completed"; \
+    echo ""; \
     echo "=== Verifying Build Outputs ==="; \
     echo "Default build output:"; \
     ls -la public/build/ 2>/dev/null || echo "⚠️  public/build/ not found"; \
@@ -43,7 +52,8 @@ RUN set -e; \
     ls -la public/desktop/ 2>/dev/null || echo "⚠️  public/desktop/ not found"; \
     echo "Mobile output:"; \
     ls -la public/mobile-assets/ 2>/dev/null || echo "⚠️  public/mobile-assets/ not found"; \
-    echo "✅ Frontend builds completed!"
+    echo ""; \
+    echo "✅ All frontend builds completed successfully!"
 
 # ==============================================
 # Stage 2: PHP Composer Dependencies
