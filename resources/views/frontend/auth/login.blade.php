@@ -7,7 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Login - Sistema Hemodiálise</title>
 
-    @vite(['resources/css/app.css', 'resources/js/auth/login.js', 'resources/js/device-detection.js'])
+    @vite(['resources/css/app.css', 'resources/js/auth/login.js'])
     <style>
         .mobile-detect { display: none; }
         @media (max-width: 768px) {
