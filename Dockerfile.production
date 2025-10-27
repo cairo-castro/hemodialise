@@ -28,32 +28,35 @@ COPY vite.config.js ./vite.config.js
 COPY tsconfig.json ./tsconfig.json
 COPY ionic-frontend/ ./ionic-frontend/
 
+# Create placeholder directories for Tailwind @source paths
+# These are referenced in app.css but not needed during build
+RUN mkdir -p vendor/laravel/framework/src/Illuminate/Pagination/resources/views \
+    storage/framework/views
+
 # Create output directories before build
 RUN mkdir -p public/build public/desktop public/mobile-assets
 
-# Build production assets with detailed error reporting
-RUN set -e; \
-    echo "=== Building Default/Filament Assets ==="; \
-    npm run build 2>&1 || { echo "❌ Default build failed! Check error above."; exit 1; }; \
-    echo "✅ Default build completed"; \
-    echo ""; \
-    echo "=== Building Desktop Assets ==="; \
-    npm run build:desktop 2>&1 || { echo "❌ Desktop build failed! Check error above."; exit 1; }; \
-    echo "✅ Desktop build completed"; \
-    echo ""; \
-    echo "=== Building Mobile Assets ==="; \
-    npm run build:mobile 2>&1 || { echo "❌ Mobile build failed! Check error above."; exit 1; }; \
-    echo "✅ Mobile build completed"; \
-    echo ""; \
-    echo "=== Verifying Build Outputs ==="; \
-    echo "Default build output:"; \
-    ls -la public/build/ 2>/dev/null || echo "⚠️  public/build/ not found"; \
-    echo "Desktop output:"; \
-    ls -la public/desktop/ 2>/dev/null || echo "⚠️  public/desktop/ not found"; \
-    echo "Mobile output:"; \
-    ls -la public/mobile-assets/ 2>/dev/null || echo "⚠️  public/mobile-assets/ not found"; \
-    echo ""; \
-    echo "✅ All frontend builds completed successfully!"
+# Build 1: Default/Filament Assets
+RUN echo "=== Building Default/Filament Assets ===" && \
+    npm run build && \
+    echo "✅ Default build completed" && \
+    ls -la public/build/
+
+# Build 2: Desktop Assets
+RUN echo "=== Building Desktop Assets ===" && \
+    npm run build:desktop && \
+    echo "✅ Desktop build completed" && \
+    ls -la public/desktop/
+
+# Build 3: Mobile Assets
+RUN echo "=== Building Mobile Assets ===" && \
+    npm run build:mobile && \
+    echo "✅ Mobile build completed" && \
+    ls -la public/mobile-assets/
+
+# Verify all builds completed
+RUN echo "=== All Frontend Builds Completed ===" && \
+    ls -la public/build/ public/desktop/ public/mobile-assets/
 
 # ==============================================
 # Stage 2: PHP Composer Dependencies
