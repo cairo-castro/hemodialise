@@ -30,15 +30,19 @@ COPY ionic-frontend/ ./ionic-frontend/
 
 # Build production assets
 RUN set -e; \
+    echo "=== Building Default/Filament Assets ==="; \
+    npm run build || { echo "❌ Default build failed!"; exit 1; }; \
     echo "=== Building Desktop Assets ==="; \
     npm run build:desktop || { echo "❌ Desktop build failed!"; exit 1; }; \
     echo "=== Building Mobile Assets ==="; \
     npm run build:mobile || { echo "❌ Mobile build failed!"; exit 1; }; \
     echo "=== Verifying Build Outputs ==="; \
+    echo "Default build output:"; \
+    ls -la public/build/ 2>/dev/null || echo "⚠️  public/build/ not found"; \
     echo "Desktop output:"; \
-    find public -type d -name "desktop" -o -name "build" 2>/dev/null || true; \
+    ls -la public/desktop/ 2>/dev/null || echo "⚠️  public/desktop/ not found"; \
     echo "Mobile output:"; \
-    find public -type d -name "mobile*" 2>/dev/null || true; \
+    ls -la public/mobile-assets/ 2>/dev/null || echo "⚠️  public/mobile-assets/ not found"; \
     echo "✅ Frontend builds completed!"
 
 # ==============================================
@@ -108,12 +112,12 @@ FROM php:8.3-fpm-alpine AS production
 
 # Metadata
 LABEL maintainer="Sistema Hemodiálise - Qualidade" \
-      version="3.2" \
-      description="Sistema de Gestão de Hemodiálise - Dokploy Production (Fixed PHP-FPM Socket)" \
+      version="3.3" \
+      description="Sistema de Gestão de Hemodiálise - Dokploy Production (Fixed Vite Manifest)" \
       org.opencontainers.image.source="https://github.com/cairo-castro/hemodialise"
 
-# Force cache invalidation for PHP-FPM socket fix - 2025-10-23
-RUN echo "Build timestamp: 2025-10-23-1845"
+# Force cache invalidation for Vite manifest fix - 2025-10-27
+RUN echo "Build timestamp: 2025-10-27-1600-VITE-FIX"
 
 # Set environment defaults (can be overridden by Dokploy)
 ENV APP_ENV=production \
@@ -232,9 +236,10 @@ RUN mkdir -p \
     storage/logs \
     storage/app/public \
     bootstrap/cache \
+    public/build \
     public/desktop \
     public/mobile-assets \
-    && chown -R laravel:laravel storage bootstrap/cache public/desktop public/mobile-assets \
+    && chown -R laravel:laravel storage bootstrap/cache public/build public/desktop public/mobile-assets \
     && chmod -R 775 storage bootstrap/cache \
     && chmod -R 755 public \
     && find storage -type f -exec chmod 664 {} \; 2>/dev/null || true \
