@@ -30,9 +30,11 @@ Route::get('/', function (Request $request) {
 })->name('home');
 
 // Mobile/Ionic interface - única interface mobile
-Route::prefix('mobile')->name('mobile.')->middleware('auth')->group(function () {
+// NOTE: No auth middleware here - the mobile SPA handles authentication internally via JWT
+Route::prefix('mobile')->name('mobile.')->group(function () {
     // Catch-all route for SPA navigation (Vue Router handles all routes)
     // This must be a single route that serves the SPA for ALL paths
+    // The mobile app checks authentication on load and shows login if needed
     Route::get('/{any?}', function () {
         return view('mobile.app');
     })->where('any', '.*')->name('spa');
