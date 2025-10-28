@@ -13,20 +13,26 @@ use App\Http\Controllers\DesktopController;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
-// Main entry point - redirect based on authentication and device
+// Main entry point - redirect based on device type
 Route::get('/', function (Request $request) {
-    // Se não estiver autenticado, vai para login
+    // Detect device type FIRST (before checking auth)
+    $userAgent = $request->header('User-Agent', '');
+    $isMobile = stripos($userAgent, 'Mobile') !== false ||
+               stripos($userAgent, 'Android') !== false ||
+               stripos($userAgent, 'iPhone') !== false;
+
+    // Mobile devices ALWAYS go to /mobile (PWA handles its own auth)
+    if ($isMobile) {
+        return redirect('/mobile');
+    }
+
+    // Desktop: check authentication
     if (!auth()->check()) {
         return redirect()->route('login');
     }
-    
-    // Se estiver autenticado, detecta dispositivo e redireciona
-    $userAgent = $request->header('User-Agent', '');
-    $isMobile = stripos($userAgent, 'Mobile') !== false || 
-               stripos($userAgent, 'Android') !== false || 
-               stripos($userAgent, 'iPhone') !== false;
-    
-    return redirect($isMobile ? '/mobile' : '/desktop');
+
+    // Desktop authenticated: go to desktop interface
+    return redirect('/desktop');
 })->name('home');
 
 // Mobile/Ionic interface - única interface mobile
