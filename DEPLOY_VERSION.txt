@@ -1,0 +1,4 @@
+DEPLOY VERSION: 2025-10-28-15:10
+COMMIT: a480152
+DESCRIPTION: Phase 3 complete - JWT removed, CSRF middleware re-added to Filament
+EXPECTED: VerifyCsrfToken::class should be present in AdminPanelProvider middleware array
