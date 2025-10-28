@@ -69,17 +69,10 @@ Route::get('/admin-login', function() {
 // Filament registers /admin and all sub-routes with its own authentication middleware
 // configured in app/Providers/Filament/AdminPanelProvider.php
 // Do NOT create a custom /admin route here as it will conflict with Filament's routing
-
-// Custom admin login route with specific POST handling
-Route::match(['get', 'post'], '/admin/login', function() {
-    // If already logged in and have admin access, redirect to bridge
-    if (auth()->check() && auth()->user()->canAccessAdmin()) {
-        return redirect('/admin-bridge');
-    }
-    
-    // Otherwise, redirect to main login
-    return redirect('/login');
-});
+//
+// Similarly, /admin/login is Filament's default login route - do not override it
+// If you want to use a custom login flow, disable Filament's login in AdminPanelProvider
+// and redirect users through /admin-bridge instead
 Route::post('/logout', function(Request $request) {
     try {
         // Invalidar token JWT se existir
