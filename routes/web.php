@@ -6,45 +6,34 @@ use App\Http\Controllers\Frontend\SafetyChecklistController;
 use App\Http\Controllers\Frontend\CleaningControlController;
 use App\Http\Controllers\Frontend\ChemicalDisinfectionController;
 use App\Http\Controllers\Frontend\AuthController;
-use App\Http\Controllers\MobileController;
-use App\Http\Controllers\JwtAuthController;
-use App\Http\Controllers\AdminController;
 use App\Http\Controllers\DesktopController;
+use App\Services\DeviceDetector;
 use Illuminate\Http\Request;
-use Tymon\JWTAuth\Facades\JWTAuth;
 
-// Main entry point - redirect based on device type
+// Main entry point - simplified routing based on device and auth
 Route::get('/', function (Request $request) {
-    // Detect device type FIRST (before checking auth)
-    $userAgent = $request->header('User-Agent', '');
-    $isMobile = stripos($userAgent, 'Mobile') !== false ||
-               stripos($userAgent, 'Android') !== false ||
-               stripos($userAgent, 'iPhone') !== false;
+    $isMobile = DeviceDetector::isMobile($request);
 
-    // Mobile devices ALWAYS go to /mobile (PWA handles its own auth)
+    // If already authenticated, redirect to appropriate interface
+    if (auth()->check()) {
+        return redirect($isMobile ? '/mobile' : '/desktop');
+    }
+
+    // Not authenticated
     if ($isMobile) {
+        // Mobile: go to PWA (will show login if needed)
         return redirect('/mobile');
+    } else {
+        // Desktop: go to centralized login
+        return redirect('/login');
     }
-
-    // Desktop: check authentication
-    if (!auth()->check()) {
-        return redirect()->route('login');
-    }
-
-    // Desktop authenticated: go to desktop interface
-    return redirect('/desktop');
 })->name('home');
 
-// Mobile/Ionic interface - única interface mobile
-// NOTE: No auth middleware here - the mobile SPA handles authentication internally via JWT
-Route::prefix('mobile')->name('mobile.')->group(function () {
-    // Catch-all route for SPA navigation (Vue Router handles all routes)
-    // This must be a single route that serves the SPA for ALL paths
-    // The mobile app checks authentication on load and shows login if needed
-    Route::get('/{any?}', function () {
-        return view('mobile.app');
-    })->where('any', '.*')->name('spa');
-});
+// Mobile/Ionic interface - PWA with session authentication
+// Uses @guest/@auth Blade directives to show login or app
+Route::get('/mobile/{any?}', function () {
+    return view('mobile.app');
+})->where('any', '.*')->name('mobile.spa');
 
 // Desktop interface routes - with authentication middleware
 Route::prefix('desktop')->name('desktop.')->middleware('auth')->group(function () {
@@ -55,64 +44,31 @@ Route::prefix('desktop')->name('desktop.')->middleware('auth')->group(function (
 });
 
 
-// Rotas de autenticação
-Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-Route::post('/login', [AuthController::class, 'login'])->name('login.post');
-Route::get('/auth/check', [JwtAuthController::class, 'check']);
-Route::get('/admin-bridge', [AdminController::class, 'bridge']);
-Route::post('/admin-login', [AdminController::class, 'login']);
-Route::get('/admin-login', function() {
-    return redirect('/admin-bridge');
-});
+// Rotas de autenticação - centralizadas com Session Laravel
+Route::get('/login', [AuthController::class, 'showLogin'])
+    ->name('login')
+    ->middleware('guest');
+
+Route::post('/login', [AuthController::class, 'login'])
+    ->name('login.post');
 
 // NOTE: /admin route is handled by Filament automatically
 // Filament registers /admin and all sub-routes with its own authentication middleware
 // configured in app/Providers/Filament/AdminPanelProvider.php
-// Do NOT create a custom /admin route here as it will conflict with Filament's routing
-//
-// Similarly, /admin/login is Filament's default login route - do not override it
-// If you want to use a custom login flow, disable Filament's login in AdminPanelProvider
-// and redirect users through /admin-bridge instead
+// Users can access /admin directly and Filament will handle authentication
+// Logout - simplified with session-only auth
 Route::post('/logout', function(Request $request) {
-    try {
-        // Invalidar token JWT se existir
-        $token = $request->bearerToken() ?: $request->header('Authorization');
-        if ($token) {
-            JWTAuth::setToken(str_replace('Bearer ', '', $token))->invalidate();
-        }
-    } catch (\Exception $e) {
-        // Ignore token errors on logout
+    auth()->logout();
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+
+    // Return JSON for AJAX requests or redirect for form submissions
+    if ($request->expectsJson()) {
+        return response()->json(['message' => 'Logout realizado com sucesso']);
     }
 
-    // Limpar sessão Laravel
-    auth()->logout();
-    $request->session()->invalidate();
-    $request->session()->regenerateToken();
-
-    return response()->json(['message' => 'Logout realizado com sucesso']);
+    return redirect('/login')->with('logout_success', true);
 })->name('logout');
-
-Route::get('/logout', function(Request $request) {
-    // Logout via GET - limpar completamente a sessão
-    auth()->logout();
-    $request->session()->flush(); // Remove todos os dados da sessão
-    $request->session()->invalidate();
-    $request->session()->regenerateToken();
-
-    // Hard redirect sem parâmetros para forçar reload completo
-    return redirect('/login')->with('logout_success', true);
-});
-
-// Override Filament logout route
-Route::post('/admin/logout', function(Request $request) {
-    auth()->logout();
-    $request->session()->flush(); // Remove todos os dados da sessão
-    $request->session()->invalidate();
-    $request->session()->regenerateToken();
-
-    // Hard redirect sem parâmetros para forçar reload completo
-    return redirect('/login')->with('logout_success', true);
-})->name('filament.admin.auth.logout');
 
 // Interface performance testing route
 Route::get('/performance-test', function() {

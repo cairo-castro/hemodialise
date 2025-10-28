@@ -13,25 +13,12 @@ class AuthController extends Controller
     {
         // Se já estiver autenticado, redirecionar para a interface apropriada
         if (Auth::check()) {
-            $user = Auth::user();
-
-            // Admin users go to Filament
-            if ($user->canAccessAdmin()) {
-                \Log::info('Admin user already authenticated, redirecting to Filament', [
-                    'user' => $user->email,
-                    'role' => $user->role,
-                    'redirect' => '/admin'
-                ]);
-                return redirect('/admin');
-            }
-
-            // Regular users go by device type
-            $isMobileDevice = $this->isMobile($request);
-            $redirectUrl = $isMobileDevice ? '/mobile' : '/desktop';
+            $isMobile = \App\Services\DeviceDetector::isMobile($request);
+            $redirectUrl = $isMobile ? '/mobile' : '/desktop';
 
             \Log::info('User already authenticated, redirecting by device', [
-                'user' => $user->email,
-                'device' => $isMobileDevice ? 'mobile' : 'desktop',
+                'user' => Auth::user()->email,
+                'device' => $isMobile ? 'mobile' : 'desktop',
                 'redirect' => $redirectUrl
             ]);
 
@@ -53,33 +40,19 @@ class AuthController extends Controller
 
             $user = Auth::user();
 
-            // Verificar se é admin e deve ir para Filament
-            if ($user->canAccessAdmin()) {
-                $redirectUrl = '/admin';
-                $deviceType = 'admin';
+            // Determine redirect: device detection (mobile vs desktop)
+            // Note: Admin users can access /admin directly via URL bookmark
+            $isMobile = \App\Services\DeviceDetector::isMobile($request);
+            $redirectUrl = $isMobile ? '/mobile' : '/desktop';
 
-                \Log::info('Admin user login - redirecting to Filament', [
-                    'user' => $user->email,
-                    'role' => $user->role,
-                    'redirect' => $redirectUrl
-                ]);
-            } else {
-                // Detectar dispositivo e redirecionar apropriadamente
-                $isMobileDevice = $this->isMobile($request);
-                $deviceType = $isMobileDevice ? 'mobile' : 'desktop';
+            \Log::info('User login successful', [
+                'user' => $user->email,
+                'role' => $user->role,
+                'device' => $isMobile ? 'mobile' : 'desktop',
+                'redirect' => $redirectUrl
+            ]);
 
-                // Redirecionar baseado no DISPOSITIVO, não no tipo de usuário
-                $redirectUrl = $isMobileDevice ? '/mobile' : '/desktop';
-
-                \Log::info('Regular user login - redirecting by device', [
-                    'user' => $user->email,
-                    'device' => $deviceType,
-                    'redirect' => $redirectUrl,
-                    'user_agent' => $request->header('User-Agent')
-                ]);
-            }
-
-            // Retornar JSON para Vue.js
+            // Return JSON for AJAX/Vue.js requests
             if ($request->expectsJson() || $request->header('Content-Type') === 'application/json') {
                 return response()->json([
                     'success' => true,
@@ -89,7 +62,6 @@ class AuthController extends Controller
                         'name' => $user->name,
                         'email' => $user->email,
                         'role' => $user->role,
-                        'default_view' => $user->default_view
                     ]
                 ]);
             }
@@ -114,43 +86,4 @@ class AuthController extends Controller
         ]);
     }
 
-    private function isMobile(Request $request)
-    {
-        $userAgent = $request->header('User-Agent', '');
-
-        // Debug: Log para verificar
-        \Log::info('User Agent Detection', ['user_agent' => $userAgent]);
-
-        // Detecção mais precisa de dispositivos móveis
-        $mobileKeywords = [
-            'Mobile', 'Android', 'iPhone', 'iPad', 'iPod', 
-            'BlackBerry', 'Windows Phone', 'webOS', 'Opera Mini',
-            'IEMobile', 'Mobile Safari'
-        ];
-
-        $isMobile = false;
-        foreach ($mobileKeywords as $keyword) {
-            if (stripos($userAgent, $keyword) !== false) {
-                $isMobile = true;
-                break;
-            }
-        }
-
-        // Excluir tablets grandes que podem preferir versão desktop
-        // mas manter iPad como mobile para melhor experiência
-        
-        \Log::info('Is Mobile Result', ['is_mobile' => $isMobile]);
-
-        return $isMobile;
-    }
-
-    public function logout(Request $request)
-    {
-        Auth::logout();
-
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return redirect()->route('login');
-    }
 }
