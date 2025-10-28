@@ -127,16 +127,37 @@ class User extends Authenticatable implements FilamentUser
 
     public function canAccessAdmin(): bool
     {
+        \Log::info('[User::canAccessAdmin] START', [
+            'user_id' => $this->id,
+            'email' => $this->email,
+            'role_attribute' => $this->role,
+            'unit_id' => $this->unit_id,
+        ]);
+
         // Apenas usuários GLOBAIS podem acessar o admin
         // super-admin, gestor-global e coordenadores globais
-        $canAccess = $this->hasRole(['super-admin', 'gestor-global']) ||
-                     ($this->role === 'coordenador' && $this->unit_id === null);
+        $hasSuperAdminRole = $this->hasRole('super-admin');
+        $hasGestorGlobalRole = $this->hasRole('gestor-global');
+        $isCoordenadorGlobal = ($this->role === 'coordenador' && $this->unit_id === null);
 
-        \Log::info('User canAccessAdmin check', [
+        \Log::info('[User::canAccessAdmin] Role checks', [
             'user_id' => $this->id,
-            'role' => $this->role,
-            'unit_id' => $this->unit_id,
-            'can_access' => $canAccess
+            'has_super_admin_role' => $hasSuperAdminRole,
+            'has_gestor_global_role' => $hasGestorGlobalRole,
+            'is_coordenador_global' => $isCoordenadorGlobal,
+            'all_roles' => $this->roles->pluck('name')->toArray()
+        ]);
+
+        $canAccess = $hasSuperAdminRole || $hasGestorGlobalRole || $isCoordenadorGlobal;
+
+        \Log::info('[User::canAccessAdmin] RESULT', [
+            'user_id' => $this->id,
+            'email' => $this->email,
+            'can_access' => $canAccess,
+            'reason' => $canAccess ?
+                ($hasSuperAdminRole ? 'has super-admin role' :
+                 ($hasGestorGlobalRole ? 'has gestor-global role' : 'is coordenador global')) :
+                'no admin roles found'
         ]);
 
         return $canAccess;
