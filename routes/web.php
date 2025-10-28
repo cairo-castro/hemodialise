@@ -64,27 +64,11 @@ Route::post('/admin-login', [AdminController::class, 'login']);
 Route::get('/admin-login', function() {
     return redirect('/admin-bridge');
 });
-// Handle direct access to admin route
-Route::get('/admin', function() {
-    if (!auth()->check()) {
-        return redirect()->route('login');
-    }
-    
-    // If user is logged in but doesn't have admin access, redirect appropriately
-    $user = auth()->user();
-    if (!$user->canAccessAdmin()) {
-        $userAgent = request()->header('User-Agent', '');
-        $isMobile = stripos($userAgent, 'Mobile') !== false || 
-                   stripos($userAgent, 'Android') !== false || 
-                   stripos($userAgent, 'iPhone') !== false;
 
-        $redirectUrl = $isMobile ? '/mobile' : '/desktop';
-        return redirect($redirectUrl)->with('error', 'Acesso negado. Apenas usuários globais podem acessar o painel administrativo.');
-    }
-    
-    // If user has admin access, they should use the bridge mechanism
-    return redirect('/admin-bridge');
-})->middleware('auth');
+// NOTE: /admin route is handled by Filament automatically
+// Filament registers /admin and all sub-routes with its own authentication middleware
+// configured in app/Providers/Filament/AdminPanelProvider.php
+// Do NOT create a custom /admin route here as it will conflict with Filament's routing
 
 // Custom admin login route with specific POST handling
 Route::match(['get', 'post'], '/admin/login', function() {
