@@ -166,6 +166,80 @@ This approach prevents 401 errors during browser redirects while maintaining sec
 - Update `.env` for production database credentials
 - Ensure proper file permissions for `storage/` and `bootstrap/cache/`
 
+### Production Server Access
+**Server Details:**
+- Host: `212.85.1.175`
+- User: `root`
+- Password: `ClinQua-Hosp@2025`
+- Deployment: Dokploy (Docker-based)
+- Domain: `qualidadehd.direcaoclinica.com.br`
+
+**SSH Access:**
+```bash
+# Access server via SSH
+sshpass -p 'ClinQua-Hosp@2025' ssh -o StrictHostKeyChecking=no root@212.85.1.175
+```
+
+**Docker Container Management:**
+```bash
+# List running containers
+docker ps | grep qualidade
+
+# Current container name pattern: qualidade-qualidadehd-bue1bg.1.[HASH]
+# Find current container:
+CONTAINER_ID=$(docker ps --filter "name=qualidade-qualidadehd" --format "{{.Names}}" | head -1)
+
+# Access container shell
+docker exec -it $CONTAINER_ID sh
+
+# View Laravel logs
+docker exec $CONTAINER_ID tail -100 storage/logs/laravel-$(date +%Y-%m-%d).log
+
+# View Nginx access logs
+docker exec $CONTAINER_ID tail -100 /var/log/nginx/access.log
+
+# View Nginx error logs
+docker exec $CONTAINER_ID tail -100 /var/log/nginx/error.log
+
+# Check container health
+docker inspect $CONTAINER_ID | grep -A 10 Health
+
+# View container logs
+docker logs $CONTAINER_ID --tail 100 -f
+```
+
+**Useful Production Commands:**
+```bash
+# One-liner to access latest Laravel log
+sshpass -p 'ClinQua-Hosp@2025' ssh -o StrictHostKeyChecking=no root@212.85.1.175 \
+  "docker exec \$(docker ps --filter 'name=qualidade-qualidadehd' --format '{{.Names}}' | head -1) \
+  tail -200 storage/logs/laravel-\$(date +%Y-%m-%d).log"
+
+# Check application status
+sshpass -p 'ClinQua-Hosp@2025' ssh -o StrictHostKeyChecking=no root@212.85.1.175 \
+  "docker ps --filter 'name=qualidade-qualidadehd'"
+
+# View real-time logs
+sshpass -p 'ClinQua-Hosp@2025' ssh -o StrictHostKeyChecking=no root@212.85.1.175 \
+  "docker logs \$(docker ps --filter 'name=qualidade-qualidadehd' --format '{{.Names}}' | head -1) -f"
+```
+
+**Deployment Process:**
+1. Push code to `main` branch on GitHub
+2. Dokploy detects changes automatically
+3. Triggers Docker rebuild using `Dockerfile.production`
+4. New container is created and deployed
+5. Old container is stopped and removed
+6. Traffic is routed to new container via Traefik
+
+**Database Access:**
+```bash
+# MariaDB container
+docker exec -it qualidade-productionqualidade-l2xbgb.1.yglsvypy0m21nmg1d0w7bhbdc mysql -u root -p
+
+# Database credentials are stored in Dokploy environment variables
+```
+
 ### Testing Strategy
 - PHPUnit configured for backend testing
 - Filament resources auto-generated with standard CRUD operations
