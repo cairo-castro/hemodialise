@@ -80,7 +80,7 @@ export default defineConfig(({ mode }) => {
                 input: [
                     'resources/css/app.css',
                     'resources/js/app.js',
-                    'resources/js/auth/login.js'
+                    // NOTE: login.js removed - loaded only on /login page
                 ],
                 refresh: true,
                 buildDirectory: 'desktop',
@@ -95,7 +95,9 @@ export default defineConfig(({ mode }) => {
                 input: [
                     'resources/css/app.css',
                     'resources/js/app.js',
-                    'resources/js/auth/login.js'
+                    // NOTE: login.js removed from global input
+                    // It should only be loaded on /login page via @vite directive
+                    // Do not include here as it conflicts with Filament/Livewire
                 ],
                 refresh: true,
             })
