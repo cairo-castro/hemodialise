@@ -1,55 +1,13 @@
 <?php
 
-use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ChecklistController;
 use App\Http\Controllers\Api\CleaningChecklistController;
 use App\Http\Controllers\Api\PatientController;
 use App\Http\Controllers\Api\MachineController;
 use Illuminate\Support\Facades\Route;
 
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/refresh', [AuthController::class, 'refresh'])->middleware('auth:api');
-
-// Rota para debug de token (remover em produção)
-Route::get('/debug-token', function() {
-    $token = request()->bearerToken();
-
-    if (!$token) {
-        return response()->json(['error' => 'Token não fornecido'], 400);
-    }
-
-    try {
-        $user = \Tymon\JWTAuth\Facades\JWTAuth::setToken($token)->authenticate();
-        return response()->json([
-            'valid' => true,
-            'user' => $user,
-            'token_payload' => \Tymon\JWTAuth\Facades\JWTAuth::setToken($token)->getPayload()
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'valid' => false,
-            'error' => $e->getMessage(),
-            'error_class' => get_class($e)
-        ]);
-    }
-});
-
-// Endpoint that works with both JWT and session authentication
+// Endpoint for user info - session authentication only
 Route::get('/me', function() {
-    // Try JWT first
-    try {
-        $token = request()->bearerToken();
-        if ($token) {
-            $user = \Tymon\JWTAuth\Facades\JWTAuth::setToken($token)->authenticate();
-            if ($user) {
-                return response()->json(['user' => $user]);
-            }
-        }
-    } catch (\Exception $e) {
-        // JWT failed, try session
-    }
-
-    // Try session authentication
     if (auth()->check()) {
         return response()->json(['user' => auth()->user()]);
     }
@@ -57,15 +15,15 @@ Route::get('/me', function() {
     return response()->json(['error' => 'Unauthenticated'], 401);
 });
 
-// User units routes that work with both JWT and session auth
-Route::prefix('user-units')->middleware('auth:web,api')->group(function () {
+// User units routes - session authentication
+Route::prefix('user-units')->middleware('auth')->group(function () {
     Route::get('/', [App\Http\Controllers\Api\UserUnitController::class, 'index']);
     Route::post('/switch', [App\Http\Controllers\Api\UserUnitController::class, 'switch']);
     Route::get('/current', [App\Http\Controllers\Api\UserUnitController::class, 'current']);
 });
 
-Route::middleware('auth:api')->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout']);
+// API routes with session authentication
+Route::middleware('auth')->group(function () {
 
     Route::middleware(['role:tecnico,gestor,coordenador,supervisor,admin', 'unit.scope'])->group(function () {
         // Rotas específicas devem vir ANTES do apiResource para evitar conflitos
