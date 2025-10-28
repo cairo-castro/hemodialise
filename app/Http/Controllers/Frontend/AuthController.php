@@ -13,18 +13,31 @@ class AuthController extends Controller
     {
         // Se já estiver autenticado, redirecionar para a interface apropriada
         if (Auth::check()) {
+            $user = Auth::user();
+
+            // Admin users go to Filament
+            if ($user->canAccessAdmin()) {
+                \Log::info('Admin user already authenticated, redirecting to Filament', [
+                    'user' => $user->email,
+                    'role' => $user->role,
+                    'redirect' => '/admin'
+                ]);
+                return redirect('/admin');
+            }
+
+            // Regular users go by device type
             $isMobileDevice = $this->isMobile($request);
             $redirectUrl = $isMobileDevice ? '/mobile' : '/desktop';
-            
-            \Log::info('User already authenticated, redirecting', [
-                'user' => Auth::user()->email,
+
+            \Log::info('User already authenticated, redirecting by device', [
+                'user' => $user->email,
                 'device' => $isMobileDevice ? 'mobile' : 'desktop',
                 'redirect' => $redirectUrl
             ]);
-            
+
             return redirect($redirectUrl);
         }
-        
+
         return view('frontend.auth.login');
     }
 
@@ -40,18 +53,31 @@ class AuthController extends Controller
 
             $user = Auth::user();
 
-            // Detectar dispositivo e redirecionar apropriadamente
-            $isMobileDevice = $this->isMobile($request);
-            
-            // Redirecionar baseado no DISPOSITIVO, não no tipo de usuário
-            $redirectUrl = $isMobileDevice ? '/mobile' : '/desktop';
-            
-            \Log::info('Login redirect', [
-                'user' => $user->email,
-                'device' => $isMobileDevice ? 'mobile' : 'desktop',
-                'redirect' => $redirectUrl,
-                'user_agent' => $request->header('User-Agent')
-            ]);
+            // Verificar se é admin e deve ir para Filament
+            if ($user->canAccessAdmin()) {
+                $redirectUrl = '/admin';
+                $deviceType = 'admin';
+
+                \Log::info('Admin user login - redirecting to Filament', [
+                    'user' => $user->email,
+                    'role' => $user->role,
+                    'redirect' => $redirectUrl
+                ]);
+            } else {
+                // Detectar dispositivo e redirecionar apropriadamente
+                $isMobileDevice = $this->isMobile($request);
+                $deviceType = $isMobileDevice ? 'mobile' : 'desktop';
+
+                // Redirecionar baseado no DISPOSITIVO, não no tipo de usuário
+                $redirectUrl = $isMobileDevice ? '/mobile' : '/desktop';
+
+                \Log::info('Regular user login - redirecting by device', [
+                    'user' => $user->email,
+                    'device' => $deviceType,
+                    'redirect' => $redirectUrl,
+                    'user_agent' => $request->header('User-Agent')
+                ]);
+            }
 
             // Retornar JSON para Vue.js
             if ($request->expectsJson() || $request->header('Content-Type') === 'application/json') {
