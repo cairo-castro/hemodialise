@@ -8,8 +8,10 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use Spatie\Permission\Traits\HasRoles;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 
-class User extends Authenticatable implements JWTSubject
+class User extends Authenticatable implements JWTSubject, FilamentUser
 {
     use HasFactory, Notifiable, HasRoles;
 
@@ -128,20 +130,30 @@ class User extends Authenticatable implements JWTSubject
         return in_array($this->role, ['gestor', 'coordenador', 'supervisor', 'admin']);
     }
 
+    /**
+     * Determine if the user can access the Filament admin panel.
+     * Required by FilamentUser interface.
+     */
+    public function canAccessPanel(Panel $panel): bool
+    {
+        // Use the existing canAccessAdmin logic
+        return $this->canAccessAdmin();
+    }
+
     public function canAccessAdmin(): bool
     {
         // Apenas usuários GLOBAIS podem acessar o admin
         // super-admin, gestor-global e coordenadores globais
-        $canAccess = $this->hasRole(['super-admin', 'gestor-global']) || 
+        $canAccess = $this->hasRole(['super-admin', 'gestor-global']) ||
                      ($this->role === 'coordenador' && $this->unit_id === null);
-        
+
         \Log::info('User canAccessAdmin check', [
             'user_id' => $this->id,
             'role' => $this->role,
             'unit_id' => $this->unit_id,
             'can_access' => $canAccess
         ]);
-        
+
         return $canAccess;
     }
 
