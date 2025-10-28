@@ -12,14 +12,12 @@ class FilamentAccessMiddleware
     {
         $user = $request->user();
 
-        // Allow access to Filament login page
-        if ($request->routeIs('filament.admin.auth.login')) {
-            return $next($request);
-        }
+        // This middleware only runs AFTER authentication by Filament
+        // So $user should always be set at this point
 
-        // Verificar se está logado
         if (!$user) {
-            // Redirect to Filament's login page instead of our centralized login
+            // This shouldn't happen, but just in case
+            \Log::error('FilamentAccessMiddleware: No authenticated user found');
             return redirect()->route('filament.admin.auth.login');
         }
 
@@ -35,12 +33,12 @@ class FilamentAccessMiddleware
 
             // Redirecionar baseado no dispositivo do usuário
             $userAgent = $request->header('User-Agent', '');
-            $isMobile = stripos($userAgent, 'Mobile') !== false || 
-                       stripos($userAgent, 'Android') !== false || 
+            $isMobile = stripos($userAgent, 'Mobile') !== false ||
+                       stripos($userAgent, 'Android') !== false ||
                        stripos($userAgent, 'iPhone') !== false;
 
             $redirectUrl = $isMobile ? '/mobile' : '/desktop';
-            
+
             return redirect($redirectUrl)->with('error', 'Acesso negado. Apenas usuários globais podem acessar o painel administrativo.');
         }
 
