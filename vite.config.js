@@ -95,9 +95,7 @@ export default defineConfig(({ mode }) => {
                 input: [
                     'resources/css/app.css',
                     'resources/js/app.js',
-                    // NOTE: login.js removed from global input
-                    // It should only be loaded on /login page via @vite directive
-                    // Do not include here as it conflicts with Filament/Livewire
+                    'resources/js/auth/login.js', // Needed for /login page
                 ],
                 refresh: true,
             })
