@@ -18,6 +18,10 @@ class CleaningChecklistController extends Controller
             ->orderBy('checklist_date', 'desc')
             ->orderBy('shift', 'desc');
 
+        // Filter by unit (critical security fix)
+        $scopedUnitId = $request->get('scoped_unit_id');
+        $query->forUnit($scopedUnitId);  // Using query scope
+
         // Filter by date range
         if ($request->has('start_date')) {
             $query->where('checklist_date', '>=', $request->start_date);
@@ -49,6 +53,29 @@ class CleaningChecklistController extends Controller
         $data = $request->validated();
         $data['user_id'] = Auth::id();
 
+        // Validate unit access (critical security fix)
+        $scopedUnitId = $request->get('scoped_unit_id');
+        if ($scopedUnitId) {
+            $machine = \App\Models\Machine::find($data['machine_id']);
+
+            if (!$machine) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Máquina não encontrada'
+                ], 404);
+            }
+
+            if ($machine->unit_id != $scopedUnitId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Você não tem permissão para criar checklist para esta máquina'
+                ], 403);
+            }
+
+            // Preenche unit_id explicitamente da máquina (performance: zero overhead)
+            $data['unit_id'] = $machine->unit_id;
+        }
+
         // Check if checklist already exists
         $existing = CleaningChecklist::where('machine_id', $data['machine_id'])
             ->where('checklist_date', $data['checklist_date'])
@@ -72,8 +99,21 @@ class CleaningChecklistController extends Controller
         ], 201);
     }
 
-    public function show(CleaningChecklist $cleaningChecklist): JsonResponse
+    public function show(Request $request, CleaningChecklist $cleaningChecklist): JsonResponse
     {
+        // Validate unit access (critical security fix)
+        $scopedUnitId = $request->get('scoped_unit_id');
+        if ($scopedUnitId) {
+            $cleaningChecklist->load('machine');
+
+            if ($cleaningChecklist->machine && $cleaningChecklist->machine->unit_id != $scopedUnitId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Você não tem permissão para visualizar este checklist'
+                ], 403);
+            }
+        }
+
         $cleaningChecklist->load(['machine', 'user']);
 
         return response()->json([
@@ -84,6 +124,19 @@ class CleaningChecklistController extends Controller
 
     public function update(Request $request, CleaningChecklist $cleaningChecklist): JsonResponse
     {
+        // Validate unit access (critical security fix)
+        $scopedUnitId = $request->get('scoped_unit_id');
+        if ($scopedUnitId) {
+            $cleaningChecklist->load('machine');
+
+            if ($cleaningChecklist->machine && $cleaningChecklist->machine->unit_id != $scopedUnitId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Você não tem permissão para atualizar este checklist'
+                ], 403);
+            }
+        }
+
         $validator = Validator::make($request->all(), [
             'chemical_disinfection_time' => 'nullable|date_format:H:i',
             'chemical_disinfection_completed' => 'boolean',
@@ -111,8 +164,21 @@ class CleaningChecklistController extends Controller
         ]);
     }
 
-    public function destroy(CleaningChecklist $cleaningChecklist): JsonResponse
+    public function destroy(Request $request, CleaningChecklist $cleaningChecklist): JsonResponse
     {
+        // Validate unit access (critical security fix)
+        $scopedUnitId = $request->get('scoped_unit_id');
+        if ($scopedUnitId) {
+            $cleaningChecklist->load('machine');
+
+            if ($cleaningChecklist->machine && $cleaningChecklist->machine->unit_id != $scopedUnitId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Você não tem permissão para excluir este checklist'
+                ], 403);
+            }
+        }
+
         $cleaningChecklist->delete();
 
         return response()->json([
@@ -125,15 +191,20 @@ class CleaningChecklistController extends Controller
     {
         $today = now()->toDateString();
 
+        // Filter by unit (critical security fix)
+        $scopedUnitId = $request->get('scoped_unit_id');
+
+        $baseQuery = CleaningChecklist::query()->forUnit($scopedUnitId);  // Using query scope
+
         $stats = [
-            'total_today' => CleaningChecklist::whereDate('checklist_date', $today)->count(),
-            'total_this_month' => CleaningChecklist::whereMonth('checklist_date', now()->month)
+            'total_today' => (clone $baseQuery)->whereDate('checklist_date', $today)->count(),
+            'total_this_month' => (clone $baseQuery)->whereMonth('checklist_date', now()->month)
                 ->whereYear('checklist_date', now()->year)
                 ->count(),
-            'chemical_disinfection_today' => CleaningChecklist::whereDate('checklist_date', $today)
+            'chemical_disinfection_today' => (clone $baseQuery)->whereDate('checklist_date', $today)
                 ->where('chemical_disinfection_completed', true)
                 ->count(),
-            'surface_cleaning_today' => CleaningChecklist::whereDate('checklist_date', $today)
+            'surface_cleaning_today' => (clone $baseQuery)->whereDate('checklist_date', $today)
                 ->whereNotNull('hd_machine_cleaning')
                 ->count(),
         ];

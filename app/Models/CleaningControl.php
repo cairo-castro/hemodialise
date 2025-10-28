@@ -9,6 +9,7 @@ class CleaningControl extends Model
 {
     protected $fillable = [
         'machine_id',
+        'unit_id',
         'user_id',
         'cleaning_date',
         'shift',
@@ -48,6 +49,22 @@ class CleaningControl extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Scope para filtrar por unidade (usa campo direto unit_id)
+     *
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param int|null $unitId
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeForUnit($query, $unitId)
+    {
+        if ($unitId) {
+            return $query->where('unit_id', $unitId);
+        }
+
+        return $query;
     }
 
     public function getCleaningTypeAttribute(): string

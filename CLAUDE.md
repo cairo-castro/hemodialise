@@ -94,6 +94,7 @@ Role-based middleware (`FilamentAccessMiddleware`) prevents field users from acc
 - **Admin Interface**: Filament-based admin panel for managers/admins
 - **Responsive Design**: Single codebase serves both mobile and desktop
 - **Offline Capability**: Service worker for offline functionality
+- **Real-Time Sync**: Lightweight polling system for automatic data synchronization (see [Data Sync Documentation](docs/DATA_SYNC.md))
 
 ### Core Domain Models
 - **Units**: Hemodialysis clinic locations with multiple machines

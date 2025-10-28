@@ -33,7 +33,7 @@
 
       <!-- Stats Cards -->
       <div class="stats-grid">
-        <div class="stat-card primary">
+        <div class="stat-card primary" :class="{ 'updating': isStatsRefreshing }">
           <div class="stat-icon">
             <ion-icon :icon="peopleOutline"></ion-icon>
           </div>
@@ -43,7 +43,7 @@
           </div>
         </div>
 
-        <div class="stat-card success">
+        <div class="stat-card success" :class="{ 'updating': isStatsRefreshing }">
           <div class="stat-icon">
             <ion-icon :icon="checkmarkCircleOutline"></ion-icon>
           </div>
@@ -306,6 +306,7 @@ import {
 import { Container } from '@mobile/core/di/Container';
 import { Patient, CreatePatientData } from '@mobile/core/domain/entities/Patient';
 import { PatientRepository } from '@mobile/core/domain/repositories/PatientRepository';
+import { useStatsAutoRefresh } from '@mobile/composables/useStatsAutoRefresh';
 
 const container = Container.getInstance();
 
@@ -471,6 +472,18 @@ const formatDate = (dateString: string) => {
   return 'Data inválida';
 };
 
+// Auto-refresh dos stats cards
+const {
+  isRefreshing: isStatsRefreshing,
+  forceRefresh: forceStatsRefresh
+} = useStatsAutoRefresh(loadPatients, {
+  loadOnMount: false,
+  interval: 15000,
+  onStatsUpdated: () => {
+    console.log('[Patients] Stats atualizados automaticamente');
+  }
+});
+
 // Lifecycle
 onMounted(() => {
   loadPatients();
@@ -623,6 +636,22 @@ onMounted(() => {
   font-size: 0.875rem;
   color: #6b7280;
   margin-top: 4px;
+}
+
+/* Animação de atualização dos stats */
+.stat-card.updating {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(0.98);
+  }
 }
 
 /* ===== PATIENTS CONTAINER ===== */

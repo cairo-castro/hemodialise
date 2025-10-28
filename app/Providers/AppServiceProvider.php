@@ -2,8 +2,16 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
+use App\Models\ChemicalDisinfection;
+use App\Models\CleaningChecklist;
+use App\Models\CleaningControl;
+use App\Models\SafetyChecklist;
+use App\Observers\ChemicalDisinfectionObserver;
+use App\Observers\CleaningChecklistObserver;
+use App\Observers\CleaningControlObserver;
+use App\Observers\SafetyChecklistObserver;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -30,5 +38,8 @@ class AppServiceProvider extends ServiceProvider
         if (str_starts_with(config('app.url'), 'https://')) {
             URL::forceScheme('https');
         }
+
+        // Observers removidos para máxima performance
+        // unit_id é preenchido explicitamente nos controllers (zero overhead)
     }
 }

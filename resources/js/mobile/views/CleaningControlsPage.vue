@@ -124,6 +124,7 @@ import {
   timeOutline,
 } from 'ionicons/icons';
 import { Container } from '../core/di/Container';
+import { useStatsAutoRefresh } from '@mobile/composables/useStatsAutoRefresh';
 
 const router = useRouter();
 const container = Container.getInstance();
@@ -150,8 +151,15 @@ const loadStats = async () => {
   }
 };
 
+// Auto-refresh dos stats
+const { forceRefresh: forceStatsRefresh } = useStatsAutoRefresh(loadStats, {
+  loadOnMount: false,
+  interval: 15000,
+  onStatsUpdated: () => console.log('[CleaningControls] Stats updated')
+});
+
 const handleRefresh = async (event: any) => {
-  await loadStats();
+  await forceStatsRefresh();
   event.target.complete();
 };
 

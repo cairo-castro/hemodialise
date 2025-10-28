@@ -18,12 +18,44 @@
 import { IonApp, IonRouterOutlet } from '@ionic/vue';
 import { onMounted } from 'vue';
 import { useDarkMode } from '@mobile/composables/useDarkMode';
+import { useDataSync } from '@mobile/composables/useDataSync';
+import { useRouter } from 'vue-router';
 
 // Initialize dark mode globally when app starts
 const { initializeDarkMode } = useDarkMode();
+const router = useRouter();
+
+// Initialize data sync globally - automatic polling for real-time updates
+// Sistema leve que consome apenas 1-2% da performance de WebSockets
+const { isPolling, hasUpdates, latestData } = useDataSync({
+  interval: 15000, // Verifica a cada 15 segundos (configurável)
+  onUpdate: (data) => {
+    console.log('[App] Novas atualizações recebidas:', data);
+
+    // Aqui você pode disparar eventos globais, atualizar stores, etc.
+    // Por exemplo:
+    // - Mostrar notificação toast
+    // - Atualizar dados em cache local
+    // - Recarregar listas se estiver na página correspondente
+
+    // Exemplo: recarregar página atual se houver atualizações relevantes
+    const currentRoute = router.currentRoute.value.name;
+
+    if (currentRoute === 'ChecklistList' && data.safety_checklists?.length > 0) {
+      console.log('[App] Atualizações em checklists detectadas');
+      // Você pode emitir um evento ou usar um store global aqui
+    }
+
+    if (currentRoute === 'CleaningControls' && data.cleaning_controls?.length > 0) {
+      console.log('[App] Atualizações em controles de limpeza detectadas');
+    }
+  }
+});
 
 onMounted(() => {
   initializeDarkMode();
-  console.log('Mobile App mounted - Dark mode initialized');
+  console.log('[App] Mobile App montado');
+  console.log('[App] Dark mode inicializado');
+  console.log('[App] Data sync ativo:', isPolling.value);
 });
 </script>

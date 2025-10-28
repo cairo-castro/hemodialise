@@ -64,6 +64,14 @@
 
         <!-- Quick Stats Summary -->
         <div class="quick-stats" v-if="statsLoaded">
+          <!-- Badge de atualização automática -->
+          <div v-if="statsHasUpdates || isStatsRefreshing" class="stats-update-badge">
+            <ion-chip color="success" class="update-chip">
+              <ion-icon :icon="isStatsRefreshing ? 'sync-outline' : 'checkmark-circle-outline'" :class="{ 'spinning': isStatsRefreshing }"></ion-icon>
+              <ion-label>{{ isStatsRefreshing ? 'Atualizando...' : 'Atualizado' }}</ion-label>
+            </ion-chip>
+          </div>
+
           <div class="stat-card available" @click="showMachineStatus">
             <div class="stat-icon">
               <ion-icon :icon="medicalSharp"></ion-icon>
@@ -236,6 +244,7 @@ import { Container } from '@mobile/core/di/Container';
 import { User } from '@mobile/core/domain/entities/User';
 import ActiveChecklistCard from '../components/ActiveChecklistCard.vue';
 import { useDarkMode } from '@mobile/composables/useDarkMode';
+import { useStatsAutoRefresh } from '@mobile/composables/useStatsAutoRefresh';
 
 const router = useRouter();
 const container = Container.getInstance();
@@ -465,6 +474,21 @@ const loadStats = async () => {
   }
 };
 
+// Auto-refresh dos stats cards - atualiza automaticamente quando há mudanças
+const {
+  isRefreshing: isStatsRefreshing,
+  hasUpdates: statsHasUpdates,
+  forceRefresh: forceStatsRefresh,
+  lastRefreshTime
+} = useStatsAutoRefresh(loadStats, {
+  loadOnMount: false, // Carregaremos manualmente no onMounted
+  interval: 15000, // 15 segundos
+  onStatsUpdated: () => {
+    console.log('[Dashboard] Stats atualizados automaticamente');
+  },
+  debug: false
+});
+
 const loadActiveChecklists = async () => {
   try {
     const response = await fetch('/api/checklists/active', {
@@ -530,7 +554,8 @@ const loadMachines = async () => {
 
 const handleRefresh = async (event: any) => {
   try {
-    await Promise.all([loadUserData(), loadStats()]);
+    // Usa o forceRefresh que invalida cache e força atualização imediata
+    await Promise.all([loadUserData(), forceStatsRefresh()]);
 
     const toast = await toastController.create({
       message: 'Dados atualizados',
@@ -916,6 +941,50 @@ onMounted(async () => {
   gap: 12px;
   padding: 16px;
   background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+  position: relative;
+}
+
+/* Stats Update Badge */
+.stats-update-badge {
+  position: absolute;
+  top: -8px;
+  right: 16px;
+  z-index: 10;
+}
+
+.update-chip {
+  font-size: 0.75rem;
+  height: 28px;
+  animation: slideIn 0.3s ease-out;
+}
+
+.update-chip ion-icon {
+  font-size: 1rem;
+  margin-right: 4px;
+}
+
+.update-chip ion-icon.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .stat-card {

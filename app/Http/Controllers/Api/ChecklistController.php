@@ -13,12 +13,9 @@ class ChecklistController extends Controller
     {
         $query = SafetyChecklist::with(['machine', 'patient']);
 
-        // Técnicos só veem máquinas da sua unidade
-        if ($request->user()->isTecnico()) {
-            $query->whereHas('machine', function($q) use ($request) {
-                $q->where('unit_id', $request->user()->unit_id);
-            });
-        }
+        // Filtrar por unidade (todos os usuários respeitam a unidade ativa)
+        $scopedUnitId = $request->get('scoped_unit_id');
+        $query->forUnit($scopedUnitId);  // Using query scope
 
         return response()->json($query->latest()->paginate(20));
     }
@@ -51,6 +48,10 @@ class ChecklistController extends Controller
         $data['session_date'] = now()->toDateString();
         $data['current_phase'] = 'pre_dialysis';
         $data['pre_dialysis_started_at'] = now();
+
+        // Preenche unit_id explicitamente da máquina (performance: zero overhead)
+        $machine = \App\Models\Machine::find($data['machine_id']);
+        $data['unit_id'] = $machine->unit_id;
 
         $checklist = SafetyChecklist::create($data);
 
@@ -158,12 +159,9 @@ class ChecklistController extends Controller
             ->with(['machine', 'patient', 'user'])
             ->orderBy('created_at', 'desc');
 
-        // Técnicos só veem checklists da sua unidade
-        if ($request->user()->isTecnico()) {
-            $query->whereHas('machine', function($q) use ($request) {
-                $q->where('unit_id', $request->user()->unit_id);
-            });
-        }
+        // Filtrar por unidade (todos os usuários respeitam a unidade ativa)
+        $scopedUnitId = $request->get('scoped_unit_id');
+        $query->forUnit($scopedUnitId);  // Using query scope
 
         $activeChecklists = $query->get();
 

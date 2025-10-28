@@ -31,11 +31,11 @@
 
           <!-- Status indicators similar to Location 1/2 in image -->
           <div class="status-indicators">
-            <div class="status-item available">
+            <div class="status-item available" :class="{ 'updating': isStatsRefreshing }">
               <ion-icon :icon="checkmarkCircleOutline"></ion-icon>
               <span>{{ availableMachinesCount }} Disponível{{ availableMachinesCount !== 1 ? 'is' : '' }}</span>
             </div>
-            <div class="status-item occupied">
+            <div class="status-item occupied" :class="{ 'updating': isStatsRefreshing }">
               <ion-icon :icon="timeOutline"></ion-icon>
               <span>{{ occupiedMachinesCount }} Em Uso</span>
             </div>
@@ -193,6 +193,7 @@ import {
 
 import { Container } from '@mobile/core/di/Container';
 import { User } from '@mobile/core/domain/entities/User';
+import { useStatsAutoRefresh } from '@mobile/composables/useStatsAutoRefresh';
 
 const router = useRouter();
 const container = Container.getInstance();
@@ -304,8 +305,20 @@ const refreshData = async () => {
   }
 };
 
+// Auto-refresh dos stats - atualiza automaticamente quando há mudanças
+const {
+  isRefreshing: isStatsRefreshing,
+  forceRefresh: forceStatsRefresh
+} = useStatsAutoRefresh(refreshData, {
+  loadOnMount: false, // Carregaremos manualmente no onMounted
+  interval: 15000,
+  onStatsUpdated: () => {
+    console.log('[ChecklistList] Stats atualizados automaticamente');
+  }
+});
+
 const handleRefresh = async (event: any) => {
-  await refreshData();
+  await forceStatsRefresh();
   event.target.complete();
 };
 
@@ -538,6 +551,22 @@ onMounted(async () => {
 
 .status-item.occupied ion-icon {
   color: #f59e0b;
+}
+
+/* Animação de atualização */
+.status-item.updating {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(0.98);
+  }
 }
 
 .content-container {

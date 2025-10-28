@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\ChecklistController;
 use App\Http\Controllers\Api\CleaningChecklistController;
 use App\Http\Controllers\Api\PatientController;
 use App\Http\Controllers\Api\MachineController;
+use App\Http\Controllers\Api\DataSyncController;
 use Illuminate\Support\Facades\Route;
 
 // Endpoint for user info - session authentication only
@@ -24,6 +25,10 @@ Route::prefix('user-units')->middleware('auth')->group(function () {
 
 // API routes with session authentication
 Route::middleware('auth')->group(function () {
+
+    // Data sync endpoint - lightweight polling system for real-time updates
+    Route::get('/sync/check-updates', [DataSyncController::class, 'checkUpdates']);
+    Route::post('/sync/invalidate-cache', [DataSyncController::class, 'invalidateCache']);
 
     Route::middleware(['role:tecnico,gestor,coordenador,supervisor,admin', 'unit.scope'])->group(function () {
         // Rotas específicas devem vir ANTES do apiResource para evitar conflitos

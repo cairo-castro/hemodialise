@@ -79,28 +79,28 @@
 
         <!-- Stats Summary -->
         <div class="stats-summary">
-        <div class="stat-card available">
+        <div class="stat-card available" :class="{ 'updating': isStatsRefreshing }">
           <ion-icon :icon="checkmarkCircleOutline"></ion-icon>
           <div class="stat-info">
             <span class="stat-number">{{ availableCount }}</span>
             <span class="stat-label">Disponíveis</span>
           </div>
         </div>
-        <div class="stat-card occupied">
+        <div class="stat-card occupied" :class="{ 'updating': isStatsRefreshing }">
           <ion-icon :icon="timeOutline"></ion-icon>
           <div class="stat-info">
             <span class="stat-number">{{ occupiedCount }}</span>
             <span class="stat-label">Em Uso</span>
           </div>
         </div>
-        <div class="stat-card maintenance">
+        <div class="stat-card maintenance" :class="{ 'updating': isStatsRefreshing }">
           <ion-icon :icon="constructOutline"></ion-icon>
           <div class="stat-info">
             <span class="stat-number">{{ maintenanceCount }}</span>
             <span class="stat-label">Manutenção</span>
           </div>
         </div>
-        <div class="stat-card inactive">
+        <div class="stat-card inactive" :class="{ 'updating': isStatsRefreshing }">
           <ion-icon :icon="powerOutline"></ion-icon>
           <div class="stat-info">
             <span class="stat-number">{{ inactiveCount }}</span>
@@ -414,6 +414,7 @@ import {
 } from 'ionicons/icons';
 
 import { Container } from '../core/di/Container';
+import { useStatsAutoRefresh } from '@mobile/composables/useStatsAutoRefresh';
 
 const router = useRouter();
 const container = Container.getInstance();
@@ -516,8 +517,20 @@ const refreshData = async () => {
   await loadMachines();
 };
 
+// Auto-refresh dos stats cards
+const {
+  isRefreshing: isStatsRefreshing,
+  forceRefresh: forceStatsRefresh
+} = useStatsAutoRefresh(refreshData, {
+  loadOnMount: false,
+  interval: 15000,
+  onStatsUpdated: () => {
+    console.log('[Machines] Stats atualizados automaticamente');
+  }
+});
+
 const handleRefresh = async (event: any) => {
-  await refreshData();
+  await forceStatsRefresh();
   event.target.complete();
 };
 
@@ -1245,6 +1258,22 @@ onMounted(() => {
   color: #6b7280;
   font-weight: 600;
   line-height: 1.2;
+}
+
+/* Animação de atualização dos stats */
+.stat-card.updating {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(0.98);
+  }
 }
 
 /* Loading */
