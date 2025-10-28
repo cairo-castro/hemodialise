@@ -45,16 +45,12 @@ class Handler extends ExceptionHandler
                     'path' => $request->getPathInfo(),
                     'method' => $request->getMethod(),
                     'user' => auth()->id() ? auth()->user()->email : 'not authenticated',
-                    'session' => session()->all()
                 ]);
-                
-                // If user is authenticated and trying to access admin, redirect to admin-bridge
-                if (auth()->check() && auth()->user()->canAccessAdmin()) {
-                    return redirect('/admin-bridge')->with('error', 'Ocorreu um erro ao acessar o painel administrativo. Redirecionando...');
-                }
-                
-                // Otherwise, redirect to login
-                return redirect('/login')->with('error', 'Acesso não autorizado. Por favor, faça login.');
+
+                // IMPORTANT: Do NOT redirect on 405 errors for /admin/login
+                // Filament uses Livewire which may cause false 405 detections
+                // Let Laravel/Filament handle the error naturally
+                // The redirect was causing login loops
             }
         }
 
