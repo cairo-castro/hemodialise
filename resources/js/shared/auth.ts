@@ -138,7 +138,7 @@ export class AuthService {
   }
 
   static async login(email: string, password: string): Promise<AuthResponse> {
-    const response = await fetch('/api/login', {
+    const response = await fetch('/login', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

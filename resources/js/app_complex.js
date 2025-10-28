@@ -323,7 +323,7 @@ window.loginApp = function() {
             this.error = '';
 
             try {
-                const response = await fetch('/api/login', {
+                const response = await fetch('/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
