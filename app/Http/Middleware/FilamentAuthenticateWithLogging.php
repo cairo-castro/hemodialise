@@ -37,7 +37,7 @@ class FilamentAuthenticateWithLogging extends FilamentAuthenticate
             \Log::warning('[FilamentAuthenticate] Authentication FAILED - redirecting to login', [
                 'exception' => $e->getMessage(),
                 'guards' => $e->guards(),
-                'redirect_to' => $e->redirectTo() ?? 'default login page'
+                'redirect_to' => $e->redirectTo($request) ?? 'default login page'
             ]);
             throw $e;
         } catch (\Exception $e) {
