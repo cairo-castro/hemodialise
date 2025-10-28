@@ -95,7 +95,8 @@ export default defineConfig(({ mode }) => {
                 input: [
                     'resources/css/app.css',
                     'resources/js/app.js',
-                    'resources/js/auth/login.js', // Needed for /login page
+                    // NOTE: login.js intentionally excluded to prevent Vue.js conflict with Filament Livewire
+                    // If /login page is needed, it should load login.js via separate build or inline
                 ],
                 refresh: true,
             })

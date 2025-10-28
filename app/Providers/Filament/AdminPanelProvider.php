@@ -25,7 +25,7 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->id('admin')
             ->path('admin')
-            ->login(\App\Filament\Pages\Auth\CustomLogin::class)
+            ->login()  // Use default Filament login
             ->passwordReset()
             ->emailVerification()
             ->brandName('Sistema Hemodiálise')

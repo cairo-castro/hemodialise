@@ -4,26 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#2563eb">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Login - Sistema Hemodiálise</title>
-
-    @vite(['resources/css/app.css', 'resources/js/auth/login.js'])
-    <style>
-        .mobile-detect { display: none; }
-        @media (max-width: 768px) {
-            .mobile-detect { display: block; }
-            .desktop-detect { display: none !important; }
-        }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50">
-    <div id="login-app">
-        <!-- Vue.js Login Component will be mounted here -->
-        <div class="min-h-screen flex items-center justify-center">
-            <div class="text-center">
-                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-                <p class="mt-4 text-gray-600">Carregando...</p>
-            </div>
+    <div class="min-h-screen flex items-center justify-center px-4">
+        <div class="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+            <h1 class="text-2xl font-bold text-gray-900 mb-4">Sistema Hemodiálise</h1>
+            <p class="text-gray-600 mb-6">Por favor, acesse o sistema através do painel administrativo:</p>
+            <a href="/admin" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg transition duration-200">
+                Acessar Painel Admin
+            </a>
+            <p class="text-sm text-gray-500 mt-6">Ou use a interface mobile: <a href="/mobile" class="text-blue-600 hover:underline">Clique aqui</a></p>
         </div>
     </div>
 </body>
