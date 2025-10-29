@@ -226,7 +226,7 @@
         <!-- Active Checklist with Phases -->
         <div v-if="activeChecklist">
           <!-- Phase Progress -->
-          <ion-card class="phase-progress-card">
+          <ion-card v-if="activeChecklist.current_phase !== 'completed'" class="phase-progress-card">
             <ion-card-content>
               <div class="phase-header">
                 <h3>{{ getPhaseTitle(activeChecklist.current_phase) }}</h3>
@@ -271,7 +271,7 @@
           </ion-card>
 
           <!-- Patient Info Summary -->
-          <ion-card class="patient-summary-card">
+          <ion-card v-if="activeChecklist.current_phase !== 'completed'" class="patient-summary-card">
             <ion-card-content>
               <div class="patient-summary">
                 <div class="patient-details">
@@ -286,7 +286,7 @@
           </ion-card>
 
           <!-- Current Phase Checklist -->
-          <div v-if="!activeChecklist.is_interrupted" class="phase-section">
+          <div v-if="!activeChecklist.is_interrupted && activeChecklist.current_phase !== 'completed'" class="phase-section">
             <!-- Phase Header Card -->
             <div class="phase-header-card">
               <div class="phase-header-icon">
