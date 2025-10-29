@@ -925,9 +925,9 @@ onMounted(async () => {
   font-size: 0.95rem;
   color: var(--ion-text-color);
   font-weight: 700;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.3;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 /* Multiple Units - Interactive Display */
@@ -981,9 +981,9 @@ onMounted(async () => {
   font-size: 0.95rem;
   color: var(--ion-text-color);
   font-weight: 700;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.3;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 .unit-change-btn {
@@ -1381,6 +1381,10 @@ onMounted(async () => {
   border: 2px solid var(--ion-color-step-100);
   transition: all 0.2s ease;
   color: var(--ion-text-color);
+  white-space: normal;
+  text-align: left;
+  line-height: 1.4;
+  min-height: 56px;
 }
 
 :deep(.unit-selector-action-sheet .action-sheet-button:hover) {
