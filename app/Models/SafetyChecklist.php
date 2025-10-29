@@ -47,6 +47,7 @@ class SafetyChecklist extends Model
         'incidents',
         'item_observations',
         'paused_at',
+        'paused_reason',
         'resumed_at',
     ];
 
@@ -231,9 +232,10 @@ class SafetyChecklist extends Model
         $this->save();
     }
 
-    public function pauseSession(): void
+    public function pauseSession(string $reason = 'manual'): void
     {
         $this->paused_at = now();
+        $this->paused_reason = $reason;
         $this->save();
     }
 
@@ -241,6 +243,7 @@ class SafetyChecklist extends Model
     {
         $this->resumed_at = now();
         $this->paused_at = null;
+        $this->paused_reason = null;
         $this->save();
     }
 

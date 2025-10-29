@@ -481,7 +481,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
-import { useRouter, useRoute } from 'vue-router';
+import { useRouter, useRoute, onBeforeRouteLeave } from 'vue-router';
 import { useIonRouter } from '@ionic/vue';
 import {
   IonPage,
@@ -1150,10 +1150,14 @@ const pauseAndReturn = async () => {
   try {
     const response = await fetch(`/api/checklists/${activeChecklist.value.id}/pause`, {
       method: 'POST',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-      }
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: JSON.stringify({ reason: 'manual' })
     });
 
     const data = await response.json();
@@ -1165,6 +1169,9 @@ const pauseAndReturn = async () => {
         position: 'top'
       });
       await toast.present();
+
+      // Mark as paused to allow navigation without triggering guard
+      activeChecklist.value.paused_at = data.checklist.paused_at;
 
       // Return to dashboard
       router.replace('/dashboard');
@@ -1521,6 +1528,96 @@ onMounted(() => {
   // Also check on mount (for first load)
   checkAndLoadNewPatient();
 });
+
+// Navigation guard to prevent accidental exit
+onBeforeRouteLeave(async (to, from) => {
+  // Allow navigation if no active checklist or checklist is already paused/completed/interrupted
+  if (!activeChecklist.value ||
+      activeChecklist.value.paused_at ||
+      activeChecklist.value.current_phase === 'completed' ||
+      activeChecklist.value.is_interrupted) {
+    return true;
+  }
+
+  // Show confirmation alert
+  const alert = await alertController.create({
+    header: 'Pausar Checklist?',
+    message: 'Você está saindo do checklist ativo. Deseja pausá-lo para continuar depois?',
+    buttons: [
+      {
+        text: 'Cancelar',
+        role: 'cancel',
+        handler: () => {
+          return false; // Stay on page
+        }
+      },
+      {
+        text: 'Sair sem Pausar',
+        role: 'destructive',
+        handler: async () => {
+          // Just leave without pausing
+          return true;
+        }
+      },
+      {
+        text: 'Pausar e Sair',
+        handler: async () => {
+          // Pause automatically with reason 'auto'
+          await pauseChecklistAutomatically();
+          return true;
+        }
+      }
+    ]
+  });
+
+  await alert.present();
+
+  const { role } = await alert.onDidDismiss();
+
+  // If user clicked cancel, prevent navigation
+  if (role === 'cancel' || !role) {
+    return false;
+  }
+
+  // If user chose to pause, wait for pause to complete
+  if (role === 'handler') {
+    await pauseChecklistAutomatically();
+  }
+
+  return true;
+});
+
+// Function to pause checklist automatically when user navigates away
+const pauseChecklistAutomatically = async () => {
+  if (!activeChecklist.value) return;
+
+  try {
+    const response = await fetch(`/api/checklists/${activeChecklist.value.id}/pause`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: JSON.stringify({ reason: 'auto' })
+    });
+
+    const data = await response.json();
+    if (data.success) {
+      const toast = await toastController.create({
+        message: 'Checklist pausado automaticamente.',
+        duration: 2000,
+        color: 'warning',
+        position: 'top'
+      });
+      await toast.present();
+    }
+  } catch (error) {
+    console.error('Erro ao pausar checklist automaticamente:', error);
+  }
+};
 
 onUnmounted(() => {
   if (timeInterval) {

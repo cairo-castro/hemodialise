@@ -195,7 +195,7 @@ class ChecklistController extends Controller
         ]);
     }
 
-    public function pause(SafetyChecklist $checklist)
+    public function pause(Request $request, SafetyChecklist $checklist)
     {
         if ($checklist->isPaused()) {
             return response()->json([
@@ -211,7 +211,9 @@ class ChecklistController extends Controller
             ], 422);
         }
 
-        $checklist->pauseSession();
+        // Accept reason from request, default to 'manual'
+        $reason = $request->input('reason', 'manual');
+        $checklist->pauseSession($reason);
 
         return response()->json([
             'success' => true,
