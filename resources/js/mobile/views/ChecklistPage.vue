@@ -331,7 +331,22 @@
               ></textarea>
             </div>
 
-            <!-- Action Buttons Dashboard Style -->
+            <!-- Primary Continue Button - MOVED TO TOP FOR EMPHASIS -->
+            <button
+              class="primary-continue-btn"
+              :class="{ disabled: !canAdvancePhase }"
+              :disabled="!canAdvancePhase"
+              @click="advancePhase"
+            >
+              <ion-icon :icon="checkmarkCircleOutline"></ion-icon>
+              <div class="btn-text">
+                <span class="btn-title">{{ isLastPhase ? 'Concluir Checklist' : 'Avançar para Próxima Fase' }}</span>
+                <span class="btn-subtitle">{{ canAdvancePhase ? 'Todos os itens verificados' : 'Complete todos os itens obrigatórios' }}</span>
+              </div>
+              <ion-icon :icon="arrowForwardOutline"></ion-icon>
+            </button>
+
+            <!-- Secondary Action Buttons Dashboard Style -->
             <div class="dashboard-actions">
               <!-- Pause Button -->
               <button class="action-card warning" @click="pauseAndReturn">
@@ -355,21 +370,6 @@
                 </div>
               </button>
             </div>
-
-            <!-- Primary Continue Button -->
-            <button
-              class="primary-continue-btn"
-              :class="{ disabled: !canAdvancePhase }"
-              :disabled="!canAdvancePhase"
-              @click="advancePhase"
-            >
-              <ion-icon :icon="checkmarkCircleOutline"></ion-icon>
-              <div class="btn-text">
-                <span class="btn-title">{{ isLastPhase ? 'Concluir Checklist' : 'Avançar para Próxima Fase' }}</span>
-                <span class="btn-subtitle">{{ canAdvancePhase ? 'Todos os itens verificados' : 'Complete todos os itens obrigatórios' }}</span>
-              </div>
-              <ion-icon :icon="arrowForwardOutline"></ion-icon>
-            </button>
           </div>
 
           <!-- Interrupted State -->
@@ -1008,6 +1008,12 @@ const advancePhase = async () => {
     if (data.success) {
       activeChecklist.value = data.checklist;
       updatePhaseCompletion();
+
+      // Scroll to top of page when advancing phase
+      const content = document.querySelector('ion-content');
+      if (content) {
+        await content.scrollToTop(400); // 400ms smooth scroll
+      }
 
       const toast = await toastController.create({
         message: data.message,
@@ -2643,13 +2649,35 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 16px;
-  background: var(--ion-color-success);
+  background: linear-gradient(135deg, var(--ion-color-success) 0%, var(--ion-color-success-shade) 100%);
   border: none;
   border-radius: 16px;
-  padding: 20px 24px;
+  padding: 24px 28px;
+  margin-bottom: 20px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 4px 12px rgba(var(--ion-color-success-rgb), 0.3);
+  transition: all 0.3s ease;
+  box-shadow: 0 6px 20px rgba(var(--ion-color-success-rgb), 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Subtle pulse animation when enabled */
+.primary-continue-btn:not(.disabled) {
+  animation: subtle-pulse 2s ease-in-out infinite;
+}
+
+@keyframes subtle-pulse {
+  0%, 100% {
+    box-shadow: 0 6px 20px rgba(var(--ion-color-success-rgb), 0.4);
+  }
+  50% {
+    box-shadow: 0 6px 24px rgba(var(--ion-color-success-rgb), 0.5);
+  }
+}
+
+.primary-continue-btn:hover:not(.disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(var(--ion-color-success-rgb), 0.5);
 }
 
 .primary-continue-btn:active:not(.disabled) {
@@ -2661,6 +2689,7 @@ onUnmounted(() => {
   cursor: not-allowed;
   background: var(--ion-color-step-500);
   box-shadow: 0 4px 12px rgba(156, 163, 175, 0.3);
+  animation: none;
 }
 
 .primary-continue-btn > ion-icon:first-child {
