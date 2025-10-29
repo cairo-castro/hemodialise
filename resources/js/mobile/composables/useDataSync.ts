@@ -44,6 +44,13 @@ export function useDataSync(options: {
     try {
       error.value = null;
 
+      // Verifica se está autenticado antes de fazer polling
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        // Usuário não está logado, ignora silenciosamente
+        return;
+      }
+
       const response = await axios.get('/api/sync/check-updates', {
         params: {
           last_check: lastCheck.value || new Date(Date.now() - 5 * 60 * 1000).toISOString()
