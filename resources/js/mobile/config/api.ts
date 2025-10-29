@@ -11,26 +11,26 @@ export const API_CONFIG = {
 
   // API endpoints
   ENDPOINTS: {
-    // Auth
+    // Auth (rotas web do Laravel)
     LOGIN: '/login',
     LOGOUT: '/logout',
-    ME: '/me',
+    ME: '/api/me',
 
-    // Patients
-    PATIENTS: '/patients',
-    PATIENTS_SEARCH: '/patients/search',
+    // Patients (rotas API)
+    PATIENTS: '/api/patients',
+    PATIENTS_SEARCH: '/api/patients/search',
 
-    // Checklists
-    CHECKLISTS: '/checklists',
-    CHECKLISTS_TODAY: '/checklists/today',
-    CHECKLISTS_PENDING: '/checklists/pending',
-    CHECKLISTS_BY_USER: '/checklists/user',
-    CHECKLISTS_BY_MACHINE: '/checklists/machine',
+    // Checklists (rotas API)
+    CHECKLISTS: '/api/checklists',
+    CHECKLISTS_TODAY: '/api/checklists/today',
+    CHECKLISTS_PENDING: '/api/checklists/pending',
+    CHECKLISTS_BY_USER: '/api/checklists/user',
+    CHECKLISTS_BY_MACHINE: '/api/checklists/machine',
 
-    // Machines
-    MACHINES: '/machines',
-    MACHINES_AVAILABLE: '/machines/available',
-    MACHINES_BY_UNIT: '/machines/unit'
+    // Machines (rotas API)
+    MACHINES: '/api/machines',
+    MACHINES_AVAILABLE: '/api/machines/available',
+    MACHINES_BY_UNIT: '/api/machines/unit'
   }
 };
 

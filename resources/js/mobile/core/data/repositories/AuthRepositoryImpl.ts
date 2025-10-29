@@ -2,6 +2,7 @@ import { AuthRepository } from '../../domain/repositories/AuthRepository';
 import { User, LoginCredentials, AuthToken } from '../../domain/entities/User';
 import { ApiDataSource } from '../datasources/ApiDataSource';
 import { LocalStorageDataSource } from '../datasources/LocalStorageDataSource';
+import { API_CONFIG } from '@mobile/config/api';
 
 export class AuthRepositoryImpl implements AuthRepository {
   private readonly TOKEN_KEY = 'auth_token';
@@ -12,7 +13,7 @@ export class AuthRepositoryImpl implements AuthRepository {
   ) {}
 
   async login(credentials: LoginCredentials): Promise<AuthToken> {
-    const response = await this.apiDataSource.post<AuthToken>('/login', credentials);
+    const response = await this.apiDataSource.post<AuthToken>(API_CONFIG.ENDPOINTS.LOGIN, credentials);
     return response.data || response as unknown as AuthToken;
   }
 
@@ -22,7 +23,7 @@ export class AuthRepositoryImpl implements AuthRepository {
       throw new Error('Token não encontrado');
     }
 
-    const response = await this.apiDataSource.get<any>('/me', token);
+    const response = await this.apiDataSource.get<any>(API_CONFIG.ENDPOINTS.ME, token);
     // API returns { "user": {...} }, extract the user object
     return (response as any).data?.user || (response as any).user || response;
   }
@@ -30,7 +31,7 @@ export class AuthRepositoryImpl implements AuthRepository {
   async logout(): Promise<void> {
     const token = this.getStoredToken();
     if (token) {
-      await this.apiDataSource.post('/logout', {}, token);
+      await this.apiDataSource.post(API_CONFIG.ENDPOINTS.LOGOUT, {}, token);
     }
   }
 
