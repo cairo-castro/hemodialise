@@ -170,7 +170,7 @@ onMounted(() => {
 
 <style scoped>
 .cleaning-content {
-  --background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+  --background: var(--ion-background-color);
 }
 
 .content-wrapper {
@@ -220,11 +220,11 @@ onMounted(() => {
   gap: 1rem;
   padding: 1.5rem;
   margin-top: -1rem;
-  background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+  background: var(--ion-background-color);
 }
 
 .stat-card {
-  background: white;
+  background: var(--ion-card-background);
   border-radius: 16px;
   padding: 1.25rem;
   display: flex;
@@ -241,11 +241,11 @@ onMounted(() => {
 }
 
 .stat-card:nth-child(1) {
-  border-left-color: #10b981;
+  border-left-color: var(--color-available);
 }
 
 .stat-card:nth-child(2) {
-  border-left-color: #3b82f6;
+  border-left-color: var(--ion-color-primary);
 }
 
 .stat-icon-wrapper {
@@ -257,11 +257,11 @@ onMounted(() => {
 }
 
 .stat-icon-wrapper.today ion-icon {
-  color: #10b981;
+  color: var(--color-available);
 }
 
 .stat-icon-wrapper.month ion-icon {
-  color: #3b82f6;
+  color: var(--ion-color-primary);
 }
 
 .stat-content {
@@ -271,14 +271,14 @@ onMounted(() => {
 .stat-number {
   font-size: 1.75rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--ion-text-color);
   line-height: 1;
   margin-bottom: 0.25rem;
 }
 
 .stat-label {
   font-size: 0.75rem;
-  color: #6b7280;
+  color: var(--ion-color-step-600);
   font-weight: 500;
   line-height: 1.2;
 }

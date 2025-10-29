@@ -24,6 +24,12 @@ class Patient extends Model
         'active' => 'boolean',
     ];
 
+    protected $appends = [
+        'name',
+        'age',
+        'blood_type'
+    ];
+
     public function safetyChecklists(): HasMany
     {
         return $this->hasMany(SafetyChecklist::class);
@@ -32,6 +38,11 @@ class Patient extends Model
     public function unit()
     {
         return $this->belongsTo(Unit::class);
+    }
+
+    public function getNameAttribute(): string
+    {
+        return $this->full_name;
     }
 
     public function getAgeAttribute(): int

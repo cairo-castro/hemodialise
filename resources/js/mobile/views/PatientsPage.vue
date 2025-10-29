@@ -254,6 +254,101 @@
           </form>
         </ion-content>
       </ion-modal>
+
+      <!-- Patient Details Modal -->
+      <ion-modal :is-open="showDetailsModal" @will-dismiss="showDetailsModal = false">
+        <ion-header>
+          <ion-toolbar color="primary">
+            <ion-title>Detalhes do Paciente</ion-title>
+            <ion-buttons slot="end">
+              <ion-button @click="showDetailsModal = false">
+                <ion-icon :icon="closeOutline"></ion-icon>
+              </ion-button>
+            </ion-buttons>
+          </ion-toolbar>
+        </ion-header>
+
+        <ion-content class="ion-padding" v-if="selectedPatientDetails">
+          <div class="patient-details-modal">
+            <!-- Patient Info Card -->
+            <ion-card class="details-card">
+              <ion-card-content>
+                <div class="details-header">
+                  <div class="details-avatar">
+                    <ion-icon :icon="personOutline"></ion-icon>
+                  </div>
+                  <div class="details-title">
+                    <h2>{{ selectedPatientDetails.full_name }}</h2>
+                    <ion-badge :color="selectedPatientDetails.active ? 'success' : 'danger'">
+                      {{ selectedPatientDetails.active ? 'Ativo' : 'Inativo' }}
+                    </ion-badge>
+                  </div>
+                </div>
+
+                <div class="details-grid">
+                  <div class="detail-item">
+                    <ion-icon :icon="calendarOutline"></ion-icon>
+                    <div>
+                      <span class="detail-label">Data de Nascimento</span>
+                      <span class="detail-value">{{ formatDate(selectedPatientDetails.birth_date) }}</span>
+                    </div>
+                  </div>
+
+                  <div class="detail-item">
+                    <ion-icon :icon="informationCircleOutline"></ion-icon>
+                    <div>
+                      <span class="detail-label">Idade</span>
+                      <span class="detail-value">{{ selectedPatientDetails.age }} anos</span>
+                    </div>
+                  </div>
+
+                  <div class="detail-item" v-if="selectedPatientDetails.blood_type">
+                    <ion-icon :icon="waterOutline"></ion-icon>
+                    <div>
+                      <span class="detail-label">Tipo Sanguíneo</span>
+                      <span class="detail-value">{{ selectedPatientDetails.blood_type }}</span>
+                    </div>
+                  </div>
+
+                  <div class="detail-item">
+                    <ion-icon :icon="clipboardOutline"></ion-icon>
+                    <div>
+                      <span class="detail-label">Checklists Realizados</span>
+                      <span class="detail-value">{{ selectedPatientDetails.checklists_count }}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="detail-section" v-if="selectedPatientDetails.allergies">
+                  <h4><ion-icon :icon="alertCircleOutline"></ion-icon> Alergias</h4>
+                  <p>{{ selectedPatientDetails.allergies }}</p>
+                </div>
+
+                <div class="detail-section" v-if="selectedPatientDetails.observations">
+                  <h4><ion-icon :icon="medkitOutline"></ion-icon> Observações</h4>
+                  <p>{{ selectedPatientDetails.observations }}</p>
+                </div>
+              </ion-card-content>
+            </ion-card>
+
+            <!-- Actions -->
+            <div class="details-actions">
+              <ion-button
+                expand="block"
+                :color="selectedPatientDetails.active ? 'warning' : 'success'"
+                @click="togglePatientStatus"
+                :disabled="isTogglingStatus"
+              >
+                <ion-icon
+                  :icon="selectedPatientDetails.active ? closeOutline : checkmarkCircleOutline"
+                  slot="start"
+                ></ion-icon>
+                {{ selectedPatientDetails.active ? 'Desativar Paciente' : 'Ativar Paciente' }}
+              </ion-button>
+            </div>
+          </div>
+        </ion-content>
+      </ion-modal>
     </ion-content>
   </ion-page>
 </template>
@@ -318,7 +413,10 @@ const patientRepository = container.get<PatientRepository>('PatientRepository');
 const patients = ref<Patient[]>([]);
 const searchQuery = ref('');
 const showCreateModal = ref(false);
+const showDetailsModal = ref(false);
+const selectedPatientDetails = ref<any>(null);
 const isSearching = ref(false);
+const isTogglingStatus = ref(false);
 let searchTimeout: NodeJS.Timeout | null = null;
 
 const newPatient = ref<CreatePatientData>({
@@ -403,9 +501,95 @@ const handleSearch = (event: any) => {
   }, 500);
 };
 
-const selectPatient = (patient: Patient) => {
-  // Navigate to patient details or perform action
-  console.log('Selected patient:', patient);
+const selectPatient = async (patient: Patient) => {
+  try {
+    const loading = await loadingController.create({
+      message: 'Carregando detalhes...',
+      spinner: 'crescent'
+    });
+    await loading.present();
+
+    // Busca detalhes completos do paciente
+    const response = await fetch(`/api/patients/${patient.id}`, {
+      credentials: 'include',
+      headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      selectedPatientDetails.value = data.patient;
+      showDetailsModal.value = true;
+    } else {
+      throw new Error(data.message || 'Erro ao carregar detalhes');
+    }
+
+    await loading.dismiss();
+  } catch (error: any) {
+    console.error('Error loading patient details:', error);
+    const toast = await toastController.create({
+      message: error.message || 'Erro ao carregar detalhes do paciente',
+      duration: 3000,
+      color: 'danger',
+      position: 'top'
+    });
+    await toast.present();
+  }
+};
+
+const togglePatientStatus = async () => {
+  if (!selectedPatientDetails.value) return;
+
+  try {
+    isTogglingStatus.value = true;
+
+    const response = await fetch(`/api/patients/${selectedPatientDetails.value.id}/toggle-active`, {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      // Atualiza o status no modal
+      selectedPatientDetails.value.active = data.patient.active;
+
+      // Atualiza na lista também
+      const patientIndex = patients.value.findIndex(p => p.id === selectedPatientDetails.value.id);
+      if (patientIndex !== -1) {
+        patients.value[patientIndex] = { ...patients.value[patientIndex], active: data.patient.active };
+      }
+
+      const toast = await toastController.create({
+        message: data.message,
+        duration: 2000,
+        color: 'success',
+        position: 'top'
+      });
+      await toast.present();
+    } else {
+      throw new Error(data.message || 'Erro ao alterar status');
+    }
+  } catch (error: any) {
+    console.error('Error toggling patient status:', error);
+    const toast = await toastController.create({
+      message: error.message || 'Erro ao alterar status do paciente',
+      duration: 3000,
+      color: 'danger',
+      position: 'top'
+    });
+    await toast.present();
+  } finally {
+    isTogglingStatus.value = false;
+  }
 };
 
 const createPatient = async () => {
@@ -510,7 +694,7 @@ onMounted(() => {
 
 /* ===== CONTENT ===== */
 .dashboard-content {
-  --background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+  --background: var(--ion-background-color);
 }
 
 /* ===== SEARCH ===== */
@@ -522,7 +706,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: white;
+  background: var(--ion-card-background);
   border-radius: 16px;
   padding: 8px 16px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
@@ -539,7 +723,7 @@ onMounted(() => {
   --box-shadow: none;
   --border-radius: 0;
   --placeholder-opacity: 0.6;
-  --color: #1f2937;
+  --color: var(--ion-text-color);
   padding: 0;
   width: 100%;
 }
@@ -561,7 +745,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: white;
+  background: var(--ion-card-background);
   border-radius: 16px;
   padding: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -613,7 +797,7 @@ onMounted(() => {
 }
 
 .stat-card.primary .stat-icon ion-icon {
-  color: #2563eb;
+  color: var(--ion-color-primary);
 }
 
 .stat-card.success .stat-icon ion-icon {
@@ -628,13 +812,13 @@ onMounted(() => {
 .stat-value {
   font-size: 1.75rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--ion-text-color);
   line-height: 1;
 }
 
 .stat-label {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--ion-color-step-600);
   margin-top: 4px;
 }
 
@@ -669,7 +853,7 @@ onMounted(() => {
 .section-header h2 {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--ion-text-color);
   margin: 0;
 }
 
@@ -691,8 +875,8 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 16px;
-  background: white;
-  border: 2px solid #e5e7eb;
+  background: var(--ion-card-background);
+  border: 2px solid var(--ion-color-step-150);
   border-radius: 16px;
   padding: 16px;
   cursor: pointer;
@@ -739,7 +923,7 @@ onMounted(() => {
 .patient-header-dash h3 {
   font-size: 1rem;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--ion-text-color);
   margin: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -763,7 +947,7 @@ onMounted(() => {
   align-items: center;
   gap: 4px;
   font-size: 0.813rem;
-  color: #6b7280;
+  color: var(--ion-color-step-600);
 }
 
 .meta-item ion-icon {
@@ -782,7 +966,7 @@ onMounted(() => {
   align-items: center;
   gap: 4px;
   padding: 4px 10px;
-  background: #f3f4f6;
+  background: var(--ion-color-step-50);
   border-radius: 8px;
   font-size: 0.75rem;
   color: #4b5563;
@@ -808,7 +992,7 @@ onMounted(() => {
   align-items: center;
   text-align: center;
   padding: 60px 20px;
-  background: white;
+  background: var(--ion-card-background);
   border-radius: 16px;
   border: 2px dashed #e5e7eb;
 }
@@ -826,19 +1010,19 @@ onMounted(() => {
 
 .empty-icon ion-icon {
   font-size: 3rem;
-  color: #9ca3af;
+  color: var(--ion-color-step-500);
 }
 
 .empty-state-dash h3 {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--ion-text-color);
   margin: 0 0 8px 0;
 }
 
 .empty-state-dash p {
   font-size: 0.938rem;
-  color: #6b7280;
+  color: var(--ion-color-step-600);
   margin: 0 0 20px 0;
 }
 
@@ -882,7 +1066,7 @@ onMounted(() => {
 
 /* Modal Content */
 .modal-content-dash {
-  --background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+  --background: var(--ion-background-color);
   --padding: 0;
 }
 
@@ -894,7 +1078,7 @@ onMounted(() => {
 
 /* Welcome Card */
 .welcome-card-dash {
-  background: white;
+  background: var(--ion-card-background);
   padding: 20px;
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -905,13 +1089,13 @@ onMounted(() => {
 .welcome-card-dash h2 {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--ion-text-color);
   margin: 0 0 8px 0;
 }
 
 .welcome-card-dash p {
   font-size: 0.9rem;
-  color: #6b7280;
+  color: var(--ion-color-step-600);
   margin: 0;
 }
 
@@ -936,7 +1120,7 @@ onMounted(() => {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: white;
+  background: var(--ion-card-background);
   border: 3px solid #d1d5db;
   transition: all 0.3s ease;
 }
@@ -948,7 +1132,7 @@ onMounted(() => {
 
 .progress-item span {
   font-size: 0.7rem;
-  color: #6b7280;
+  color: var(--ion-color-step-600);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -983,8 +1167,8 @@ onMounted(() => {
   display: flex;
   align-items: flex-start;
   gap: 16px;
-  background: white;
-  border: 2px solid #e5e7eb;
+  background: var(--ion-card-background);
+  border: 2px solid var(--ion-color-step-150);
   border-radius: 12px;
   padding: 16px;
   transition: all 0.2s ease;
@@ -1032,14 +1216,14 @@ onMounted(() => {
 .card-content-dash label {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--ion-text-color);
   margin: 0;
 }
 
 .optional {
   font-size: 0.75rem;
   font-weight: 400;
-  color: #9ca3af;
+  color: var(--ion-color-step-500);
 }
 
 .input-dash,
@@ -1049,7 +1233,7 @@ onMounted(() => {
   --padding-top: 0;
   --padding-bottom: 0;
   font-size: 1rem;
-  color: #1f2937;
+  color: var(--ion-text-color);
 }
 
 .input-dash::part(native),
@@ -1080,9 +1264,9 @@ onMounted(() => {
 }
 
 .btn-cancel-dash {
-  background: white;
-  color: #6b7280;
-  border: 2px solid #e5e7eb;
+  background: var(--ion-card-background);
+  color: var(--ion-color-step-600);
+  border: 2px solid var(--ion-color-step-150);
 }
 
 .btn-cancel-dash:active {
@@ -1131,6 +1315,146 @@ onMounted(() => {
 
   .buttons-dash {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Patient Details Modal Styles */
+.patient-details-modal {
+  padding: 0;
+}
+
+.details-card {
+  margin: 0 0 16px 0;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.details-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.details-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-primary-shade) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 40px;
+}
+
+.details-title {
+  flex: 1;
+}
+
+.details-title h2 {
+  margin: 0 0 8px 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.detail-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  background: var(--ion-background-color);
+  border-radius: 12px;
+}
+
+.detail-item ion-icon {
+  font-size: 24px;
+  color: var(--ion-color-primary);
+  margin-top: 4px;
+}
+
+.detail-item div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail-label {
+  font-size: 12px;
+  color: #6c757d;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.detail-value {
+  font-size: 16px;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.detail-section {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #e9ecef;
+}
+
+.detail-section h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #495057;
+}
+
+.detail-section h4 ion-icon {
+  font-size: 20px;
+  color: var(--ion-color-primary);
+}
+
+.detail-section p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #6c757d;
+  padding: 12px;
+  background: var(--ion-background-color);
+  border-radius: 8px;
+}
+
+.details-actions {
+  padding: 0 16px 16px 16px;
+}
+
+.details-actions ion-button {
+  --border-radius: 12px;
+  font-weight: 600;
+  text-transform: none;
+  height: 48px;
+}
+
+@media (max-width: 480px) {
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .details-avatar {
+    width: 60px;
+    height: 60px;
+    font-size: 30px;
+  }
+
+  .details-title h2 {
+    font-size: 20px;
   }
 }
 </style>

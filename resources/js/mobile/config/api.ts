@@ -19,6 +19,7 @@ export const API_CONFIG = {
     // Patients (rotas API)
     PATIENTS: '/api/patients',
     PATIENTS_SEARCH: '/api/patients/search',
+    PATIENTS_QUICK_SEARCH: '/api/patients/quick-search',
 
     // Checklists (rotas API)
     CHECKLISTS: '/api/checklists',
@@ -26,6 +27,10 @@ export const API_CONFIG = {
     CHECKLISTS_PENDING: '/api/checklists/pending',
     CHECKLISTS_BY_USER: '/api/checklists/user',
     CHECKLISTS_BY_MACHINE: '/api/checklists/machine',
+
+    // Cleaning Checklists (rotas API)
+    CLEANING_CHECKLISTS: '/api/cleaning-checklists',
+    CLEANING_CHECKLISTS_STATS: '/api/cleaning-checklists/stats',
 
     // Machines (rotas API)
     MACHINES: '/api/machines',

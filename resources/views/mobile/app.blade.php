@@ -104,7 +104,8 @@
 
     <!-- Service Worker Registration -->
     <script>
-        if ('serviceWorker' in navigator) {
+        // Only register service worker in production
+        if ('serviceWorker' in navigator && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js')
                     .then((registration) => {
@@ -113,6 +114,14 @@
                     .catch((registrationError) => {
                         console.log('SW registration failed: ', registrationError);
                     });
+            });
+        } else if ('serviceWorker' in navigator) {
+            // Unregister any existing service workers in development
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                for(let registration of registrations) {
+                    registration.unregister();
+                    console.log('SW unregistered in development mode');
+                }
             });
         }
     </script>

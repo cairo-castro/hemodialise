@@ -172,6 +172,29 @@ class ChecklistController extends Controller
         ]);
     }
 
+    public function recent(Request $request)
+    {
+        // Get recent checklists (last 24 hours) with limit parameter
+        $limit = $request->input('limit', 10);
+
+        $query = SafetyChecklist::with(['machine', 'patient', 'user'])
+            ->where('created_at', '>=', now()->subDay())
+            ->orderBy('created_at', 'desc')
+            ->limit($limit);
+
+        // Filtrar por unidade (todos os usuários respeitam a unidade ativa)
+        $scopedUnitId = $request->get('scoped_unit_id');
+        $query->forUnit($scopedUnitId);  // Using query scope
+
+        $recentChecklists = $query->get();
+
+        return response()->json([
+            'success' => true,
+            'checklists' => $recentChecklists,
+            'total' => $recentChecklists->count(),
+        ]);
+    }
+
     public function pause(SafetyChecklist $checklist)
     {
         if ($checklist->isPaused()) {

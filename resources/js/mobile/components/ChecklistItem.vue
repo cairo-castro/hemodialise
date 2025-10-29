@@ -158,33 +158,33 @@ const getStatusIcon = (status: 'C' | 'NC' | 'NA' | null) => {
    ====================================== */
 
 .checklist-item-card {
-  background: white;
+  background: var(--ion-card-background);
   border-radius: 16px;
   padding: 20px;
   margin-bottom: 16px;
-  border: 2px solid #e5e7eb;
+  border: 2px solid var(--ion-color-step-150);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .checklist-item-card.has-value {
-  border-color: #d1d5db;
+  border-color: var(--ion-color-step-200);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .checklist-item-card.is-conforme {
-  border-color: #10b981;
-  background: linear-gradient(to bottom, white 0%, #ecfdf5 100%);
+  border-color: var(--color-available);
+  background: var(--ion-card-background);
 }
 
 .checklist-item-card.is-nao-conforme {
-  border-color: #ef4444;
-  background: linear-gradient(to bottom, white 0%, #fef2f2 100%);
+  border-color: var(--color-maintenance);
+  background: var(--ion-card-background);
 }
 
 .checklist-item-card.is-nao-aplica {
-  border-color: #6b7280;
-  background: linear-gradient(to bottom, white 0%, #f9fafb 100%);
+  border-color: var(--ion-color-step-600);
+  background: var(--ion-card-background);
 }
 
 /* Header Section */
@@ -194,7 +194,7 @@ const getStatusIcon = (status: 'C' | 'NC' | 'NA' | null) => {
   justify-content: space-between;
   margin-bottom: 20px;
   padding-bottom: 16px;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--ion-color-step-150);
 }
 
 .header-content {
@@ -205,14 +205,14 @@ const getStatusIcon = (status: 'C' | 'NC' | 'NA' | null) => {
 .item-card-title {
   font-size: 17px;
   font-weight: 600;
-  color: #111827;
+  color: var(--ion-text-color);
   margin: 0 0 6px 0;
   line-height: 1.4;
 }
 
 .item-card-description {
   font-size: 14px;
-  color: #6b7280;
+  color: var(--ion-color-step-600);
   margin: 0;
   line-height: 1.5;
 }
@@ -239,17 +239,17 @@ const getStatusIcon = (status: 'C' | 'NC' | 'NA' | null) => {
 }
 
 .status-badge.c {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: var(--ion-color-success);
   color: white;
 }
 
 .status-badge.nc {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  background: var(--ion-color-danger);
   color: white;
 }
 
 .status-badge.na {
-  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  background: var(--ion-color-step-600);
   color: white;
 }
 
@@ -268,8 +268,8 @@ const getStatusIcon = (status: 'C' | 'NC' | 'NA' | null) => {
 }
 
 .action-status-btn {
-  background: white;
-  border: 2px solid #e5e7eb;
+  background: var(--ion-card-background);
+  border: 2px solid var(--ion-color-step-150);
   border-radius: 14px;
   padding: 16px;
   display: flex;
@@ -289,7 +289,7 @@ const getStatusIcon = (status: 'C' | 'NC' | 'NA' | null) => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.8) 0%, transparent 100%);
+  background: rgba(255, 255, 255, 0.1);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
@@ -301,7 +301,7 @@ const getStatusIcon = (status: 'C' | 'NC' | 'NA' | null) => {
 .action-status-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
-  border-color: #d1d5db;
+  border-color: var(--ion-color-step-200);
 }
 
 .action-status-btn:active {
@@ -311,20 +311,20 @@ const getStatusIcon = (status: 'C' | 'NC' | 'NA' | null) => {
 
 /* Selected States */
 .action-status-btn.conforme.selected {
-  border-color: #10b981;
-  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border-color: var(--color-available);
+  background: rgba(var(--ion-color-success-rgb), 0.1);
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
 }
 
 .action-status-btn.nao-conforme.selected {
-  border-color: #ef4444;
-  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  border-color: var(--color-maintenance);
+  background: rgba(var(--ion-color-danger-rgb), 0.1);
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
 }
 
 .action-status-btn.nao-aplica.selected {
-  border-color: #6b7280;
-  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+  border-color: var(--ion-color-step-600);
+  background: var(--ion-color-step-100);
   box-shadow: 0 4px 12px rgba(107, 114, 128, 0.25);
 }
 
@@ -342,34 +342,34 @@ const getStatusIcon = (status: 'C' | 'NC' | 'NA' | null) => {
 }
 
 .action-status-icon.success {
-  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-  color: #059669;
+  background: rgba(var(--ion-color-success-rgb), 0.2);
+  color: var(--color-available);
 }
 
 .action-status-btn.conforme.selected .action-status-icon.success {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: var(--ion-color-success);
   color: white;
   transform: scale(1.1);
 }
 
 .action-status-icon.danger {
-  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-  color: #dc2626;
+  background: rgba(var(--ion-color-danger-rgb), 0.2);
+  color: var(--color-maintenance);
 }
 
 .action-status-btn.nao-conforme.selected .action-status-icon.danger {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  background: var(--ion-color-danger);
   color: white;
   transform: scale(1.1);
 }
 
 .action-status-icon.neutral {
-  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
-  color: #4b5563;
+  background: var(--ion-color-step-150);
+  color: var(--ion-color-step-600);
 }
 
 .action-status-btn.nao-aplica.selected .action-status-icon.neutral {
-  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  background: var(--ion-color-step-600);
   color: white;
   transform: scale(1.1);
 }
@@ -385,30 +385,30 @@ const getStatusIcon = (status: 'C' | 'NC' | 'NA' | null) => {
 .action-status-label {
   font-size: 15px;
   font-weight: 600;
-  color: #111827;
+  color: var(--ion-text-color);
   line-height: 1.3;
 }
 
 .action-status-hint {
   font-size: 12px;
-  color: #9ca3af;
+  color: var(--ion-color-step-500);
   font-weight: 500;
 }
 
 .action-status-btn.selected .action-status-label {
-  color: #111827;
+  color: var(--ion-text-color);
 }
 
 .action-status-btn.conforme.selected .action-status-hint {
-  color: #059669;
+  color: var(--color-available);
 }
 
 .action-status-btn.nao-conforme.selected .action-status-hint {
-  color: #dc2626;
+  color: var(--color-maintenance);
 }
 
 .action-status-btn.nao-aplica.selected .action-status-hint {
-  color: #4b5563;
+  color: var(--ion-color-step-600);
 }
 
 /* Selected Check Icon */
@@ -424,23 +424,23 @@ const getStatusIcon = (status: 'C' | 'NC' | 'NA' | null) => {
 }
 
 .action-status-btn.conforme.selected .selected-check {
-  color: #059669;
+  color: var(--color-available);
 }
 
 .action-status-btn.nao-conforme.selected .selected-check {
-  color: #dc2626;
+  color: var(--color-maintenance);
 }
 
 .action-status-btn.nao-aplica.selected .selected-check {
-  color: #4b5563;
+  color: var(--ion-color-step-600);
 }
 
 /* Observation Card (NC Only) */
 .observation-card {
   margin-top: 16px;
   padding: 16px;
-  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-  border: 2px solid #ef4444;
+  background: rgba(var(--ion-color-danger-rgb), 0.1);
+  border: 2px solid var(--color-maintenance);
   border-radius: 12px;
   animation: slideDown 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -462,7 +462,7 @@ const getStatusIcon = (status: 'C' | 'NC' | 'NA' | null) => {
   gap: 8px;
   font-size: 14px;
   font-weight: 600;
-  color: #dc2626;
+  color: var(--color-maintenance);
   margin-bottom: 12px;
 }
 
@@ -473,25 +473,25 @@ const getStatusIcon = (status: 'C' | 'NC' | 'NA' | null) => {
 .observation-textarea {
   width: 100%;
   padding: 12px;
-  border: 2px solid #fca5a5;
+  border: 2px solid rgba(var(--ion-color-danger-rgb), 0.3);
   border-radius: 8px;
   font-size: 14px;
   font-family: inherit;
   line-height: 1.5;
-  background: white;
-  color: #111827;
+  background: var(--ion-card-background);
+  color: var(--ion-text-color);
   resize: vertical;
   transition: all 0.3s ease;
 }
 
 .observation-textarea:focus {
   outline: none;
-  border-color: #ef4444;
+  border-color: var(--color-maintenance);
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
 }
 
 .observation-textarea::placeholder {
-  color: #9ca3af;
+  color: var(--ion-color-step-500);
   font-style: italic;
 }
 

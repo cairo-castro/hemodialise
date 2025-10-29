@@ -1,0 +1,278 @@
+/**
+ * Card Component Utilities
+ * Reusable card styles for the application
+ */
+
+/* ========================================
+   BASE CARD STYLES
+   ======================================== */
+
+.app-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: var(--spacing-card-padding);
+  transition: var(--transition-card);
+}
+
+.app-card:active {
+  transform: scale(0.98);
+}
+
+/* Card Variants */
+.app-card--gradient-primary {
+  background: linear-gradient(135deg, var(--ion-color-primary), var(--ion-color-primary-shade));
+  color: white;
+}
+
+.app-card--gradient-secondary {
+  background: linear-gradient(135deg, var(--ion-color-secondary), var(--ion-color-secondary-shade));
+  color: white;
+}
+
+.app-card--bordered {
+  border: var(--border-medium) solid var(--border-light);
+  box-shadow: none;
+}
+
+.app-card--elevated {
+  box-shadow: var(--shadow-lg);
+}
+
+.app-card--flat {
+  box-shadow: none;
+}
+
+/* ========================================
+   MACHINE CARDS
+   ======================================== */
+
+.machine-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  border-left: var(--border-thick) solid transparent;
+  cursor: pointer;
+}
+
+.machine-card--available {
+  border-left-color: var(--color-available);
+}
+
+.machine-card--available:hover {
+  background: rgba(16, 185, 129, 0.05);
+}
+
+.machine-card--occupied {
+  border-left-color: var(--color-occupied);
+  cursor: pointer;
+}
+
+.machine-card--occupied:hover {
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.machine-card--maintenance {
+  border-left-color: var(--color-maintenance);
+  opacity: 0.7;
+}
+
+.machine-card--inactive {
+  border-left-color: var(--color-inactive);
+  opacity: 0.6;
+}
+
+/* ========================================
+   STAT CARDS
+   ======================================== */
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  background: var(--bg-card);
+  border-left: var(--border-thick) solid transparent;
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+  transition: var(--transition-card);
+}
+
+.stat-card:active {
+  transform: scale(0.97);
+}
+
+.stat-card--available {
+  border-left-color: var(--ion-color-success);
+}
+
+.stat-card--occupied,
+.stat-card--active {
+  border-left-color: var(--ion-color-warning);
+}
+
+.stat-card--total {
+  border-left-color: var(--ion-color-medium);
+}
+
+.stat-card--maintenance {
+  border-left-color: var(--ion-color-danger);
+}
+
+/* Stat Card Icon */
+.stat-icon {
+  flex-shrink: 0;
+  font-size: var(--text-5xl);
+}
+
+.stat-card--available .stat-icon {
+  color: var(--ion-color-success);
+}
+
+.stat-card--occupied .stat-icon,
+.stat-card--active .stat-icon {
+  color: var(--ion-color-warning);
+}
+
+.stat-card--total .stat-icon {
+  color: var(--ion-color-medium);
+}
+
+.stat-card--maintenance .stat-icon {
+  color: var(--ion-color-danger);
+}
+
+/* Stat Card Content */
+.stat-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.stat-number {
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  line-height: var(--leading-tight);
+}
+
+.stat-label {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: var(--tracking-wide);
+  margin-top: 2px;
+  font-weight: var(--font-semibold);
+}
+
+/* ========================================
+   PATIENT CARDS
+   ======================================== */
+
+.patient-card {
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-md);
+}
+
+/* ========================================
+   CHECKLIST CARDS
+   ======================================== */
+
+.safety-checklist-item {
+  margin-bottom: var(--spacing-sm);
+  border-radius: var(--radius-sm);
+}
+
+/* ========================================
+   WELCOME/HEADER CARDS
+   ======================================== */
+
+.welcome-card {
+  background: linear-gradient(135deg, var(--ion-color-primary), var(--ion-color-primary-shade));
+  color: white;
+  padding: var(--spacing-lg);
+}
+
+.welcome-title {
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
+  margin: 0 0 var(--spacing-sm) 0;
+  color: white;
+}
+
+/* ========================================
+   ACTION CARDS
+   ======================================== */
+
+.action-card {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  background: var(--bg-card);
+  border: var(--border-medium) solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  cursor: pointer;
+  transition: var(--transition-card);
+}
+
+.action-card:active {
+  transform: scale(0.98);
+  border-color: var(--ion-color-primary);
+}
+
+.action-card-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.action-card-icon ion-icon {
+  font-size: var(--text-4xl);
+  color: white;
+}
+
+.action-card-icon--primary {
+  background: linear-gradient(135deg, var(--ion-color-primary), var(--ion-color-primary-shade));
+}
+
+.action-card-icon--warning {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.action-card-icon--tertiary {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+}
+
+.action-card-icon--cleaning {
+  background: linear-gradient(135deg, #06b6d4, #0891b2);
+}
+
+.action-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.action-card-title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+}
+
+.action-card-subtitle {
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+}
+
+.action-card-chevron {
+  font-size: var(--text-xl);
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}

@@ -2,6 +2,7 @@ import { CleaningChecklistRepository, CleaningChecklistFilters } from '../../dom
 import { CleaningChecklist, CleaningChecklistCreate, CleaningChecklistStats } from '../../domain/entities/CleaningChecklist';
 import { ApiDataSource } from '../datasources/ApiDataSource';
 import { AuthRepository } from '../../domain/repositories/AuthRepository';
+import { API_CONFIG } from '@mobile/config/api';
 
 export class CleaningChecklistRepositoryImpl implements CleaningChecklistRepository {
   constructor(
@@ -9,14 +10,8 @@ export class CleaningChecklistRepositoryImpl implements CleaningChecklistReposit
     private authRepository: AuthRepository
   ) {}
 
-  private getToken(): string {
-    const token = this.authRepository.getStoredToken();
-    if (!token) throw new Error('Token não encontrado');
-    return token;
-  }
-
   async getAll(filters?: CleaningChecklistFilters): Promise<CleaningChecklist[]> {
-    const token = this.getToken();
+    // Session-based auth: não precisa de token, usa cookie de sessão
     const queryParams = new URLSearchParams();
 
     if (filters) {
@@ -27,9 +22,9 @@ export class CleaningChecklistRepositoryImpl implements CleaningChecklistReposit
     }
 
     const query = queryParams.toString();
-    const endpoint = `/cleaning-checklists${query ? `?${query}` : ''}`;
+    const endpoint = `${API_CONFIG.ENDPOINTS.CLEANING_CHECKLISTS}${query ? `?${query}` : ''}`;
 
-    const response = await this.apiDataSource.get<any>(endpoint, token);
+    const response = await this.apiDataSource.get<any>(endpoint);
 
     if (response.data && response.data.checklists) {
       return response.data.checklists;
@@ -41,8 +36,7 @@ export class CleaningChecklistRepositoryImpl implements CleaningChecklistReposit
   }
 
   async getById(id: number): Promise<CleaningChecklist> {
-    const token = this.getToken();
-    const response = await this.apiDataSource.get<any>(`/cleaning-checklists/${id}`, token);
+    const response = await this.apiDataSource.get<any>(`${API_CONFIG.ENDPOINTS.CLEANING_CHECKLISTS}/${id}`);
 
     if (response.data && response.data.checklist) {
       return response.data.checklist;
@@ -51,8 +45,7 @@ export class CleaningChecklistRepositoryImpl implements CleaningChecklistReposit
   }
 
   async create(data: CleaningChecklistCreate): Promise<CleaningChecklist> {
-    const token = this.getToken();
-    const response = await this.apiDataSource.post<any>('/cleaning-checklists', data, token);
+    const response = await this.apiDataSource.post<any>(API_CONFIG.ENDPOINTS.CLEANING_CHECKLISTS, data);
 
     if (response.data && response.data.checklist) {
       return response.data.checklist;
@@ -61,8 +54,7 @@ export class CleaningChecklistRepositoryImpl implements CleaningChecklistReposit
   }
 
   async update(id: number, data: Partial<CleaningChecklistCreate>): Promise<CleaningChecklist> {
-    const token = this.getToken();
-    const response = await this.apiDataSource.put<any>(`/cleaning-checklists/${id}`, data, token);
+    const response = await this.apiDataSource.put<any>(`${API_CONFIG.ENDPOINTS.CLEANING_CHECKLISTS}/${id}`, data);
 
     if (response.data && response.data.checklist) {
       return response.data.checklist;
@@ -71,13 +63,11 @@ export class CleaningChecklistRepositoryImpl implements CleaningChecklistReposit
   }
 
   async delete(id: number): Promise<void> {
-    const token = this.getToken();
-    await this.apiDataSource.delete(`/cleaning-checklists/${id}`, token);
+    await this.apiDataSource.delete(`${API_CONFIG.ENDPOINTS.CLEANING_CHECKLISTS}/${id}`);
   }
 
   async getStats(): Promise<CleaningChecklistStats> {
-    const token = this.getToken();
-    const response = await this.apiDataSource.get<any>('/cleaning-checklists/stats', token);
+    const response = await this.apiDataSource.get<any>(API_CONFIG.ENDPOINTS.CLEANING_CHECKLISTS_STATS);
 
     if (response.data && response.data.stats) {
       return response.data.stats;

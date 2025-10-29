@@ -1,0 +1,46 @@
+/**
+ * Ionic Color Definitions
+ * Maps our application colors to Ionic's color system
+ */
+
+:root {
+  /* Primary color - Blue theme for hemodialysis system */
+  --ion-color-primary: #2563eb;
+  --ion-color-primary-rgb: 37, 99, 235;
+  --ion-color-primary-contrast: #ffffff;
+  --ion-color-primary-contrast-rgb: 255, 255, 255;
+  --ion-color-primary-shade: #2148ce;
+  --ion-color-primary-tint: #3b72ed;
+
+  /* Secondary color - Teal for medical theme */
+  --ion-color-secondary: #0d9488;
+  --ion-color-secondary-rgb: 13, 148, 136;
+  --ion-color-secondary-contrast: #ffffff;
+  --ion-color-secondary-contrast-rgb: 255, 255, 255;
+  --ion-color-secondary-shade: #0b8277;
+  --ion-color-secondary-tint: #259d94;
+
+  /* Success color - Green */
+  --ion-color-success: #059669;
+  --ion-color-success-rgb: 5, 150, 105;
+  --ion-color-success-contrast: #ffffff;
+  --ion-color-success-contrast-rgb: 255, 255, 255;
+  --ion-color-success-shade: #05855d;
+  --ion-color-success-tint: #1ea478;
+
+  /* Warning color - Orange */
+  --ion-color-warning: #ea580c;
+  --ion-color-warning-rgb: 234, 88, 12;
+  --ion-color-warning-contrast: #ffffff;
+  --ion-color-warning-contrast-rgb: 255, 255, 255;
+  --ion-color-warning-shade: #ce4e0b;
+  --ion-color-warning-tint: #ec6924;
+
+  /* Danger color - Red */
+  --ion-color-danger: #dc2626;
+  --ion-color-danger-rgb: 220, 38, 38;
+  --ion-color-danger-contrast: #ffffff;
+  --ion-color-danger-contrast-rgb: 255, 255, 255;
+  --ion-color-danger-shade: #c22121;
+  --ion-color-danger-tint: #e03c3c;
+}

@@ -1,0 +1,28 @@
+/**
+ * Transition Tokens
+ * Consistent animation timing and easing
+ */
+
+:root {
+  /* Timing */
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 300ms;
+  --duration-slower: 500ms;
+
+  /* Easing functions */
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-smooth: cubic-bezier(0.25, 0.1, 0.25, 1);
+
+  /* Combined transitions */
+  --transition-fast: var(--duration-fast) var(--ease-out);
+  --transition-base: var(--duration-base) var(--ease-out);
+  --transition-slow: var(--duration-slow) var(--ease-in-out);
+
+  /* Specific use cases */
+  --transition-button: all var(--transition-base);
+  --transition-card: all var(--transition-base);
+  --transition-modal: all var(--transition-slow);
+}

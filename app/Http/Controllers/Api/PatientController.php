@@ -125,28 +125,28 @@ class PatientController extends Controller
      * Retorna um paciente específico pelo ID
      * Filtra automaticamente pela unidade do usuário autenticado
      */
-    public function show($id): JsonResponse
+    public function show(Request $request, $id): JsonResponse
     {
-        $user = auth()->user();
-        
-        $query = Patient::where('id', $id)
-            ->where('active', true);
-            
-        // SEGURANÇA: Filtra apenas pacientes da unidade do usuário
-        // Admin pode ver todos, outros usuários apenas da sua unidade
-        if (!$user->isAdmin() && $user->unit_id) {
-            $query->where('unit_id', $user->unit_id);
+        $query = Patient::where('id', $id);
+
+        // Aplicar filtro de unidade do middleware
+        $scopedUnitId = $request->get('scoped_unit_id');
+        if ($scopedUnitId !== null) {
+            $query->where('unit_id', $scopedUnitId);
         }
-        
-        $patient = $query->first();
-        
+
+        $patient = $query->with('safetyChecklists')->first();
+
         if (!$patient) {
             return response()->json([
                 'success' => false,
                 'message' => 'Paciente não encontrado ou não pertence à sua unidade.'
             ], 404);
         }
-        
+
+        // Conta os checklists do paciente
+        $checklistsCount = $patient->safetyChecklists()->count();
+
         return response()->json([
             'success' => true,
             'patient' => [
@@ -157,6 +157,9 @@ class PatientController extends Controller
                 'age' => $patient->age,
                 'allergies' => $patient->allergies,
                 'observations' => $patient->observations,
+                'unit_id' => $patient->unit_id,
+                'active' => $patient->active,
+                'checklists_count' => $checklistsCount,
             ]
         ]);
     }
@@ -168,18 +171,23 @@ class PatientController extends Controller
             'birth_date' => 'required|date_format:Y-m-d',
         ]);
 
-        $user = auth()->user();
+        // Aplicar filtro de unidade do middleware
+        $scopedUnitId = $request->get('scoped_unit_id');
 
-        // SEGURANÇA: First, try to find existing patient in the user's unit
+        // SEGURANÇA: Requer seleção de unidade antes de buscar/criar pacientes
+        if ($scopedUnitId === null) {
+            return response()->json([
+                'found' => false,
+                'error' => 'Selecione uma unidade antes de buscar pacientes.'
+            ], 400);
+        }
+
+        // SEGURANÇA: First, try to find existing patient in the scoped unit
         $query = Patient::where('full_name', $request->full_name)
             ->where('birth_date', $request->birth_date)
-            ->where('active', true);
-            
-        // Filtra pela unidade do usuário (exceto admin)
-        if (!$user->isAdmin() && $user->unit_id) {
-            $query->where('unit_id', $user->unit_id);
-        }
-        
+            ->where('active', true)
+            ->where('unit_id', $scopedUnitId);
+
         $patient = $query->first();
 
         if ($patient) {
@@ -201,7 +209,7 @@ class PatientController extends Controller
                 'full_name' => $request->full_name,
                 'birth_date' => $request->birth_date,
                 'active' => true,
-                'unit_id' => $user->unit_id, // SEGURANÇA: Associa à unidade do usuário
+                'unit_id' => $scopedUnitId, // SEGURANÇA: Associa à unidade selecionada pelo middleware
             ]);
 
             return response()->json([
@@ -228,7 +236,16 @@ class PatientController extends Controller
     public function store(Request $request): JsonResponse
     {
         try {
-            $user = auth()->user();
+            // Aplicar filtro de unidade do middleware
+            $scopedUnitId = $request->get('scoped_unit_id');
+
+            // SEGURANÇA: Requer seleção de unidade antes de criar pacientes
+            if ($scopedUnitId === null) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Selecione uma unidade antes de criar pacientes.'
+                ], 400);
+            }
 
             $validated = $request->validate([
                 'full_name' => 'required|string|max:255',
@@ -239,8 +256,8 @@ class PatientController extends Controller
                 'observations' => 'nullable|string',
             ]);
 
-            // SEGURANÇA: Associa automaticamente o paciente à unidade do usuário
-            $validated['unit_id'] = $user->unit_id;
+            // SEGURANÇA: Associa automaticamente o paciente à unidade selecionada pelo middleware
+            $validated['unit_id'] = $scopedUnitId;
 
             $patient = Patient::create($validated);
 
@@ -261,11 +278,11 @@ class PatientController extends Controller
                 'errors' => $e->errors()
             ], 422);
         } catch (\Exception $e) {
-            if (str_contains($e->getMessage(), 'patients_name_birth_unique')) {
+            if (str_contains($e->getMessage(), 'patients_name_birth_unit_unique')) {
                 return response()->json([
                     'success' => false,
                     'errors' => [
-                        'patient' => ['Já existe um paciente com este nome e data de nascimento.']
+                        'patient' => ['Já existe um paciente com este nome e data de nascimento nesta unidade.']
                     ]
                 ], 422);
             }
@@ -273,6 +290,51 @@ class PatientController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Erro interno do servidor.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Ativa ou desativa um paciente
+     */
+    public function toggleActive(Request $request, $id): JsonResponse
+    {
+        try {
+            $query = Patient::where('id', $id);
+
+            // Aplicar filtro de unidade do middleware
+            $scopedUnitId = $request->get('scoped_unit_id');
+            if ($scopedUnitId !== null) {
+                $query->where('unit_id', $scopedUnitId);
+            }
+
+            $patient = $query->first();
+
+            if (!$patient) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Paciente não encontrado ou não pertence à sua unidade.'
+                ], 404);
+            }
+
+            // Alterna o status
+            $patient->active = !$patient->active;
+            $patient->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => $patient->active ? 'Paciente ativado com sucesso.' : 'Paciente desativado com sucesso.',
+                'patient' => [
+                    'id' => $patient->id,
+                    'active' => $patient->active,
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao alterar status do paciente.',
+                'error' => $e->getMessage()
             ], 500);
         }
     }

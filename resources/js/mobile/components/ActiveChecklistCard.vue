@@ -15,6 +15,12 @@
       <span class="patient-name">{{ checklist.patient.name }}</span>
     </div>
 
+    <div class="user-info">
+      <ion-icon :icon="personCircleOutline" class="user-icon"></ion-icon>
+      <span class="user-label">Técnico:</span>
+      <span class="user-name">{{ checklist.user.name }}</span>
+    </div>
+
     <div class="progress-section">
       <div class="progress-bar">
         <div class="progress-fill" :style="{ width: progressPercentage + '%' }"></div>
@@ -90,6 +96,7 @@ import { computed } from 'vue';
 import { IonButton, IonIcon, IonBadge, alertController } from '@ionic/vue';
 import {
   personOutline,
+  personCircleOutline,
   timeOutline,
   pauseOutline,
   playOutline,
@@ -108,6 +115,11 @@ interface Props {
     patient: {
       id: number;
       name: string;
+    };
+    user: {
+      id: number;
+      name: string;
+      email: string;
     };
     created_at: string;
     paused_at?: string;
@@ -201,6 +213,7 @@ const showDetails = async () => {
     header: 'Detalhes do Checklist',
     subHeader: `${props.checklist.machine.name} - ${props.checklist.patient.name}`,
     message: `
+      <strong>Técnico:</strong> ${props.checklist.user.name}<br>
       <strong>Fase:</strong> ${phaseTitle.value}<br>
       <strong>Progresso:</strong> ${progressPercentage.value}%<br>
       <strong>Iniciado:</strong> ${new Date(props.checklist.created_at).toLocaleString('pt-BR')}<br>
@@ -273,6 +286,8 @@ const showDetails = async () => {
   padding: 6px 12px;
   border-radius: 20px;
   font-weight: 600;
+  margin-top: 8px;
+  align-self: flex-start;
 }
 
 .patient-info {
@@ -294,6 +309,35 @@ const showDetails = async () => {
   font-size: 14px;
   font-weight: 500;
   color: #495057;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 16px;
+  padding: 6px 12px;
+  background: #e7f3ff;
+  border-radius: 8px;
+  border-left: 3px solid #007bff;
+}
+
+.user-icon {
+  font-size: 18px;
+  color: #007bff;
+  flex-shrink: 0;
+}
+
+.user-label {
+  font-size: 12px;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.user-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #007bff;
 }
 
 .progress-section {
@@ -391,11 +435,12 @@ const showDetails = async () => {
   position: absolute;
   top: 16px;
   right: 16px;
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: #28a745;
   box-shadow: 0 0 0 2px white, 0 0 6px rgba(40, 167, 69, 0.3);
+  z-index: 1;
 }
 
 .status-indicator.paused {

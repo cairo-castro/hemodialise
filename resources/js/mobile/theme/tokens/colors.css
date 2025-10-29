@@ -1,0 +1,33 @@
+/**
+ * Color Tokens
+ * Semantic color definitions for the hemodialysis system
+ */
+
+:root {
+  /* Machine Status Colors */
+  --color-available: #10b981;      /* Green - Available machine */
+  --color-occupied: #f59e0b;       /* Amber - Machine in use */
+  --color-maintenance: #ef4444;    /* Red - Under maintenance */
+  --color-inactive: #6b7280;       /* Gray - Inactive machine */
+
+  /* Medical System Colors */
+  --color-safe: #059669;           /* Green - Safe/OK status */
+  --color-warning: #ea580c;        /* Orange - Warning status */
+  --color-critical: #dc2626;       /* Red - Critical status */
+
+  /* Text Colors (for use when Ionic variables don't fit) */
+  --text-primary: var(--ion-text-color);
+  --text-secondary: var(--ion-color-step-600);
+  --text-tertiary: var(--ion-color-step-500);
+  --text-muted: var(--ion-color-step-400);
+
+  /* Background Colors */
+  --bg-primary: var(--ion-background-color);
+  --bg-secondary: var(--ion-color-step-50);
+  --bg-card: var(--ion-card-background);
+
+  /* Border Colors */
+  --border-light: var(--ion-color-step-150);
+  --border-medium: var(--ion-color-step-300);
+  --border-dark: var(--ion-color-step-500);
+}

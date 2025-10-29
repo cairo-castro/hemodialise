@@ -1,0 +1,151 @@
+/**
+ * Button Component Utilities
+ * Reusable button styles for the application
+ */
+
+/* ========================================
+   PRIMARY BUTTON
+   ======================================== */
+
+.btn-primary {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  background: linear-gradient(135deg, var(--ion-color-primary), var(--ion-color-primary-shade));
+  color: white;
+  border: none;
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-button);
+  cursor: pointer;
+  transition: var(--transition-button);
+  position: relative;
+  font-weight: var(--font-semibold);
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+}
+
+.btn-primary ion-icon {
+  font-size: 2.5rem;
+  flex-shrink: 0;
+}
+
+.btn-primary-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  text-align: left;
+}
+
+.btn-primary-title {
+  font-size: var(--text-2xl);
+  font-weight: var(--font-bold);
+}
+
+.btn-primary-subtitle {
+  font-size: var(--text-base);
+  opacity: 0.9;
+}
+
+/* ========================================
+   ACTION BUTTON
+   ======================================== */
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  background: var(--bg-card);
+  border: var(--border-medium) solid var(--border-light);
+  cursor: pointer;
+  transition: var(--transition-button);
+  text-align: left;
+  width: 100%;
+}
+
+.action-btn:active {
+  transform: scale(0.98);
+  border-color: var(--ion-color-primary);
+}
+
+.action-btn-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.action-btn-icon ion-icon {
+  font-size: var(--text-4xl);
+  color: white;
+}
+
+.action-btn-icon--primary {
+  background: linear-gradient(135deg, var(--ion-color-primary), var(--ion-color-primary-shade));
+}
+
+.action-btn-icon--success {
+  background: linear-gradient(135deg, var(--ion-color-success), var(--ion-color-success-shade));
+}
+
+.action-btn-icon--warning {
+  background: linear-gradient(135deg, var(--ion-color-warning), var(--ion-color-warning-shade));
+}
+
+.action-btn-icon--danger {
+  background: linear-gradient(135deg, var(--ion-color-danger), var(--ion-color-danger-shade));
+}
+
+.action-btn-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.action-btn-title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+}
+
+.action-btn-subtitle {
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+}
+
+.action-btn-chevron {
+  font-size: var(--text-xl);
+  color: var(--text-tertiary);
+  flex-shrink: 0;
+}
+
+/* ========================================
+   BUTTON ICON CONTAINER
+   ======================================== */
+
+.btn-icon {
+  flex-shrink: 0;
+}
+
+/* ========================================
+   BADGE ON BUTTON
+   ======================================== */
+
+.btn-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: var(--text-base);
+  font-weight: var(--font-bold);
+}

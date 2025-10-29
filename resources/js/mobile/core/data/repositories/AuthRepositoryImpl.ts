@@ -14,6 +14,9 @@ export class AuthRepositoryImpl implements AuthRepository {
   ) {}
 
   async login(credentials: LoginCredentials): Promise<AuthToken> {
+    // Ensure we have a fresh CSRF token before attempting login
+    await this.refreshCsrfToken();
+
     const response = await this.apiDataSource.post<AuthToken>(API_CONFIG.ENDPOINTS.LOGIN, credentials);
 
     // Session-based auth: NÃO marca como autenticado aqui
@@ -34,9 +37,59 @@ export class AuthRepositoryImpl implements AuthRepository {
   }
 
   async logout(): Promise<void> {
-    // Session-based auth: chama logout para destruir sessão
-    await this.apiDataSource.post(API_CONFIG.ENDPOINTS.LOGOUT, {});
-    this.removeToken();
+    try {
+      // Session-based auth: chama logout para destruir sessão
+      const response = await this.apiDataSource.post(API_CONFIG.ENDPOINTS.LOGOUT, {});
+      this.removeToken();
+
+      // Update CSRF token if returned by logout endpoint
+      const csrfToken = (response as any).csrf_token || (response as any).data?.csrf_token;
+      if (csrfToken) {
+        const currentCsrfMeta = document.querySelector('meta[name="csrf-token"]');
+        if (currentCsrfMeta) {
+          currentCsrfMeta.setAttribute('content', csrfToken);
+          console.log('CSRF token updated from logout response');
+        }
+      }
+    } catch (error) {
+      // Even if logout fails, clean up local state
+      this.removeToken();
+      throw error;
+    }
+
+    // Always refresh CSRF token after logout as additional safety measure
+    await this.refreshCsrfToken();
+  }
+
+  private async refreshCsrfToken(): Promise<void> {
+    try {
+      // Fetch a fresh CSRF token from dedicated endpoint
+      const response = await fetch('/csrf-token', {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const newToken = data.csrf_token;
+
+        if (newToken) {
+          // Update the CSRF token in the current page
+          const currentCsrfMeta = document.querySelector('meta[name="csrf-token"]');
+          if (currentCsrfMeta) {
+            currentCsrfMeta.setAttribute('content', newToken);
+            console.log('CSRF token refreshed successfully');
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error refreshing CSRF token:', error);
+      // Non-critical error, don't throw
+    }
   }
 
   getStoredToken(): string | null {

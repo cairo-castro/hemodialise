@@ -24,16 +24,19 @@ class UnitScopeMiddleware
             return $next($request);
         }
 
-        // Se usuário tem acesso global, não aplica filtro
+        // Se usuário tem acesso global, usa a unidade selecionada no dashboard
         if ($user->hasGlobalAccess()) {
-            // Verificar se foi passado um unit_id específico na query string ou header
-            $selectedUnitId = $request->input('unit_id') ?? $request->header('X-Unit-Id');
-            
+            // Prioridade: unit_id na query > X-Unit-Id no header > current_unit_id do usuário
+            $selectedUnitId = $request->input('unit_id')
+                ?? $request->header('X-Unit-Id')
+                ?? $user->current_unit_id;
+
             if ($selectedUnitId) {
                 // Usuário global selecionou uma unidade específica
                 $request->merge(['scoped_unit_id' => $selectedUnitId]);
             } else {
-                // Acesso global sem filtro - pode ver todas as unidades
+                // Acesso global sem unidade selecionada - retorna vazio
+                // Força seleção de unidade no dashboard
                 $request->merge(['scoped_unit_id' => null, 'has_global_access' => true]);
             }
         } else {

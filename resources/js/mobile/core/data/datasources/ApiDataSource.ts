@@ -90,6 +90,14 @@ export class ApiDataSource {
           };
         }
 
+        // CSRF token mismatch - provide helpful message
+        if (response.status === 419) {
+          throw {
+            message: 'Token de segurança expirado. Por favor, recarregue a página.',
+            status: 419
+          };
+        }
+
         const error: ApiError = {
           message: responseData.message || 'Erro na requisição',
           errors: responseData.errors,

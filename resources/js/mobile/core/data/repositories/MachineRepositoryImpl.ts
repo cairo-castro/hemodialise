@@ -2,6 +2,7 @@ import { MachineRepository, UpdateStatusParams, ToggleActiveParams } from '../..
 import { Machine } from '../../domain/entities/Machine';
 import { ApiDataSource } from '../datasources/ApiDataSource';
 import { LocalStorageDataSource } from '../datasources/LocalStorageDataSource';
+import { API_CONFIG } from '@mobile/config/api';
 
 export class MachineRepositoryImpl implements MachineRepository {
   constructor(
@@ -9,17 +10,9 @@ export class MachineRepositoryImpl implements MachineRepository {
     private localStorageDataSource: LocalStorageDataSource
   ) {}
 
-  private getToken(): string {
-    const token = this.localStorageDataSource.get('auth_token');
-    if (!token) {
-      throw new Error('Token de autenticação não encontrado');
-    }
-    return token;
-  }
-
   async getAll(): Promise<Machine[]> {
-    const token = this.getToken();
-    const response = await this.apiDataSource.get<any>('/machines', token);
+    // Session-based auth: não precisa de token, usa cookie de sessão
+    const response = await this.apiDataSource.get<any>(API_CONFIG.ENDPOINTS.MACHINES);
 
     // API returns { success: true, machines: [...] }
     if (response.data && response.data.machines) {
@@ -35,20 +28,17 @@ export class MachineRepositoryImpl implements MachineRepository {
   }
 
   async getById(id: number): Promise<Machine> {
-    const token = this.getToken();
-    const response = await this.apiDataSource.get<Machine>(`/machines/${id}`, token);
+    const response = await this.apiDataSource.get<Machine>(`${API_CONFIG.ENDPOINTS.MACHINES}/${id}`);
     return response.data;
   }
 
   async getByUnit(unitId: number): Promise<Machine[]> {
-    const token = this.getToken();
-    const response = await this.apiDataSource.get<Machine[]>(`/machines/unit/${unitId}`, token);
+    const response = await this.apiDataSource.get<Machine[]>(`${API_CONFIG.ENDPOINTS.MACHINES_BY_UNIT}/${unitId}`);
     return response.data;
   }
 
   async getAvailable(): Promise<Machine[]> {
-    const token = this.getToken();
-    const response = await this.apiDataSource.get<{ success: boolean; machines: Machine[] }>('/machines/available', token);
+    const response = await this.apiDataSource.get<{ success: boolean; machines: Machine[] }>(API_CONFIG.ENDPOINTS.MACHINES_AVAILABLE);
 
     // Try to access machines from different possible structures
     if ((response as any).data?.machines) {
@@ -64,21 +54,17 @@ export class MachineRepositoryImpl implements MachineRepository {
   }
 
   async updateStatus(id: number, params: UpdateStatusParams): Promise<Machine> {
-    const token = this.getToken();
     const response = await this.apiDataSource.put<{ machine: Machine }>(
-      `/machines/${id}/status`,
-      params,
-      token
+      `${API_CONFIG.ENDPOINTS.MACHINES}/${id}/status`,
+      params
     );
     return response.data.machine;
   }
 
   async toggleActive(id: number, params: ToggleActiveParams): Promise<Machine> {
-    const token = this.getToken();
     const response = await this.apiDataSource.put<{ machine: Machine }>(
-      `/machines/${id}/toggle-active`,
-      params,
-      token
+      `${API_CONFIG.ENDPOINTS.MACHINES}/${id}/toggle-active`,
+      params
     );
     return response.data.machine;
   }

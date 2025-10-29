@@ -31,14 +31,26 @@ import '@ionic/vue/css/display.css';
  */
 
 /*
- * Ionic 8 Dark Mode - Class-based theming (manual control)
+ * Ionic Dark Mode - Class-based theming (manual control)
  * Allows manual dark mode toggle via .ion-palette-dark class
  * Applied to <html> element via useDarkMode() composable
+ *
+ * IMPORTANT: Use official Ionic CSS palette files
  */
-import './theme/dark.css';
+import '@ionic/vue/css/palettes/dark.class.css';
 
-/* Theme variables */
-import './theme/variables.css';
+/**
+ * Custom Theme
+ * -----------------------------------------------------
+ * Centralized theme system with:
+ * - Design tokens (colors, spacing, typography, etc)
+ * - Component styles (cards, buttons, forms, etc)
+ * - Utility classes (layout, spacing, text, etc)
+ * - Medical system specific styles
+ *
+ * Loaded LAST to override Ionic defaults
+ */
+import './theme/index.css';
 
 const app = createApp(App)
   .use(IonicVue, {

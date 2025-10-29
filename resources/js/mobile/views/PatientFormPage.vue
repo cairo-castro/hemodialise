@@ -227,9 +227,10 @@ const handleSubmit = async () => {
       await toast.present();
 
       console.log('🔙 Voltando para checklist...');
-      
-      // Go back to previous page (checklist) - patient will be auto-selected
-      router.back();
+
+      // Use replace to avoid history stack issues
+      // This ensures the back button works correctly
+      router.replace('/checklist/new');
     }
   } catch (error: any) {
     await loading.dismiss();
@@ -259,7 +260,7 @@ const handleCancel = async () => {
           role: 'destructive',
           handler: () => {
             localStorage.removeItem('patient_search_query');
-            router.back();
+            router.replace('/checklist/new');
           }
         }
       ]
@@ -268,7 +269,7 @@ const handleCancel = async () => {
     await alert.present();
   } else {
     localStorage.removeItem('patient_search_query');
-    router.back();
+    router.replace('/checklist/new');
   }
 };
 
@@ -312,7 +313,7 @@ onMounted(() => {
 
 /* Welcome Card */
 .welcome-card-dash {
-  background: white;
+  background: var(--ion-card-background);
   padding: 20px;
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -323,13 +324,13 @@ onMounted(() => {
 .welcome-card-dash h2 {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--ion-text-color);
   margin: 0 0 8px 0;
 }
 
 .welcome-card-dash p {
   font-size: 0.9rem;
-  color: #6b7280;
+  color: var(--ion-color-step-600);
   margin: 0;
 }
 
@@ -354,7 +355,7 @@ onMounted(() => {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: white;
+  background: var(--ion-card-background);
   border: 3px solid #d1d5db;
   transition: all 0.3s ease;
 }
@@ -366,7 +367,7 @@ onMounted(() => {
 
 .progress-item span {
   font-size: 0.7rem;
-  color: #6b7280;
+  color: var(--ion-color-step-600);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -401,8 +402,8 @@ onMounted(() => {
   display: flex;
   align-items: flex-start;
   gap: 16px;
-  background: white;
-  border: 2px solid #e5e7eb;
+  background: var(--ion-card-background);
+  border: 2px solid var(--ion-color-step-150);
   border-radius: 12px;
   padding: 16px;
   transition: all 0.2s ease;
@@ -454,14 +455,14 @@ onMounted(() => {
 .card-content-dash label {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--ion-text-color);
   margin: 0;
 }
 
 .optional {
   font-size: 0.75rem;
   font-weight: 400;
-  color: #9ca3af;
+  color: var(--ion-color-step-500);
 }
 
 .input-dash,
@@ -471,7 +472,7 @@ onMounted(() => {
   --padding-top: 0;
   --padding-bottom: 0;
   font-size: 1rem;
-  color: #1f2937;
+  color: var(--ion-text-color);
 }
 
 .input-dash::part(native),
@@ -502,9 +503,9 @@ onMounted(() => {
 }
 
 .btn-cancel-dash {
-  background: white;
-  color: #6b7280;
-  border: 2px solid #e5e7eb;
+  background: var(--ion-card-background);
+  color: var(--ion-color-step-600);
+  border: 2px solid var(--ion-color-step-150);
 }
 
 .btn-cancel-dash:active {

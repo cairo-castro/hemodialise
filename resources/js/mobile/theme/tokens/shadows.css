@@ -1,0 +1,19 @@
+/**
+ * Shadow Tokens
+ * Consistent shadow system for depth hierarchy
+ */
+
+:root {
+  /* Shadow scale */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --shadow-xl: 0 8px 24px rgba(0, 0, 0, 0.2);
+  --shadow-2xl: 0 20px 40px rgba(0, 0, 0, 0.3);
+
+  /* Specific use cases */
+  --shadow-card: var(--shadow-md);
+  --shadow-button: var(--shadow-lg);
+  --shadow-modal: var(--shadow-xl);
+  --shadow-desktop-app: var(--shadow-2xl);
+}

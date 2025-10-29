@@ -111,6 +111,12 @@ const routes: Array<RouteRecordRaw> = [
     beforeEnter: requiresAuth
   },
   {
+    path: '/machines-overview',
+    name: 'MachinesOverview',
+    component: () => import('@mobile/views/MachinesOverviewPage.vue'),
+    beforeEnter: requiresAuth
+  },
+  {
     path: '/cleaning-controls',
     name: 'CleaningControls',
     component: () => import('@mobile/views/CleaningControlsPage.vue'),
@@ -120,6 +126,12 @@ const routes: Array<RouteRecordRaw> = [
     path: '/cleaning-checklist/new',
     name: 'NewCleaningChecklist',
     component: () => import('@mobile/views/CleaningChecklistNewPage.vue'),
+    beforeEnter: requiresAuth
+  },
+  {
+    path: '/profile',
+    name: 'Profile',
+    component: () => import('@mobile/views/ProfilePage.vue'),
     beforeEnter: requiresAuth
   },
   // Fallback route for any unmatched paths

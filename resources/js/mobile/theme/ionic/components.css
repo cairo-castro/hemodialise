@@ -1,0 +1,39 @@
+/**
+ * Ionic Component Overrides
+ * Customizations for Ionic components to match our design system
+ */
+
+/* Card styling - adapts to platform themes */
+ion-card {
+  --border-radius: var(--radius-card);
+  transition: var(--transition-card);
+}
+
+ion-card[button]:active {
+  transform: scale(0.98);
+}
+
+/* Toolbar styling */
+ion-toolbar {
+  --border-style: none;
+}
+
+/* Input styling - works with both light and dark themes */
+.mobile-input,
+ion-input.mobile-input {
+  --border-radius: var(--radius-input);
+  --padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  transition: var(--transition-base);
+}
+
+/* Button styling */
+.mobile-button,
+ion-button.mobile-button {
+  --border-radius: var(--radius-button);
+  --padding: var(--spacing-md);
+  margin: var(--spacing-sm) 0;
+  height: 52px;
+  font-weight: var(--font-semibold);
+  transition: var(--transition-button);
+}

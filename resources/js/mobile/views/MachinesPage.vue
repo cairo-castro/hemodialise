@@ -10,6 +10,9 @@
           <ion-button @click="refreshData" :disabled="isLoading">
             <ion-icon :icon="refreshOutline"></ion-icon>
           </ion-button>
+          <ion-button @click="openCreateMachineModal">
+            <ion-icon :icon="addOutline"></ion-icon>
+          </ion-button>
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
@@ -236,15 +239,8 @@
           <p>{{ getEmptyStateMessage() }}</p>
         </div>
       </div>
-      
-      </div>
 
-      <!-- FAB Button para adicionar máquina -->
-      <ion-fab vertical="bottom" horizontal="end" slot="fixed">
-        <ion-fab-button @click="openCreateMachineModal">
-          <ion-icon :icon="addOutline"></ion-icon>
-        </ion-fab-button>
-      </ion-fab>
+      </div>
 
       <!-- Modal de Criar/Editar Máquina -->
       <ion-modal :is-open="showMachineModal" @didDismiss="closeMachineModal">
@@ -303,28 +299,6 @@
                   :disabled="isSaving"
                   class="custom-textarea"
                 ></ion-textarea>
-              </div>
-
-              <div class="form-group" v-if="!isEditMode">
-                <ion-label position="stacked" class="form-label">
-                  <ion-icon :icon="locationOutline"></ion-icon>
-                  Unidade *
-                </ion-label>
-                <ion-select
-                  v-model="machineForm.unit_id"
-                  placeholder="Selecione a unidade"
-                  interface="action-sheet"
-                  :disabled="isSaving || availableUnits.length === 1"
-                  class="custom-select"
-                >
-                  <ion-select-option
-                    v-for="unit in availableUnits"
-                    :key="unit.id"
-                    :value="unit.id"
-                  >
-                    {{ unit.name }}
-                  </ion-select-option>
-                </ion-select>
               </div>
             </div>
 
@@ -433,7 +407,6 @@ const currentTime = ref('');
 const showMachineModal = ref(false);
 const isEditMode = ref(false);
 const isSaving = ref(false);
-const availableUnits = ref<any[]>([]);
 const machineForm = ref({
   id: null as number | null,
   name: '',
@@ -806,33 +779,62 @@ const getEmptyStateMessage = () => {
 // Computed para validação do formulário
 const isFormValid = computed(() => {
   return machineForm.value.name.trim() !== '' &&
-         machineForm.value.identifier.trim() !== '' &&
-         (isEditMode.value || machineForm.value.unit_id !== null);
+         machineForm.value.identifier.trim() !== '';
 });
 
-// Carregar unidades disponíveis
-const loadAvailableUnits = async () => {
+// Carregar unidade do usuário
+const loadUserUnit = async () => {
   try {
-    const response = await fetch('/api/user-units', {
+    // Busca a unidade ativa do usuário (current_unit_id para admin/gestor ou unit_id para usuários normais)
+    const response = await fetch('/api/user-units/current', {
+      credentials: 'include',
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
       }
     });
-    
+
+    if (!response.ok) {
+      console.error('Erro ao carregar unidade');
+      throw new Error('Não foi possível carregar a unidade');
+    }
+
     const data = await response.json();
-    
-    if (data.success) {
-      availableUnits.value = data.units || [];
-      
-      // Se há unidade atual, usar ela como padrão
-      if (data.current_unit_id && !isEditMode.value) {
-        machineForm.value.unit_id = data.current_unit_id;
-      } else if (availableUnits.value.length === 1) {
-        machineForm.value.unit_id = availableUnits.value[0].id;
-      }
+    console.log('Resposta de /api/user-units/current:', data);
+
+    if (data.success && data.unit && data.unit.id) {
+      // Unidade configurada corretamente
+      machineForm.value.unit_id = data.unit.id;
+      console.log('Unit ID configurado:', machineForm.value.unit_id);
+    } else {
+      // Nenhuma unidade disponível - usuário precisa selecionar no dashboard
+      console.error('Nenhuma unidade selecionada');
+      const toast = await toastController.create({
+        message: 'Por favor, selecione uma unidade no Dashboard antes de continuar',
+        duration: 3000,
+        color: 'warning',
+        position: 'top',
+        buttons: [
+          {
+            text: 'Ir para Dashboard',
+            handler: () => {
+              router.push('/dashboard');
+            }
+          }
+        ]
+      });
+      await toast.present();
+      closeMachineModal();
     }
   } catch (error) {
-    console.error('Erro ao carregar unidades:', error);
+    console.error('Erro ao carregar unidade:', error);
+    const toast = await toastController.create({
+      message: 'Erro ao carregar unidade. Por favor, tente novamente.',
+      duration: 2000,
+      color: 'danger',
+      position: 'top'
+    });
+    await toast.present();
   }
 };
 
@@ -846,8 +848,8 @@ const openCreateMachineModal = async () => {
     description: '',
     unit_id: null
   };
-  
-  await loadAvailableUnits();
+
+  await loadUserUnit();
   showMachineModal.value = true;
 };
 
@@ -861,8 +863,7 @@ const openEditMachineModal = async (machine: any) => {
     description: machine.description || '',
     unit_id: machine.unit_id
   };
-  
-  await loadAvailableUnits();
+
   showMachineModal.value = true;
 };
 
@@ -895,8 +896,9 @@ const saveMachine = async () => {
       method,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        'X-Requested-With': 'XMLHttpRequest'
       },
+      credentials: 'include',
       body: JSON.stringify({
         name: machineForm.value.name,
         identifier: machineForm.value.identifier,
@@ -1013,7 +1015,7 @@ onMounted(() => {
 <style scoped>
 /* Content Background */
 .machines-content {
-  --background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+  --background: var(--ion-background-color);
 }
 
 .machines-container {
@@ -1079,12 +1081,12 @@ onMounted(() => {
   align-items: center;
   gap: 6px;
   padding: 10px 16px;
-  background: white;
-  border: 2px solid #e5e7eb;
+  background: var(--ion-card-background);
+  border: 2px solid var(--ion-color-step-150);
   border-radius: 24px;
   font-size: 0.85rem;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--ion-color-step-600);
   cursor: pointer;
   transition: all 0.2s ease;
   white-space: nowrap;
@@ -1102,7 +1104,7 @@ onMounted(() => {
   min-width: 22px;
   height: 22px;
   padding: 0 6px;
-  background: #f3f4f6;
+  background: var(--ion-color-step-100);
   border-radius: 11px;
   font-size: 0.75rem;
   font-weight: 700;
@@ -1125,47 +1127,47 @@ onMounted(() => {
 
 /* Available Pills */
 .filter-pill.available.active {
-  border-color: #10b981;
+  border-color: var(--color-available);
   background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%);
-  color: #10b981;
+  color: var(--color-available);
 }
 
 .filter-pill.available.active ion-icon {
-  color: #10b981;
+  color: var(--color-available);
 }
 
 .filter-pill.available.active .pill-count {
-  background: #10b981;
+  background: var(--color-available);
 }
 
 /* Occupied Pills */
 .filter-pill.occupied.active {
-  border-color: #f59e0b;
+  border-color: var(--color-occupied);
   background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%);
-  color: #f59e0b;
+  color: var(--color-occupied);
 }
 
 .filter-pill.occupied.active ion-icon {
-  color: #f59e0b;
+  color: var(--color-occupied);
 }
 
 .filter-pill.occupied.active .pill-count {
-  background: #f59e0b;
+  background: var(--color-occupied);
 }
 
 /* Maintenance Pills */
 .filter-pill.maintenance.active {
-  border-color: #ef4444;
+  border-color: var(--color-maintenance);
   background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.05) 100%);
-  color: #ef4444;
+  color: var(--color-maintenance);
 }
 
 .filter-pill.maintenance.active ion-icon {
-  color: #ef4444;
+  color: var(--color-maintenance);
 }
 
 .filter-pill.maintenance.active .pill-count {
-  background: #ef4444;
+  background: var(--color-maintenance);
 }
 
 /* Stats Summary */
@@ -1181,10 +1183,10 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  background: white;
+  background: var(--ion-card-background);
   padding: 20px 16px;
   border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--shadow-card);
   transition: all 0.3s ease;
   border-top: 4px solid transparent;
   text-align: center;
@@ -1202,42 +1204,42 @@ onMounted(() => {
 
 /* Available - Green */
 .stat-card.available {
-  border-top-color: #10b981;
-  background: linear-gradient(180deg, rgba(16, 185, 129, 0.05) 0%, white 100%);
+  border-top-color: var(--color-available);
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.05) 0%, var(--ion-card-background) 100%);
 }
 
 .stat-card.available ion-icon {
-  color: #10b981;
+  color: var(--color-available);
 }
 
 /* Occupied - Orange */
 .stat-card.occupied {
-  border-top-color: #f59e0b;
-  background: linear-gradient(180deg, rgba(245, 158, 11, 0.05) 0%, white 100%);
+  border-top-color: var(--color-occupied);
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.05) 0%, var(--ion-card-background) 100%);
 }
 
 .stat-card.occupied ion-icon {
-  color: #f59e0b;
+  color: var(--color-occupied);
 }
 
 /* Maintenance - Red */
 .stat-card.maintenance {
-  border-top-color: #ef4444;
-  background: linear-gradient(180deg, rgba(239, 68, 68, 0.05) 0%, white 100%);
+  border-top-color: var(--color-maintenance);
+  background: linear-gradient(180deg, rgba(239, 68, 68, 0.05) 0%, var(--ion-card-background) 100%);
 }
 
 .stat-card.maintenance ion-icon {
-  color: #ef4444;
+  color: var(--color-maintenance);
 }
 
 /* Inactive - Gray */
 .stat-card.inactive {
-  border-top-color: #6b7280;
-  background: linear-gradient(180deg, rgba(107, 114, 128, 0.05) 0%, white 100%);
+  border-top-color: var(--color-inactive);
+  background: linear-gradient(180deg, rgba(107, 114, 128, 0.05) 0%, var(--ion-card-background) 100%);
 }
 
 .stat-card.inactive ion-icon {
-  color: #6b7280;
+  color: var(--color-inactive);
 }
 
 .stat-info {
@@ -1249,13 +1251,13 @@ onMounted(() => {
 .stat-card .stat-number {
   font-size: 2rem;
   font-weight: 800;
-  color: #1f2937;
+  color: var(--ion-text-color);
   line-height: 1;
 }
 
 .stat-card .stat-label {
   font-size: 0.8rem;
-  color: #6b7280;
+  color: var(--ion-color-step-600);
   font-weight: 600;
   line-height: 1.2;
 }
@@ -1283,7 +1285,7 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   padding: 3rem;
-  color: #9ca3af;
+  color: var(--ion-color-step-500);
 }
 
 .loading-container ion-spinner {
@@ -1301,7 +1303,7 @@ onMounted(() => {
 /* Modern Machine Card */
 .machine-card-modern {
   position: relative;
-  background: white;
+  background: var(--ion-card-background);
   border-radius: 16px;
   padding: 20px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -1316,20 +1318,20 @@ onMounted(() => {
 }
 
 .machine-card-modern.available {
-  border-left-color: #10b981;
+  border-left-color: var(--color-available);
 }
 
 .machine-card-modern.occupied {
-  border-left-color: #f59e0b;
+  border-left-color: var(--color-occupied);
   cursor: pointer;
 }
 
 .machine-card-modern.maintenance {
-  border-left-color: #ef4444;
+  border-left-color: var(--color-maintenance);
 }
 
 .machine-card-modern.inactive {
-  border-left-color: #6b7280;
+  border-left-color: var(--ion-color-step-600);
   opacity: 0.6;
 }
 
@@ -1381,13 +1383,13 @@ onMounted(() => {
   margin: 0 0 4px 0;
   font-size: 1.15rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--ion-text-color);
 }
 
 .machine-identifier {
   margin: 0;
   font-size: 0.8rem;
-  color: #9ca3af;
+  color: var(--ion-color-step-500);
   font-family: 'Courier New', monospace;
   font-weight: 600;
 }
@@ -1397,7 +1399,7 @@ onMounted(() => {
   align-items: center;
   gap: 6px;
   padding: 6px 12px;
-  background: #f9fafb;
+  background: var(--ion-background-color);
   border-radius: 20px;
 }
 
@@ -1409,23 +1411,23 @@ onMounted(() => {
 }
 
 .status-dot.available {
-  background: #10b981;
+  background: var(--color-available);
   box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
   animation: pulse 2s infinite;
 }
 
 .status-dot.occupied {
-  background: #f59e0b;
+  background: var(--color-occupied);
   box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
 }
 
 .status-dot.maintenance {
-  background: #ef4444;
+  background: var(--color-maintenance);
   box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
 }
 
 .status-dot.inactive {
-  background: #6b7280;
+  background: var(--color-inactive);
 }
 
 @keyframes pulse {
@@ -1436,22 +1438,22 @@ onMounted(() => {
 .status-text {
   font-size: 0.75rem;
   font-weight: 700;
-  color: #6b7280;
+  color: var(--ion-color-step-600);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .machine-description {
   font-size: 0.85rem;
-  color: #6b7280;
+  color: var(--ion-color-step-600);
   line-height: 1.4;
   margin-bottom: 12px;
 }
 
 /* Session Info Modern */
 .session-info-modern {
-  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-  border: 2px solid #bfdbfe;
+  background: rgba(var(--ion-color-primary-rgb), 0.1);
+  border: 2px solid rgba(var(--ion-color-primary-rgb), 0.3);
   border-radius: 12px;
   padding: 16px;
   margin-top: 12px;
@@ -1464,12 +1466,12 @@ onMounted(() => {
   margin-bottom: 12px;
   font-weight: 700;
   font-size: 0.9rem;
-  color: #1e40af;
+  color: var(--ion-color-primary-shade);
 }
 
 .session-tag ion-icon {
   font-size: 1.2rem;
-  color: #3b82f6;
+  color: var(--ion-color-primary);
 }
 
 .session-details-grid {
@@ -1487,7 +1489,7 @@ onMounted(() => {
 
 .detail-label {
   font-size: 0.7rem;
-  color: #6b7280;
+  color: var(--ion-color-step-600);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -1495,7 +1497,7 @@ onMounted(() => {
 
 .detail-value {
   font-size: 0.9rem;
-  color: #1f2937;
+  color: var(--ion-text-color);
   font-weight: 700;
 }
 
@@ -1504,11 +1506,11 @@ onMounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 10px 12px;
-  background: white;
+  background: var(--ion-card-background);
   border-radius: 8px;
   font-size: 0.85rem;
   font-weight: 600;
-  color: #3b82f6;
+  color: var(--ion-color-primary);
 }
 
 .session-action ion-icon:first-child {
@@ -1517,7 +1519,7 @@ onMounted(() => {
 
 .session-action ion-icon:last-child {
   font-size: 1rem;
-  color: #9ca3af;
+  color: var(--ion-color-step-500);
 }
 
 /* Machine Actions */
@@ -1579,7 +1581,7 @@ onMounted(() => {
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  background: var(--ion-color-step-100);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1588,20 +1590,20 @@ onMounted(() => {
 
 .empty-icon ion-icon {
   font-size: 2.5rem;
-  color: #9ca3af;
+  color: var(--ion-color-step-500);
 }
 
 .empty-state-modern h3 {
   margin: 0 0 0.75rem 0;
   font-size: 1.25rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--ion-text-color);
 }
 
 .empty-state-modern p {
   margin: 0;
   font-size: 0.9rem;
-  color: #6b7280;
+  color: var(--ion-color-step-600);
   line-height: 1.5;
 }
 
@@ -1611,7 +1613,7 @@ onMounted(() => {
 
 /* Modal Content */
 .machine-modal-content {
-  --background: #f8f9fa;
+  --background: var(--ion-background-color);
 }
 
 /* Machine Form */
@@ -1623,7 +1625,7 @@ onMounted(() => {
 }
 
 .form-section {
-  background: white;
+  background: var(--ion-card-background);
   border-radius: 16px;
   padding: 1.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
@@ -1633,7 +1635,7 @@ onMounted(() => {
   margin: 0 0 1.25rem 0;
   font-size: 1rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--ion-text-color);
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -1653,7 +1655,7 @@ onMounted(() => {
   gap: 0.5rem;
   font-size: 0.875rem;
   font-weight: 600;
-  color: #374151;
+  color: var(--ion-text-color);
   margin-bottom: 0.5rem;
 }
 
@@ -1665,7 +1667,7 @@ onMounted(() => {
 .custom-input,
 .custom-textarea,
 .custom-select {
-  --background: #f9fafb;
+  --background: var(--ion-background-color);
   --border-color: #e5e7eb;
   --border-width: 2px;
   --border-style: solid;
@@ -1675,14 +1677,14 @@ onMounted(() => {
   --padding-top: 0.875rem;
   --padding-bottom: 0.875rem;
   font-size: 1rem;
-  color: #1f2937;
+  color: var(--ion-text-color);
 }
 
 .custom-input:focus-within,
 .custom-textarea:focus-within,
 .custom-select:focus-within {
   --border-color: var(--ion-color-primary);
-  --background: white;
+  --background: var(--ion-card-background);
 }
 
 .custom-textarea {

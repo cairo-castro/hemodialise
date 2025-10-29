@@ -1,0 +1,74 @@
+/**
+ * Theme Index - Import Coordinator
+ *
+ * This file imports all theme files in the correct order.
+ * Loaded AFTER Ionic CSS to override defaults.
+ *
+ * Import Order:
+ * 1. Core Styles (base, reset)
+ * 2. Design Tokens (colors, spacing, typography, etc)
+ * 3. Ionic Customizations (color mappings, component overrides)
+ * 4. Color Palettes (light/dark modes)
+ * 5. Component Styles (cards, buttons, forms, etc)
+ * 6. Utilities (layout, spacing, text, animations)
+ * 7. App-Specific Styles (medical system specific)
+ */
+
+/* ========================================
+   1. CORE STYLES
+   ======================================== */
+
+@import './core/base.css';
+
+/* ========================================
+   2. DESIGN TOKENS
+   ======================================== */
+
+@import './tokens/colors.css';
+@import './tokens/spacing.css';
+@import './tokens/typography.css';
+@import './tokens/shadows.css';
+@import './tokens/borders.css';
+@import './tokens/transitions.css';
+
+/* ========================================
+   3. IONIC CUSTOMIZATIONS
+   ======================================== */
+
+@import './ionic/colors.css';
+@import './ionic/components.css';
+
+/* ========================================
+   4. COLOR PALETTES
+   ======================================== */
+
+/* Light mode palette (default - already set by Ionic) */
+@import './palettes/light.css';
+
+/* Dark mode palette customizations */
+/* Note: Base dark mode loaded via @ionic/vue/css/palettes/dark.class.css in main.ts */
+@import './palettes/dark.css';
+
+/* ========================================
+   5. COMPONENT STYLES
+   ======================================== */
+
+@import './components/cards.css';
+@import './components/buttons.css';
+@import './components/forms.css';
+@import './components/badges.css';
+
+/* ========================================
+   6. UTILITIES
+   ======================================== */
+
+@import './utilities/layout.css';
+@import './utilities/spacing.css';
+@import './utilities/text.css';
+@import './utilities/animations.css';
+
+/* ========================================
+   7. APP-SPECIFIC STYLES
+   ======================================== */
+
+@import './app/medical.css';

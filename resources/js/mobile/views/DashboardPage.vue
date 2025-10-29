@@ -28,7 +28,7 @@
         <div class="welcome-section" v-if="user">
           <div class="welcome-header">
             <div class="welcome-text">
-              <h1>Olá, {{ user.name.split(' ')[0] }}! 👋</h1>
+              <h1 @click="navigateToProfile" class="user-name-link">Olá, {{ user.name.split(' ')[0] }}! 👋</h1>
             </div>
           </div>
 
@@ -92,7 +92,7 @@
             </div>
           </div>
 
-          <div class="stat-card total">
+          <div class="stat-card total" @click="showMachinesOverview">
             <div class="stat-icon">
               <ion-icon :icon="medicalOutline"></ion-icon>
             </div>
@@ -330,27 +330,40 @@ const loadUserData = async () => {
 const loadAvailableUnits = async () => {
   try {
     const response = await fetch('/api/user-units', {
+      credentials: 'include',
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
       }
     });
-    
+
     const data = await response.json();
-    
+
     if (data.success) {
       availableUnits.value = data.units || [];
-      
+
       // Encontra a unidade atual
       const currentUnitId = data.current_unit_id;
+
       if (currentUnitId) {
+        // Já tem unidade selecionada
         currentUnit.value = data.units.find((u: any) => u.id === currentUnitId);
         selectedUnitId.value = currentUnitId;
-      } else if (data.units.length > 0) {
-        // Fallback: usa a primeira unidade
+        console.log('Unidade já selecionada:', currentUnit.value?.name);
+      } else if (data.units.length === 1) {
+        // Apenas uma unidade disponível - seleciona automaticamente
+        console.log('Apenas uma unidade disponível, selecionando automaticamente...');
+        await handleUnitChange(data.units[0].id);
         currentUnit.value = data.units[0];
         selectedUnitId.value = data.units[0].id;
+      } else if (data.units.length > 1) {
+        // Múltiplas unidades e nenhuma selecionada - forçar seleção
+        console.log('Múltiplas unidades disponíveis, forçando seleção...');
+        setTimeout(() => {
+          showUnitSelectorModal();
+        }, 500);
       }
-      
+
       console.log('Unidades carregadas (mobile):', {
         total: availableUnits.value.length,
         current: currentUnit.value?.name,
@@ -370,8 +383,7 @@ const loadAvailableUnits = async () => {
 
 const openUnitSelector = async () => {
   const buttons = availableUnits.value.map((unit: any) => ({
-    text: unit.name,
-    icon: unit.id === selectedUnitId.value ? 'checkmark-circle-outline' : 'location-outline',
+    text: unit.id === selectedUnitId.value ? `✓ ${unit.name}` : unit.name,
     cssClass: unit.id === selectedUnitId.value ? 'unit-selected' : '',
     handler: () => {
       if (unit.id !== selectedUnitId.value) {
@@ -382,7 +394,7 @@ const openUnitSelector = async () => {
 
   buttons.push({
     text: 'Cancelar',
-    icon: 'close-outline',
+    role: 'cancel',
     handler: () => {
       // Just close
     }
@@ -393,6 +405,26 @@ const openUnitSelector = async () => {
     subHeader: 'Escolha a unidade para visualizar',
     buttons: buttons,
     cssClass: 'unit-selector-action-sheet'
+  });
+
+  await actionSheet.present();
+};
+
+// Modal obrigatório para seleção de unidade (quando múltiplas disponíveis)
+const showUnitSelectorModal = async () => {
+  const buttons = availableUnits.value.map((unit: any) => ({
+    text: unit.name,
+    handler: () => {
+      handleUnitChange(unit.id);
+    }
+  }));
+
+  const actionSheet = await actionSheetController.create({
+    header: 'Selecione uma Unidade',
+    subHeader: 'Por favor, escolha a unidade para continuar',
+    buttons: buttons,
+    backdropDismiss: false, // Não permite fechar sem selecionar
+    cssClass: 'unit-selector-action-sheet mandatory-selection'
   });
 
   await actionSheet.present();
@@ -410,9 +442,11 @@ const handleUnitChange = async (unitId: number) => {
 
     const response = await fetch('/api/user-units/switch', {
       method: 'POST',
+      credentials: 'include',
       headers: {
-        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
       },
       body: JSON.stringify({ unit_id: unitId })
     });
@@ -428,15 +462,17 @@ const handleUnitChange = async (unitId: number) => {
       // Show success toast
       const toast = await toastController.create({
         message: `📍 Unidade alterada para ${data.current_unit.name}`,
-        duration: 2000,
+        duration: 1500,
         color: 'success',
         position: 'top',
         cssClass: 'custom-toast'
       });
       await toast.present();
-      
-      // Reload stats with new unit
-      await loadStats();
+
+      // Aguarda o toast e recarrega a página completamente para atualizar todos os dados
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
     }
   } catch (error) {
     console.error('Error switching unit:', error);
@@ -619,6 +655,11 @@ const navigateToPatients = () => {
   router.push('/patients');
 };
 
+const navigateToProfile = () => {
+  console.log('Navigating to profile...');
+  router.push('/profile');
+};
+
 const showActiveChecklists = () => {
   console.log('Navigating to active checklists...');
   router.push('/checklists');
@@ -626,6 +667,10 @@ const showActiveChecklists = () => {
 
 const showMachineStatus = () => {
   router.push('/machines');
+};
+
+const showMachinesOverview = () => {
+  router.push('/machines-overview');
 };
 
 const navigateToCleaningControls = () => {
@@ -773,7 +818,7 @@ onMounted(async () => {
 
 <style scoped>
 .dashboard-content {
-  --background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+  --background: var(--ion-background-color);
 }
 
 .dashboard-container {
@@ -784,7 +829,7 @@ onMounted(async () => {
 
 /* Welcome Section */
 .welcome-section {
-  background: white;
+  background: var(--ion-card-background);
   padding: 20px;
   margin: 16px 16px 0;
   border-radius: 16px;
@@ -805,13 +850,28 @@ onMounted(async () => {
 .welcome-section h1 {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--ion-text-color);
   margin: 0 0 4px 0;
+}
+
+.user-name-link {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-block;
+}
+
+.user-name-link:hover {
+  color: var(--ion-color-primary);
+  transform: translateX(2px);
+}
+
+.user-name-link:active {
+  transform: scale(0.98);
 }
 
 .unit-name {
   font-size: 0.9rem;
-  color: #6b7280;
+  color: var(--ion-color-step-600);
   margin: 0;
   font-weight: 500;
 }
@@ -830,16 +890,17 @@ onMounted(async () => {
 .unit-info-static {
   display: flex;
   align-items: center;
-  padding: 10px 12px;
-  background: #f8fafc;
-  border-radius: 10px;
-  border: 1px solid #e2e8f0;
+  padding: 14px 16px;
+  background: rgba(var(--ion-color-primary-rgb), 0.08);
+  border-radius: 12px;
+  border: 2px solid rgba(var(--ion-color-primary-rgb), 0.2);
+  transition: all 0.2s ease;
 }
 
 .unit-icon-static {
-  font-size: 1.2rem;
-  color: #64748b;
-  margin-right: 10px;
+  font-size: 1.4rem;
+  color: var(--ion-color-primary);
+  margin-right: 12px;
   flex-shrink: 0;
 }
 
@@ -848,21 +909,22 @@ onMounted(async () => {
   min-width: 0;
   display: flex;
   flex-direction: column;
+  gap: 2px;
 }
 
 .unit-label-static {
-  font-size: 0.65rem;
-  color: #94a3b8;
-  font-weight: 500;
+  font-size: 0.7rem;
+  color: var(--ion-color-primary);
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
-  margin-bottom: 2px;
+  letter-spacing: 0.5px;
+  opacity: 0.8;
 }
 
 .unit-name-static {
-  font-size: 0.85rem;
-  color: #475569;
-  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--ion-text-color);
+  font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -872,15 +934,28 @@ onMounted(async () => {
 .unit-info {
   display: flex;
   align-items: center;
-  padding: 12px;
-  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  padding: 14px 16px;
+  background: rgba(var(--ion-color-primary-rgb), 0.08);
   border-radius: 12px;
-  border: 1px solid #bae6fd;
+  border: 2px solid rgba(var(--ion-color-primary-rgb), 0.2);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.unit-info:hover {
+  background: rgba(var(--ion-color-primary-rgb), 0.12);
+  border-color: var(--ion-color-primary);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(var(--ion-color-primary-rgb), 0.15);
+}
+
+.unit-info:active {
+  transform: translateY(0);
 }
 
 .unit-icon {
-  font-size: 1.5rem;
-  color: #0284c7;
+  font-size: 1.4rem;
+  color: var(--ion-color-primary);
   margin-right: 12px;
   flex-shrink: 0;
 }
@@ -890,21 +965,22 @@ onMounted(async () => {
   min-width: 0;
   display: flex;
   flex-direction: column;
+  gap: 2px;
 }
 
 .unit-label {
   font-size: 0.7rem;
-  color: #64748b;
-  font-weight: 500;
+  color: var(--ion-color-primary);
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: 2px;
+  opacity: 0.8;
 }
 
 .unit-name {
-  font-size: 0.9rem;
-  color: #0f172a;
-  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--ion-text-color);
+  font-weight: 700;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -919,7 +995,7 @@ onMounted(async () => {
 
 .unit-change-btn ion-icon {
   font-size: 1.3rem;
-  color: #0284c7;
+  color: var(--ion-color-primary);
 }
 
 .role-tag {
@@ -940,7 +1016,7 @@ onMounted(async () => {
   grid-template-columns: repeat(3, 1fr);
   gap: 12px;
   padding: 16px;
-  background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+  background: var(--ion-background-color);
   position: relative;
 }
 
@@ -991,7 +1067,7 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: white;
+  background: var(--ion-card-background);
   border-left: 4px solid transparent;
   padding: 16px;
   border-radius: 12px;
@@ -1005,15 +1081,15 @@ onMounted(async () => {
 }
 
 .stat-card.available {
-  border-left-color: #10b981;
+  border-left-color: var(--ion-color-success);
 }
 
 .stat-card.active {
-  border-left-color: #f59e0b;
+  border-left-color: var(--ion-color-warning);
 }
 
 .stat-card.total {
-  border-left-color: #6b7280;
+  border-left-color: var(--ion-color-medium);
 }
 
 .stat-icon {
@@ -1025,15 +1101,15 @@ onMounted(async () => {
 }
 
 .stat-card.available .stat-icon ion-icon {
-  color: #10b981;
+  color: var(--ion-color-success);
 }
 
 .stat-card.active .stat-icon ion-icon {
-  color: #f59e0b;
+  color: var(--ion-color-warning);
 }
 
 .stat-card.total .stat-icon ion-icon {
-  color: #6b7280;
+  color: var(--ion-color-medium);
 }
 
 .stat-content {
@@ -1044,13 +1120,13 @@ onMounted(async () => {
 .stat-number {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--ion-text-color);
   line-height: 1;
 }
 
 .stat-label {
   font-size: 0.7rem;
-  color: #6b7280;
+  color: var(--ion-color-step-600);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-top: 2px;
@@ -1123,7 +1199,7 @@ onMounted(async () => {
 .section-title {
   font-size: 1.1rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--ion-text-color);
   margin: 0 0 12px 0;
 }
 
@@ -1138,8 +1214,8 @@ onMounted(async () => {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: white;
-  border: 2px solid #e5e7eb;
+  background: var(--ion-card-background);
+  border: 2px solid var(--ion-color-step-150);
   border-radius: 12px;
   padding: 16px;
   cursor: pointer;
@@ -1192,17 +1268,17 @@ onMounted(async () => {
 .action-title {
   font-size: 1rem;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--ion-text-color);
 }
 
 .action-subtitle {
   font-size: 0.85rem;
-  color: #6b7280;
+  color: var(--ion-color-step-600);
 }
 
 .chevron {
   font-size: 1.2rem;
-  color: #9ca3af;
+  color: var(--ion-color-step-500);
   flex-shrink: 0;
 }
 
@@ -1276,34 +1352,61 @@ onMounted(async () => {
 
 /* Unit Selector Action Sheet */
 :deep(.unit-selector-action-sheet) {
-  --background: #ffffff;
+  --background: var(--ion-background-color);
+  --border-radius: 16px 16px 0 0;
 }
 
 :deep(.unit-selector-action-sheet .action-sheet-title) {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   font-weight: 700;
-  color: #0f172a;
-  padding: 20px 16px 8px;
+  color: var(--ion-text-color);
+  padding: 24px 20px 8px;
+  border-bottom: 2px solid var(--ion-color-step-150);
 }
 
 :deep(.unit-selector-action-sheet .action-sheet-sub-title) {
-  font-size: 0.85rem;
-  color: #64748b;
-  padding: 0 16px 12px;
+  font-size: 0.9rem;
+  color: var(--ion-color-step-600);
+  padding: 8px 20px 16px;
+  line-height: 1.4;
 }
 
 :deep(.unit-selector-action-sheet .action-sheet-button) {
-  font-size: 0.95rem;
-  padding: 16px;
+  font-size: 1rem;
+  font-weight: 500;
+  padding: 18px 20px;
+  margin: 4px 12px;
+  border-radius: 12px;
+  background: var(--ion-card-background);
+  border: 2px solid var(--ion-color-step-100);
+  transition: all 0.2s ease;
+  color: var(--ion-text-color);
+}
+
+:deep(.unit-selector-action-sheet .action-sheet-button:hover) {
+  background: var(--ion-color-step-50);
+  border-color: var(--ion-color-step-200);
+  transform: translateX(4px);
 }
 
 :deep(.unit-selector-action-sheet .unit-selected) {
   font-weight: 700;
-  color: #0284c7;
+  color: var(--ion-color-primary);
+  background: rgba(var(--ion-color-primary-rgb), 0.1);
+  border-color: var(--ion-color-primary);
+  box-shadow: 0 2px 8px rgba(var(--ion-color-primary-rgb), 0.15);
 }
 
 :deep(.unit-selector-action-sheet .action-sheet-button ion-icon) {
-  font-size: 1.3rem;
-  margin-right: 12px;
+  font-size: 1.5rem;
+  margin-right: 14px;
+  color: var(--ion-color-primary);
+}
+
+:deep(.unit-selector-action-sheet .action-sheet-cancel) {
+  font-weight: 600;
+  color: var(--ion-color-danger);
+  margin: 8px 12px 16px;
+  border-radius: 12px;
 }
 </style>

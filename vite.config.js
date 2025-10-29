@@ -52,6 +52,7 @@ export default defineConfig(({ mode }) => {
         config.build = {
             outDir: 'public/mobile-assets',
             emptyOutDir: true,
+            sourcemap: false, // Disable source maps to avoid warnings
             rollupOptions: {
                 output: {
                     manualChunks: {
@@ -80,6 +81,12 @@ export default defineConfig(({ mode }) => {
                     secure: false,
                 }
             }
+        };
+
+        // Optimizations for development mode
+        config.optimizeDeps = {
+            include: ['vue', 'vue-router', '@ionic/vue', '@ionic/vue-router'],
+            exclude: []
         };
     }
 

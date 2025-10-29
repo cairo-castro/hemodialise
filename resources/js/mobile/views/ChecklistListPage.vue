@@ -465,22 +465,12 @@ onMounted(async () => {
 
 <style scoped>
 .header-gradient {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: var(--ion-card-background);
   padding: 24px 20px;
   position: relative;
   overflow: hidden;
-}
-
-.header-gradient::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="2" fill="white" opacity="0.05"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-bottom: 2px solid var(--ion-color-step-150);
 }
 
 .header-content {
@@ -491,13 +481,15 @@ onMounted(async () => {
 .unit-info h2 {
   margin: 0 0 8px 0;
   font-size: 24px;
-  font-weight: 600;
+  font-weight: 700;
+  color: var(--ion-text-color);
 }
 
 .unit-info p {
   margin: 0;
   font-size: 16px;
-  opacity: 0.9;
+  color: var(--ion-color-step-600);
+  font-weight: 500;
 }
 
 .status-indicators {
@@ -512,7 +504,7 @@ onMounted(async () => {
   align-items: center;
   gap: 1rem;
   padding: 1.25rem;
-  background: white;
+  background: var(--ion-card-background);
   border-radius: 16px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -530,7 +522,7 @@ onMounted(async () => {
 }
 
 .status-item span {
-  color: #1f2937;
+  color: var(--ion-text-color);
   font-size: 0.75rem;
   line-height: 1.2;
   font-weight: 500;
@@ -538,19 +530,19 @@ onMounted(async () => {
 }
 
 .status-item.available {
-  border-left-color: #10b981;
+  border-left-color: var(--color-available);
 }
 
 .status-item.available ion-icon {
-  color: #10b981;
+  color: var(--color-available);
 }
 
 .status-item.occupied {
-  border-left-color: #f59e0b;
+  border-left-color: var(--color-occupied);
 }
 
 .status-item.occupied ion-icon {
-  color: #f59e0b;
+  color: var(--color-occupied);
 }
 
 /* Animação de atualização */
@@ -578,7 +570,7 @@ onMounted(async () => {
 }
 
 .checklist-card {
-  background: white;
+  background: var(--ion-card-background);
   border-radius: 16px;
   margin-bottom: 16px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -616,7 +608,7 @@ onMounted(async () => {
 .machine-icon {
   width: 40px;
   height: 40px;
-  background: #e3f2fd;
+  background: rgba(var(--ion-color-primary-rgb), 0.1);
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -625,20 +617,20 @@ onMounted(async () => {
 
 .machine-icon ion-icon {
   font-size: 20px;
-  color: #1976d2;
+  color: var(--ion-color-primary);
 }
 
 .machine-details h3 {
   margin: 0 0 4px 0;
   font-size: 18px;
   font-weight: 600;
-  color: #2c3e50;
+  color: var(--ion-text-color);
 }
 
 .machine-id {
   margin: 0;
   font-size: 14px;
-  color: #6c757d;
+  color: var(--ion-color-step-600);
   font-family: 'Courier New', monospace;
 }
 
@@ -651,7 +643,7 @@ onMounted(async () => {
 .patient-icon {
   width: 32px;
   height: 32px;
-  background: #f3e5f5;
+  background: rgba(var(--ion-color-success-rgb), 0.1);
   border-radius: 10px;
   display: flex;
   align-items: center;
@@ -660,20 +652,20 @@ onMounted(async () => {
 
 .patient-icon ion-icon {
   font-size: 16px;
-  color: #7b1fa2;
+  color: var(--ion-color-success);
 }
 
 .patient-details h4 {
   margin: 0 0 4px 0;
   font-size: 16px;
   font-weight: 500;
-  color: #2c3e50;
+  color: var(--ion-text-color);
 }
 
 .phase-info {
   margin: 0;
   font-size: 12px;
-  color: #6c757d;
+  color: var(--ion-color-step-600);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -707,15 +699,15 @@ onMounted(async () => {
 }
 
 .progress-circle.pre-dialysis {
-  background: linear-gradient(135deg, #1976d2, #1565c0);
+  background: var(--ion-color-primary);
 }
 
 .progress-circle.during-session {
-  background: linear-gradient(135deg, #f57c00, #ef6c00);
+  background: var(--ion-color-warning);
 }
 
 .progress-circle.post-dialysis {
-  background: linear-gradient(135deg, #7b1fa2, #6a1b9a);
+  background: var(--ion-color-secondary);
 }
 
 .progress-text {
@@ -729,7 +721,7 @@ onMounted(async () => {
 
 .time-label {
   font-size: 12px;
-  color: #6c757d;
+  color: var(--ion-color-step-600);
   font-weight: 500;
 }
 
@@ -751,14 +743,14 @@ onMounted(async () => {
 }
 
 .paused-indicator {
-  background: #fff3e0;
-  border-top: 1px solid #ffe0b2;
+  background: rgba(var(--ion-color-warning-rgb), 0.1);
+  border-top: 1px solid rgba(var(--ion-color-warning-rgb), 0.3);
   padding: 8px 20px;
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  color: #ef6c00;
+  color: var(--ion-color-warning);
 }
 
 .paused-indicator ion-icon {
@@ -780,20 +772,20 @@ onMounted(async () => {
 
 .empty-icon {
   font-size: 64px;
-  color: #dee2e6;
+  color: var(--ion-color-step-300);
   margin-bottom: 16px;
 }
 
 .empty-content h3 {
   margin: 0 0 8px 0;
   font-size: 20px;
-  color: #495057;
+  color: var(--ion-text-color);
 }
 
 .empty-content p {
   margin: 0 0 24px 0;
   font-size: 16px;
-  color: #6c757d;
+  color: var(--ion-color-step-600);
   line-height: 1.5;
 }
 
@@ -809,7 +801,7 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   padding: 60px 20px;
-  color: #6c757d;
+  color: var(--ion-color-step-600);
 }
 
 .loading-state p {

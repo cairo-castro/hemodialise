@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 
 class MachineController extends Controller
 {
@@ -17,15 +18,22 @@ class MachineController extends Controller
     public function store(Request $request): JsonResponse
     {
         try {
+            $unitId = $request->input('unit_id');
+
             $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
-                'identifier' => 'required|string|max:50|unique:machines,identifier',
+                'identifier' => [
+                    'required',
+                    'string',
+                    'max:50',
+                    Rule::unique('machines', 'identifier')->where('unit_id', $unitId)
+                ],
                 'description' => 'nullable|string|max:500',
                 'unit_id' => 'required|integer|exists:units,id',
             ], [
                 'name.required' => 'O nome da máquina é obrigatório.',
                 'identifier.required' => 'O identificador é obrigatório.',
-                'identifier.unique' => 'Já existe uma máquina com este identificador.',
+                'identifier.unique' => 'Já existe uma máquina com este identificador nesta unidade.',
                 'unit_id.required' => 'A unidade é obrigatória.',
                 'unit_id.exists' => 'Unidade inválida.',
             ]);
@@ -133,12 +141,19 @@ class MachineController extends Controller
         try {
             $validator = Validator::make($request->all(), [
                 'name' => 'required|string|max:255',
-                'identifier' => 'required|string|max:50|unique:machines,identifier,' . $machine->id,
+                'identifier' => [
+                    'required',
+                    'string',
+                    'max:50',
+                    Rule::unique('machines', 'identifier')
+                        ->where('unit_id', $machine->unit_id)
+                        ->ignore($machine->id)
+                ],
                 'description' => 'nullable|string|max:500',
             ], [
                 'name.required' => 'O nome da máquina é obrigatório.',
                 'identifier.required' => 'O identificador é obrigatório.',
-                'identifier.unique' => 'Já existe uma máquina com este identificador.',
+                'identifier.unique' => 'Já existe uma máquina com este identificador nesta unidade.',
             ]);
 
             if ($validator->fails()) {

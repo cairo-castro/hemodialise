@@ -247,7 +247,7 @@ onMounted(() => {
 <style scoped>
 /* ===== BACKGROUND ===== */
 .login-content {
-  --background: #f8f9fa;
+  --background: var(--ion-background-color);
 }
 
 /* ===== DECORATIVE SHAPES ===== */
@@ -293,7 +293,7 @@ onMounted(() => {
 }
 
 .loading-card {
-  background: white;
+  background: var(--ion-card-background);
   padding: 3rem 2rem;
   border-radius: 24px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
@@ -301,7 +301,7 @@ onMounted(() => {
 }
 
 .loading-spinner {
-  --color: #3b82f6;
+  --color: var(--ion-color-primary);
   transform: scale(1.5);
   margin-bottom: 1.5rem;
 }
@@ -309,7 +309,7 @@ onMounted(() => {
 .loading-text {
   font-size: 1rem;
   font-weight: 600;
-  color: #1f2937;
+  color: var(--ion-text-color);
   margin: 0;
 }
 
@@ -329,7 +329,7 @@ onMounted(() => {
 .login-card {
   width: 100%;
   max-width: 420px;
-  background: white;
+  background: var(--ion-card-background);
   border-radius: 24px;
   padding: 2.5rem 2rem;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
@@ -368,14 +368,14 @@ onMounted(() => {
 .app-title {
   font-size: 1.75rem;
   font-weight: 800;
-  color: #1f2937;
+  color: var(--ion-text-color);
   margin: 0 0 0.5rem 0;
   letter-spacing: -0.5px;
 }
 
 .app-subtitle {
   font-size: 0.938rem;
-  color: #6b7280;
+  color: var(--ion-color-step-600);
   margin: 0;
   font-weight: 500;
 }
@@ -399,12 +399,12 @@ onMounted(() => {
   gap: 0.5rem;
   font-size: 0.875rem;
   font-weight: 600;
-  color: #374151;
+  color: var(--ion-text-color);
 }
 
 .label-icon {
   font-size: 1rem;
-  color: #3b82f6;
+  color: var(--ion-color-primary);
 }
 
 .input-wrapper {
@@ -416,18 +416,18 @@ onMounted(() => {
 .input-field {
   width: 100%;
   padding: 0.875rem 1rem;
-  border: 2px solid #e5e7eb;
+  border: 2px solid var(--ion-color-step-150);
   border-radius: 12px;
   font-size: 1rem;
-  color: #1f2937;
-  background: #f9fafb;
+  color: var(--ion-text-color);
+  background: var(--ion-background-color);
   transition: all 0.2s ease;
   outline: none;
 }
 
 .input-field:focus {
-  border-color: #3b82f6;
-  background: white;
+  border-color: var(--ion-color-primary);
+  background: var(--ion-card-background);
   box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
 }
 
@@ -437,7 +437,7 @@ onMounted(() => {
 }
 
 .input-field::placeholder {
-  color: #9ca3af;
+  color: var(--ion-color-step-500);
 }
 
 .password-toggle {
@@ -447,7 +447,7 @@ onMounted(() => {
   border: none;
   padding: 0.5rem;
   cursor: pointer;
-  color: #6b7280;
+  color: var(--ion-color-step-600);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -455,7 +455,7 @@ onMounted(() => {
 }
 
 .password-toggle:hover {
-  color: #3b82f6;
+  color: var(--ion-color-primary);
 }
 
 .password-toggle ion-icon {
@@ -542,7 +542,7 @@ onMounted(() => {
 
 .info-subtext {
   font-size: 0.813rem;
-  color: #9ca3af;
+  color: var(--ion-color-step-500);
   margin: 0;
 }
 

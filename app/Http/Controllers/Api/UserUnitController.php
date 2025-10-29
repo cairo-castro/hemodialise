@@ -33,6 +33,11 @@ class UserUnitController extends Controller
      */
     public function switch(Request $request): JsonResponse
     {
+        \Log::info('[UserUnitController::switch] START', [
+            'user_id' => auth()->id(),
+            'unit_id' => $request->input('unit_id'),
+        ]);
+
         $request->validate([
             'unit_id' => 'required|integer|exists:units,id',
         ]);
@@ -41,13 +46,24 @@ class UserUnitController extends Controller
         $unitId = $request->input('unit_id');
 
         if (!$user->canAccessUnit($unitId)) {
+            \Log::warning('[UserUnitController::switch] Access denied', [
+                'user_id' => $user->id,
+                'unit_id' => $unitId,
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Você não tem permissão para acessar esta unidade.',
             ], 403);
         }
 
-        $user->switchToUnit($unitId);
+        $result = $user->switchToUnit($unitId);
+
+        \Log::info('[UserUnitController::switch] SUCCESS', [
+            'user_id' => $user->id,
+            'unit_id' => $unitId,
+            'switch_result' => $result,
+            'current_unit_id' => $user->current_unit_id,
+        ]);
 
         return response()->json([
             'success' => true,

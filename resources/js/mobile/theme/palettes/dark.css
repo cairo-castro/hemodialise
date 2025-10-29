@@ -1,0 +1,17 @@
+/**
+ * Dark Mode Palette
+ * Dark theme specific variable overrides
+ * Note: Base dark mode is loaded from @ionic/vue/css/palettes/dark.class.css
+ * This file is for additional customizations
+ */
+
+.ion-palette-dark {
+  /* Adjust our custom color tokens for dark mode if needed */
+  /* The official Ionic dark palette handles most variables automatically */
+
+  /* Fine-tune shadows for dark mode (less opacity needed) */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.5);
+  --shadow-xl: 0 8px 24px rgba(0, 0, 0, 0.6);
+}

@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\CleaningChecklistController;
 use App\Http\Controllers\Api\PatientController;
 use App\Http\Controllers\Api\MachineController;
 use App\Http\Controllers\Api\DataSyncController;
+use App\Http\Controllers\Api\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 // Endpoint for user info - session authentication only
@@ -17,12 +18,37 @@ Route::get('/me', function() {
     ]);
 
     if (auth()->check()) {
-        \Log::info('[API /me] Authentication SUCCESS', ['user' => auth()->user()->email]);
-        return response()->json(['user' => auth()->user()]);
+        $user = auth()->user();
+        $user->load('unit', 'units');
+
+        \Log::info('[API /me] Authentication SUCCESS', ['user' => $user->email]);
+
+        return response()->json([
+            'success' => true,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => $user->role,
+                'unit_id' => $user->unit_id,
+                'unit' => $user->unit ? [
+                    'id' => $user->unit->id,
+                    'name' => $user->unit->name,
+                ] : null,
+                'units' => $user->units->map(fn($unit) => [
+                    'id' => $unit->id,
+                    'name' => $unit->name,
+                ]),
+                'created_at' => $user->created_at->toISOString()
+            ]
+        ]);
     }
 
     \Log::warning('[API /me] Authentication FAILED - No valid session');
-    return response()->json(['error' => 'Unauthenticated'], 401);
+    return response()->json([
+        'success' => false,
+        'error' => 'Unauthenticated'
+    ], 401);
 });
 
 // User units routes - session authentication
@@ -35,6 +61,10 @@ Route::prefix('user-units')->middleware('auth')->group(function () {
 // API routes with session authentication
 Route::middleware('auth')->group(function () {
 
+    // Profile routes - available to all authenticated users
+    Route::put('/profile/update', [ProfileController::class, 'update']);
+    Route::put('/profile/password', [ProfileController::class, 'updatePassword']);
+
     // Data sync endpoint - lightweight polling system for real-time updates
     Route::get('/sync/check-updates', [DataSyncController::class, 'checkUpdates']);
     Route::post('/sync/invalidate-cache', [DataSyncController::class, 'invalidateCache']);
@@ -42,6 +72,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware(['role:tecnico,gestor,coordenador,supervisor,admin', 'unit.scope'])->group(function () {
         // Rotas específicas devem vir ANTES do apiResource para evitar conflitos
         Route::get('/checklists/active', [ChecklistController::class, 'active']);
+        Route::get('/checklists/recent', [ChecklistController::class, 'recent']);
         Route::patch('/checklists/{checklist}/phase', [ChecklistController::class, 'updatePhase']);
         Route::post('/checklists/{checklist}/advance', [ChecklistController::class, 'advancePhase']);
         Route::post('/checklists/{checklist}/interrupt', [ChecklistController::class, 'interrupt']);
@@ -55,6 +86,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/patients/search', [PatientController::class, 'search']);
         Route::get('/patients/{id}', [PatientController::class, 'show']);
         Route::post('/patients', [PatientController::class, 'store']);
+        Route::patch('/patients/{id}/toggle-active', [PatientController::class, 'toggleActive']);
 
         Route::get('/machines', [MachineController::class, 'index']);
         Route::get('/machines/available', [MachineController::class, 'available']);

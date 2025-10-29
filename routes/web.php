@@ -64,11 +64,21 @@ Route::post('/logout', function(Request $request) {
 
     // Return JSON for AJAX requests or redirect for form submissions
     if ($request->expectsJson()) {
-        return response()->json(['message' => 'Logout realizado com sucesso']);
+        return response()->json([
+            'message' => 'Logout realizado com sucesso',
+            'csrf_token' => csrf_token() // Return new CSRF token
+        ]);
     }
 
     return redirect('/login')->with('logout_success', true);
 })->name('logout');
+
+// CSRF Token refresh endpoint - returns a fresh CSRF token
+Route::get('/csrf-token', function() {
+    return response()->json([
+        'csrf_token' => csrf_token()
+    ]);
+})->name('csrf.token');
 
 // Interface performance testing route
 Route::get('/performance-test', function() {

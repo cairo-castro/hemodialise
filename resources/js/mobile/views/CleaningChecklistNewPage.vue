@@ -620,7 +620,7 @@ const submitChecklist = async () => {
 
 <style scoped>
 .cleaning-checklist-content {
-  --background: linear-gradient(180deg, #f8f9fa 0%, #e9ecef 100%);
+  --background: var(--ion-background-color);
 }
 
 /* Progress Bar */
@@ -648,7 +648,7 @@ const submitChecklist = async () => {
 
 /* Step Cards */
 .step-card {
-  background: white;
+  background: var(--ion-card-background);
   border-radius: 16px;
   padding: 20px;
   margin-bottom: 16px;
@@ -657,7 +657,7 @@ const submitChecklist = async () => {
 
 .step-card.optional {
   border: 2px dashed #d1d5db;
-  background: #f9fafb;
+  background: var(--ion-background-color);
 }
 
 .step-header {
@@ -688,7 +688,7 @@ const submitChecklist = async () => {
 .step-header h2 {
   font-size: 1.3rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--ion-text-color);
   margin: 0;
   flex: 1;
 }
@@ -699,7 +699,7 @@ const submitChecklist = async () => {
 
 .step-legend {
   font-size: 0.9rem;
-  color: #6b7280;
+  color: var(--ion-color-step-600);
   margin: 4px 0 0 0;
   font-weight: 400;
 }
@@ -707,7 +707,7 @@ const submitChecklist = async () => {
 .optional-badge {
   display: inline-block;
   background: #e5e7eb;
-  color: #6b7280;
+  color: var(--ion-color-step-600);
   padding: 4px 12px;
   border-radius: 12px;
   font-size: 0.75rem;
@@ -717,9 +717,9 @@ const submitChecklist = async () => {
 
 /* Time Button */
 .time-btn {
-  --background: white;
+  --background: var(--ion-card-background);
   --border-width: 2px;
-  --border-color: #e5e7eb;
+  --border-color: var(--ion-color-step-150);
   --border-radius: 12px;
   --padding-start: 16px;
   --padding-end: 16px;
@@ -732,9 +732,9 @@ const submitChecklist = async () => {
   align-items: center;
   justify-content: space-between;
   padding: 16px;
-  border: 2px solid #e5e7eb;
+  border: 2px solid var(--ion-color-step-150);
   border-radius: 12px;
-  background: white;
+  background: var(--ion-card-background);
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -752,7 +752,7 @@ const submitChecklist = async () => {
 
 .toggle-icon {
   font-size: 2rem;
-  color: #f59e0b;
+  color: var(--color-occupied);
 }
 
 .toggle-text {
@@ -763,21 +763,21 @@ const submitChecklist = async () => {
 
 .toggle-title {
   font-weight: 600;
-  color: #1f2937;
+  color: var(--ion-text-color);
   font-size: 1rem;
 }
 
 .toggle-hint {
   font-size: 0.8rem;
-  color: #9ca3af;
+  color: var(--ion-color-step-500);
 }
 
 /* Time Selector */
 .time-selector {
   margin-top: 16px;
   padding: 16px;
-  background: #f0fdf4;
-  border: 2px solid #bbf7d0;
+  background: rgba(var(--ion-color-success-rgb), 0.1);
+  border: 2px solid rgba(var(--ion-color-success-rgb), 0.3);
   border-radius: 12px;
 }
 
@@ -804,30 +804,30 @@ const submitChecklist = async () => {
 }
 
 .legend-pill.conforme {
-  background: #d1fae5;
-  color: #065f46;
+  background: rgba(var(--ion-color-success-rgb), 0.15);
+  color: var(--color-available);
 }
 
 .legend-pill.conforme ion-icon {
-  color: #10b981;
+  color: var(--color-available);
 }
 
 .legend-pill.nao-conforme {
-  background: #fee2e2;
-  color: #991b1b;
+  background: rgba(var(--ion-color-danger-rgb), 0.15);
+  color: var(--color-maintenance);
 }
 
 .legend-pill.nao-conforme ion-icon {
-  color: #ef4444;
+  color: var(--color-maintenance);
 }
 
 .legend-pill.nao-aplica {
-  background: #e5e7eb;
-  color: #374151;
+  background: var(--ion-color-step-150);
+  color: var(--ion-text-color);
 }
 
 .legend-pill.nao-aplica ion-icon {
-  color: #6b7280;
+  color: var(--ion-color-step-600);
 }
 
 /* Cleaning Items */
@@ -838,10 +838,10 @@ const submitChecklist = async () => {
 }
 
 .cleaning-item-card {
-  border: 2px solid #e5e7eb;
+  border: 2px solid var(--ion-color-step-150);
   border-radius: 12px;
   padding: 16px;
-  background: white;
+  background: var(--ion-card-background);
 }
 
 .item-header {
@@ -857,7 +857,7 @@ const submitChecklist = async () => {
 }
 
 .item-icon.hd {
-  color: #3b82f6;
+  color: var(--ion-color-primary);
 }
 
 .item-icon.osmose {
@@ -870,7 +870,7 @@ const submitChecklist = async () => {
 
 .item-name {
   font-weight: 600;
-  color: #1f2937;
+  color: var(--ion-text-color);
   font-size: 1rem;
 }
 
@@ -888,9 +888,9 @@ const submitChecklist = async () => {
   justify-content: center;
   gap: 6px;
   padding: 16px 12px;
-  border: 2px solid #e5e7eb;
+  border: 2px solid var(--ion-color-step-150);
   border-radius: 12px;
-  background: white;
+  background: var(--ion-card-background);
   cursor: pointer;
   transition: all 0.2s ease;
   min-height: 80px;
@@ -906,48 +906,48 @@ const submitChecklist = async () => {
 }
 
 .conf-btn.conforme {
-  border-color: #e5e7eb;
-  color: #6b7280;
+  border-color: var(--ion-color-step-150);
+  color: var(--ion-color-step-600);
 }
 
 .conf-btn.conforme.active {
-  border-color: #10b981;
+  border-color: var(--color-available);
   background: #ecfdf5;
   color: #065f46;
 }
 
 .conf-btn.conforme.active ion-icon {
-  color: #10b981;
+  color: var(--color-available);
 }
 
 .conf-btn.nao-conforme {
-  border-color: #e5e7eb;
-  color: #6b7280;
+  border-color: var(--ion-color-step-150);
+  color: var(--ion-color-step-600);
 }
 
 .conf-btn.nao-conforme.active {
-  border-color: #ef4444;
-  background: #fef2f2;
-  color: #991b1b;
+  border-color: var(--color-maintenance);
+  background: rgba(var(--ion-color-danger-rgb), 0.1);
+  color: var(--color-maintenance);
 }
 
 .conf-btn.nao-conforme.active ion-icon {
-  color: #ef4444;
+  color: var(--color-maintenance);
 }
 
 .conf-btn.nao-aplica {
-  border-color: #e5e7eb;
-  color: #6b7280;
+  border-color: var(--ion-color-step-150);
+  color: var(--ion-color-step-600);
 }
 
 .conf-btn.nao-aplica.active {
-  border-color: #6b7280;
-  background: #f3f4f6;
-  color: #374151;
+  border-color: var(--ion-color-step-600);
+  background: var(--ion-color-step-50);
+  color: var(--ion-text-color);
 }
 
 .conf-btn.nao-aplica.active ion-icon {
-  color: #6b7280;
+  color: var(--ion-color-step-600);
 }
 
 .conf-btn:active {
@@ -956,10 +956,10 @@ const submitChecklist = async () => {
 
 /* Observations */
 .obs-textarea {
-  --background: white;
-  --color: #1f2937;
-  --placeholder-color: #9ca3af;
-  border: 2px solid #e5e7eb;
+  --background: var(--ion-card-background);
+  --color: var(--ion-text-color);
+  --placeholder-color: var(--ion-color-step-500);
+  border: 2px solid var(--ion-color-step-150);
   border-radius: 12px;
   padding: 12px;
   font-size: 0.95rem;
@@ -990,11 +990,11 @@ const submitChecklist = async () => {
 
 .completion-info ion-icon {
   font-size: 1.3rem;
-  color: #3b82f6;
+  color: var(--ion-color-primary);
 }
 
 .completion-info span {
-  color: #1e40af;
+  color: var(--ion-color-primary-shade);
   font-weight: 600;
   font-size: 0.9rem;
 }
@@ -1025,23 +1025,23 @@ const submitChecklist = async () => {
 }
 
 .availability-badge.good {
-  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-  border-color: #10b981;
+  background: rgba(var(--ion-color-success-rgb), 0.1);
+  border-color: var(--color-available);
 }
 
 .availability-badge.alert {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  border-color: #f59e0b;
+  background: rgba(var(--ion-color-warning-rgb), 0.1);
+  border-color: var(--color-occupied);
 }
 
 .availability-badge.warning {
-  background: linear-gradient(135deg, #ffedd5 0%, #fed7aa 100%);
+  background: rgba(249, 115, 22, 0.1);
   border-color: #f97316;
 }
 
 .availability-badge.critical {
-  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
-  border-color: #ef4444;
+  background: rgba(var(--ion-color-danger-rgb), 0.1);
+  border-color: var(--color-maintenance);
 }
 
 .availability-icon {
@@ -1055,11 +1055,11 @@ const submitChecklist = async () => {
 }
 
 .availability-badge.good .availability-icon {
-  background: #10b981;
+  background: var(--color-available);
 }
 
 .availability-badge.alert .availability-icon {
-  background: #f59e0b;
+  background: var(--color-occupied);
 }
 
 .availability-badge.warning .availability-icon {
@@ -1067,7 +1067,7 @@ const submitChecklist = async () => {
 }
 
 .availability-badge.critical .availability-icon {
-  background: #ef4444;
+  background: var(--color-maintenance);
 }
 
 .availability-icon ion-icon {
@@ -1085,12 +1085,12 @@ const submitChecklist = async () => {
 .availability-label {
   font-weight: 700;
   font-size: 0.95rem;
-  color: #1f2937;
+  color: var(--ion-text-color);
 }
 
 .availability-count {
   font-size: 0.85rem;
-  color: #6b7280;
+  color: var(--ion-color-step-600);
   font-weight: 500;
 }
 
@@ -1105,7 +1105,7 @@ const submitChecklist = async () => {
   gap: 8px;
   font-size: 0.95rem;
   font-weight: 600;
-  color: #374151;
+  color: var(--ion-text-color);
   margin-bottom: 12px;
 }
 
@@ -1129,7 +1129,7 @@ const submitChecklist = async () => {
   align-items: center;
   gap: 12px;
   padding: 20px 16px;
-  background: white;
+  background: var(--ion-card-background);
   border: 3px solid #e5e7eb;
   border-radius: 16px;
   cursor: pointer;
@@ -1151,7 +1151,7 @@ const submitChecklist = async () => {
   width: 56px;
   height: 56px;
   border-radius: 14px;
-  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  background: var(--ion-color-step-100);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1164,7 +1164,7 @@ const submitChecklist = async () => {
 
 .machine-icon ion-icon {
   font-size: 2rem;
-  color: #6b7280;
+  color: var(--ion-color-step-600);
   transition: all 0.3s ease;
 }
 
@@ -1183,13 +1183,13 @@ const submitChecklist = async () => {
 .machine-name {
   font-size: 1rem;
   font-weight: 700;
-  color: #1f2937;
+  color: var(--ion-text-color);
   text-align: center;
 }
 
 .machine-status {
   font-size: 0.75rem;
-  color: #10b981;
+  color: var(--color-available);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -1213,8 +1213,8 @@ const submitChecklist = async () => {
   align-items: center;
   gap: 12px;
   padding: 24px;
-  background: #fef2f2;
-  border: 2px solid #fecaca;
+  background: rgba(var(--ion-color-danger-rgb), 0.1);
+  border: 2px solid rgba(var(--ion-color-danger-rgb), 0.3);
   border-radius: 12px;
   text-align: center;
   margin-top: 12px;
@@ -1222,12 +1222,12 @@ const submitChecklist = async () => {
 
 .no-machines-message ion-icon {
   font-size: 3rem;
-  color: #ef4444;
+  color: var(--color-maintenance);
 }
 
 .no-machines-message p {
   margin: 0;
-  color: #991b1b;
+  color: var(--color-maintenance);
   font-weight: 600;
   font-size: 0.9rem;
 }
@@ -1252,20 +1252,20 @@ const submitChecklist = async () => {
   align-items: center;
   gap: 8px;
   padding: 16px 12px;
-  background: white;
+  background: var(--ion-card-background);
   border: 3px solid #e5e7eb;
   border-radius: 16px;
   cursor: pointer;
   transition: all 0.3s ease;
   font-size: 0.85rem;
   font-weight: 600;
-  color: #6b7280;
+  color: var(--ion-color-step-600);
   position: relative;
 }
 
 .shift-btn ion-icon {
   font-size: 2rem;
-  color: #9ca3af;
+  color: var(--ion-color-step-500);
   transition: all 0.3s ease;
 }
 
@@ -1276,7 +1276,7 @@ const submitChecklist = async () => {
 
 .shift-time {
   font-size: 0.7rem;
-  color: #9ca3af;
+  color: var(--ion-color-step-500);
   font-weight: 500;
 }
 
@@ -1301,9 +1301,9 @@ const submitChecklist = async () => {
 
 /* Date Button */
 .date-btn {
-  --background: white;
+  --background: var(--ion-card-background);
   --border-width: 3px;
-  --border-color: #e5e7eb;
+  --border-color: var(--ion-color-step-150);
   --border-radius: 12px;
   --padding-start: 16px;
   --padding-end: 16px;

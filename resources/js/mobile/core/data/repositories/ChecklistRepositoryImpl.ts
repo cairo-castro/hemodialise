@@ -2,6 +2,7 @@ import { ChecklistRepository } from '../../domain/repositories/ChecklistReposito
 import { SafetyChecklist, CreateChecklistData } from '../../domain/entities/SafetyChecklist';
 import { ApiDataSource } from '../datasources/ApiDataSource';
 import { LocalStorageDataSource } from '../datasources/LocalStorageDataSource';
+import { API_CONFIG } from '@mobile/config/api';
 
 export class ChecklistRepositoryImpl implements ChecklistRepository {
   constructor(
@@ -9,56 +10,43 @@ export class ChecklistRepositoryImpl implements ChecklistRepository {
     private localStorageDataSource: LocalStorageDataSource
   ) {}
 
-  private getToken(): string {
-    const token = this.localStorageDataSource.get('auth_token');
-    if (!token) {
-      throw new Error('Token de autenticação não encontrado');
-    }
-    return token;
-  }
-
   async create(data: CreateChecklistData): Promise<SafetyChecklist> {
-    const token = this.getToken();
-    const response = await this.apiDataSource.post<SafetyChecklist>('/checklists', data, token);
+    // Session-based auth: não precisa de token, usa cookie de sessão
+    const response = await this.apiDataSource.post<SafetyChecklist>(API_CONFIG.ENDPOINTS.CHECKLISTS, data);
     return response.data;
   }
 
   async getById(id: number): Promise<SafetyChecklist> {
-    const token = this.getToken();
-    const response = await this.apiDataSource.get<SafetyChecklist>(`/checklists/${id}`, token);
+    const response = await this.apiDataSource.get<SafetyChecklist>(`${API_CONFIG.ENDPOINTS.CHECKLISTS}/${id}`);
     return response.data;
   }
 
   async getByUser(userId: number, limit?: number): Promise<SafetyChecklist[]> {
-    const token = this.getToken();
     const params = new URLSearchParams();
     if (limit) params.append('limit', limit.toString());
 
-    const endpoint = `/checklists/user/${userId}${params.toString() ? '?' + params.toString() : ''}`;
-    const response = await this.apiDataSource.get<SafetyChecklist[]>(endpoint, token);
+    const endpoint = `${API_CONFIG.ENDPOINTS.CHECKLISTS_BY_USER}/${userId}${params.toString() ? '?' + params.toString() : ''}`;
+    const response = await this.apiDataSource.get<SafetyChecklist[]>(endpoint);
     return response.data;
   }
 
   async getByMachine(machineId: number, date?: string): Promise<SafetyChecklist[]> {
-    const token = this.getToken();
     const params = new URLSearchParams();
     if (date) params.append('date', date);
 
-    const endpoint = `/checklists/machine/${machineId}${params.toString() ? '?' + params.toString() : ''}`;
-    const response = await this.apiDataSource.get<SafetyChecklist[]>(endpoint, token);
+    const endpoint = `${API_CONFIG.ENDPOINTS.CHECKLISTS_BY_MACHINE}/${machineId}${params.toString() ? '?' + params.toString() : ''}`;
+    const response = await this.apiDataSource.get<SafetyChecklist[]>(endpoint);
     return response.data;
   }
 
   async getTodaysChecklists(): Promise<SafetyChecklist[]> {
-    const token = this.getToken();
     const today = new Date().toISOString().split('T')[0];
-    const response = await this.apiDataSource.get<SafetyChecklist[]>(`/checklists/today/${today}`, token);
+    const response = await this.apiDataSource.get<SafetyChecklist[]>(`${API_CONFIG.ENDPOINTS.CHECKLISTS_TODAY}/${today}`);
     return response.data;
   }
 
   async getPendingChecklists(): Promise<SafetyChecklist[]> {
-    const token = this.getToken();
-    const response = await this.apiDataSource.get<SafetyChecklist[]>('/checklists/pending', token);
+    const response = await this.apiDataSource.get<SafetyChecklist[]>(API_CONFIG.ENDPOINTS.CHECKLISTS_PENDING);
     return response.data;
   }
 }

@@ -1,0 +1,25 @@
+/**
+ * Border Tokens
+ * Consistent border radius and width system
+ */
+
+:root {
+  /* Border radius scale */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+
+  /* Border width */
+  --border-thin: 1px;
+  --border-medium: 2px;
+  --border-thick: 4px;
+
+  /* Specific use cases */
+  --radius-card: var(--radius-lg);
+  --radius-button: var(--radius-md);
+  --radius-input: var(--radius-md);
+  --radius-badge: var(--radius-full);
+}
