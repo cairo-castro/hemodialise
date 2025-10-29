@@ -39,7 +39,7 @@ Route::get('/me', function() {
                     'id' => $unit->id,
                     'name' => $unit->name,
                 ]),
-                'created_at' => $user->created_at->toISOString()
+                'created_at' => $user->created_at ? $user->created_at->toISOString() : null
             ]
         ]);
     }
