@@ -61,7 +61,7 @@ class SafetyChecklist extends Model
         'post_dialysis_completed_at' => 'datetime',
         'is_interrupted' => 'boolean',
         'interrupted_at' => 'datetime',
-        'item_observations' => 'array',
+        'item_observations' => \App\Casts\JsonWithUnicode::class,
         'paused_at' => 'datetime',
         'resumed_at' => 'datetime',
         // Pré-diálise

@@ -9,7 +9,7 @@
       </ion-toolbar>
     </ion-header>
 
-    <ion-content :fullscreen="true">
+    <ion-content ref="contentRef" :fullscreen="true">
       <div class="checklist-container">
 
         <!-- Header com data e horário atual -->
@@ -558,6 +558,7 @@ const searchPatientUseCase = container.getSearchPatientUseCase();
 const machineRepository = container.getMachineRepository();
 
 // Reactive state
+const contentRef = ref();
 const currentTime = ref('');
 const currentDate = ref('');
 const showInterruptModal = ref(false);
@@ -1010,9 +1011,8 @@ const advancePhase = async () => {
       updatePhaseCompletion();
 
       // Scroll to top of page when advancing phase
-      const content = document.querySelector('ion-content');
-      if (content) {
-        await content.scrollToTop(400); // 400ms smooth scroll
+      if (contentRef.value && contentRef.value.$el) {
+        await contentRef.value.$el.scrollToTop(400); // 400ms smooth scroll
       }
 
       const toast = await toastController.create({
