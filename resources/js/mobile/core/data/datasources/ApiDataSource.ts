@@ -67,7 +67,7 @@ export class ApiDataSource {
     const config: RequestInit = {
       method,
       headers,
-      credentials: 'same-origin', // Include cookies for session
+      credentials: 'include', // Include cookies for cross-origin requests (Vite proxy)
     };
 
     if (data && (method === 'POST' || method === 'PUT')) {

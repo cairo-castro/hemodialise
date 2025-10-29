@@ -9,10 +9,19 @@ use Illuminate\Support\Facades\Route;
 
 // Endpoint for user info - session authentication only
 Route::get('/me', function() {
+    \Log::info('[API /me] START', [
+        'auth_check' => auth()->check(),
+        'session_id' => session()->getId(),
+        'has_session' => session()->has('login_web_' . sha1(config('auth.guards.web.provider'))),
+        'cookie_session' => request()->cookie(config('session.cookie')),
+    ]);
+
     if (auth()->check()) {
+        \Log::info('[API /me] Authentication SUCCESS', ['user' => auth()->user()->email]);
         return response()->json(['user' => auth()->user()]);
     }
 
+    \Log::warning('[API /me] Authentication FAILED - No valid session');
     return response()->json(['error' => 'Unauthenticated'], 401);
 });
 
