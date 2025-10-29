@@ -45,8 +45,8 @@ export function useDataSync(options: {
       error.value = null;
 
       // Verifica se está autenticado antes de fazer polling
-      const token = localStorage.getItem('auth_token');
-      if (!token) {
+      const isAuth = localStorage.getItem('is_authenticated');
+      if (isAuth !== 'true') {
         // Usuário não está logado, ignora silenciosamente
         return;
       }

@@ -15,8 +15,6 @@ import { API_CONFIG } from '@mobile/config/api';
 export class ApiDataSource {
   private baseUrl: string;
   private authRepository: any = null;
-  private isRefreshing = false;
-  private refreshSubscribers: Array<(token: string) => void> = [];
 
   constructor(baseUrl?: string) {
     this.baseUrl = baseUrl || API_CONFIG.getApiUrl();
@@ -24,15 +22,6 @@ export class ApiDataSource {
 
   setAuthRepository(authRepository: any) {
     this.authRepository = authRepository;
-  }
-
-  private subscribeTokenRefresh(cb: (token: string) => void) {
-    this.refreshSubscribers.push(cb);
-  }
-
-  private onTokenRefreshed(token: string) {
-    this.refreshSubscribers.forEach(cb => cb(token));
-    this.refreshSubscribers = [];
   }
 
   async get<T>(endpoint: string, token?: string): Promise<ApiResponse<T>> {
@@ -90,41 +79,15 @@ export class ApiDataSource {
       const responseData = await response.json();
 
       if (!response.ok) {
-        // Handle 401 Unauthorized - try to refresh token
-        if (response.status === 401 && this.authRepository && endpoint !== '/login' && endpoint !== '/refresh') {
-          try {
-            const newToken = await this.refreshToken();
-            // Retry request with new token
-            headers['Authorization'] = `Bearer ${newToken}`;
-            const retryResponse = await fetch(url, { ...config, headers });
-            const retryData = await retryResponse.json();
-
-            if (!retryResponse.ok) {
-              throw {
-                message: retryData.message || 'Sessão expirada. Faça login novamente.',
-                errors: retryData.errors,
-                status: retryResponse.status
-              };
-            }
-
-            if (retryData && typeof retryData === 'object' && 'data' in retryData) {
-              return retryData;
-            }
-
-            return {
-              data: retryData,
-              success: true
-            };
-          } catch (refreshError) {
-            // Token refresh failed, clear token and throw error
-            if (this.authRepository) {
-              this.authRepository.removeToken();
-            }
-            throw {
-              message: 'Sessão expirada. Faça login novamente.',
-              status: 401
-            };
+        // Session-based auth: 401 means session expired, redirect to login
+        if (response.status === 401 && endpoint !== '/login') {
+          if (this.authRepository) {
+            this.authRepository.removeToken();
           }
+          throw {
+            message: 'Sessão expirada. Faça login novamente.',
+            status: 401
+          };
         }
 
         const error: ApiError = {
@@ -156,45 +119,4 @@ export class ApiDataSource {
     }
   }
 
-  private async refreshToken(): Promise<string> {
-    if (this.isRefreshing) {
-      // Wait for ongoing refresh to complete
-      return new Promise((resolve) => {
-        this.subscribeTokenRefresh((token: string) => {
-          resolve(token);
-        });
-      });
-    }
-
-    this.isRefreshing = true;
-
-    try {
-      const oldToken = this.authRepository.getStoredToken();
-      const response = await fetch(`${this.baseUrl}/refresh`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${oldToken}`
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error('Token refresh failed');
-      }
-
-      const data = await response.json();
-      const newToken = data.token || data.access_token;
-
-      // Store new token
-      this.authRepository.storeToken(newToken);
-
-      // Notify subscribers
-      this.onTokenRefreshed(newToken);
-
-      return newToken;
-    } finally {
-      this.isRefreshing = false;
-    }
-  }
 }
