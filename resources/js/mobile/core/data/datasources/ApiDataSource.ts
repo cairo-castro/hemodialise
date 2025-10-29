@@ -62,7 +62,14 @@ export class ApiDataSource {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest',
     };
+
+    // Get CSRF token from meta tag
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    if (csrfToken) {
+      headers['X-CSRF-TOKEN'] = csrfToken;
+    }
 
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
@@ -71,6 +78,7 @@ export class ApiDataSource {
     const config: RequestInit = {
       method,
       headers,
+      credentials: 'same-origin', // Include cookies for session
     };
 
     if (data && (method === 'POST' || method === 'PUT')) {
