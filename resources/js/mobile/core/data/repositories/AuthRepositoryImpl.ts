@@ -16,10 +16,8 @@ export class AuthRepositoryImpl implements AuthRepository {
   async login(credentials: LoginCredentials): Promise<AuthToken> {
     const response = await this.apiDataSource.post<AuthToken>(API_CONFIG.ENDPOINTS.LOGIN, credentials);
 
-    // Session-based auth: marca como autenticado após login bem-sucedido
-    if (response.success || (response as any).success) {
-      this.localStorageDataSource.set(this.AUTH_FLAG_KEY, 'true');
-    }
+    // Session-based auth: NÃO marca como autenticado aqui
+    // A flag será definida quando getCurrentUser() for bem-sucedido
 
     return response.data || response as unknown as AuthToken;
   }
@@ -27,6 +25,10 @@ export class AuthRepositoryImpl implements AuthRepository {
   async getCurrentUser(): Promise<User> {
     // Session-based auth: não precisa de token, usa cookie de sessão
     const response = await this.apiDataSource.get<any>(API_CONFIG.ENDPOINTS.ME);
+
+    // Se chegou aqui, a sessão é válida - marca como autenticado
+    this.localStorageDataSource.set(this.AUTH_FLAG_KEY, 'true');
+
     // API returns { "user": {...} }, extract the user object
     return (response as any).data?.user || (response as any).user || response;
   }
