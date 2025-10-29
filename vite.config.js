@@ -68,6 +68,21 @@ export default defineConfig(({ mode }) => {
                     target: 'http://localhost:8000',
                     changeOrigin: true,
                     secure: false,
+                },
+                '/login': {
+                    target: 'http://localhost:8000',
+                    changeOrigin: true,
+                    secure: false,
+                },
+                '/logout': {
+                    target: 'http://localhost:8000',
+                    changeOrigin: true,
+                    secure: false,
+                },
+                '/me': {
+                    target: 'http://localhost:8000',
+                    changeOrigin: true,
+                    secure: false,
                 }
             }
         };
