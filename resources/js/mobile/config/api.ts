@@ -1,6 +1,7 @@
 export const API_CONFIG = {
   // Base URL - now integrated with Laravel
-  BASE_URL: '/api',
+  // Empty string because routes are at root level (/login, /api/checklists, etc.)
+  BASE_URL: '',
 
   // Get current API URL based on environment
   getApiUrl(): string {
