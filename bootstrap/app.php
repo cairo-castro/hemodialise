@@ -35,12 +35,8 @@ return Application::configure(basePath: dirname(__DIR__))
         // Use custom CSRF token verification middleware
         $middleware->validateCsrfTokens(except: [
             '/logout', // Permitir logout GET sem CSRF
-            'admin/*', // Excluir rotas do admin Filament do CSRF (pode causar 405)
-            'admin-login',
-            'admin-login/*',
-            'admin-bridge',
-            'filament/*', // Excluir todas as rotas do Filament do CSRF
-            'api/*', // Excluir APIs do CSRF para evitar conflitos
+            'admin-bridge', // Bridge para conversão JWT->Session
+            'api/*', // Excluir APIs do CSRF
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
