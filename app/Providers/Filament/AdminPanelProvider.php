@@ -23,11 +23,13 @@ class AdminPanelProvider extends PanelProvider
     public function panel(Panel $panel): Panel
     {
         return $panel
+            ->default()
             ->id('admin')
             ->path('admin')
-            ->login()  // Use default Filament login
+            ->login()
             ->passwordReset()
             ->emailVerification()
+            ->authGuard('web')
             ->brandName('Sistema Hemodiálise')
             ->brandLogo(asset('hemodialise_logo.png'))
             ->brandLogoHeight('2.5rem')
@@ -59,8 +61,7 @@ class AdminPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->authMiddleware([
-                \App\Http\Middleware\FilamentAuthenticateWithLogging::class,
-                \App\Http\Middleware\FilamentAccessMiddleware::class,
+                Authenticate::class,
             ]);
     }
 }

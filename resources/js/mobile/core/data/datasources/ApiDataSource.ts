@@ -40,6 +40,9 @@ export class ApiDataSource {
     return this.request<T>('DELETE', endpoint, undefined, token);
   }
 
+  private retryCount = 0;
+  private maxRetries = 1;
+
   private async request<T>(
     method: string,
     endpoint: string,
@@ -90,11 +93,56 @@ export class ApiDataSource {
           };
         }
 
-        // CSRF token mismatch - provide helpful message
+        // CSRF token mismatch - refresh token and retry once
         if (response.status === 419) {
+          console.log('CSRF token mismatch detected (419)');
+
+          // Only retry once to avoid infinite loops
+          if (this.retryCount < this.maxRetries) {
+            this.retryCount++;
+            console.log(`Attempting to refresh CSRF token and retry (attempt ${this.retryCount}/${this.maxRetries})`);
+
+            try {
+              // Fetch fresh CSRF token
+              const csrfResponse = await fetch('/csrf-token', {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                  'Accept': 'application/json',
+                  'X-Requested-With': 'XMLHttpRequest'
+                }
+              });
+
+              if (csrfResponse.ok) {
+                const csrfData = await csrfResponse.json();
+                const newToken = csrfData.csrf_token;
+
+                if (newToken) {
+                  // Update the CSRF token in the page
+                  const currentCsrfMeta = document.querySelector('meta[name="csrf-token"]');
+                  if (currentCsrfMeta) {
+                    currentCsrfMeta.setAttribute('content', newToken);
+                    console.log('CSRF token refreshed, retrying request...');
+
+                    // Reset retry count for successful refresh
+                    this.retryCount = 0;
+
+                    // Retry the original request with new token
+                    return this.request<T>(method, endpoint, data, token);
+                  }
+                }
+              }
+            } catch (refreshError) {
+              console.error('Failed to refresh CSRF token:', refreshError);
+            }
+          }
+
+          // If we couldn't refresh or exceeded retry limit, reload the page
+          console.log('Could not refresh CSRF token, reloading page...');
           throw {
-            message: 'Token de segurança expirado. Por favor, recarregue a página.',
-            status: 419
+            message: 'Token de segurança expirado. Recarregando a página...',
+            status: 419,
+            shouldReload: true
           };
         }
 
@@ -105,6 +153,9 @@ export class ApiDataSource {
         };
         throw error;
       }
+
+      // Reset retry count on successful request
+      this.retryCount = 0;
 
       // If responseData already has a 'data' property, return as is
       // Otherwise, wrap the response in the expected format
@@ -117,6 +168,13 @@ export class ApiDataSource {
         success: true
       };
     } catch (error) {
+      // Handle reload for CSRF errors
+      if ((error as any).shouldReload) {
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      }
+
       if (error instanceof Error && error.name === 'TypeError') {
         throw {
           message: 'Erro de conectividade. Verifique sua conexão.',
