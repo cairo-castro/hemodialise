@@ -96,7 +96,12 @@ RUN composer --version
 # Copy dependency files only (better caching)
 COPY composer.json composer.lock ./
 
+# Copy application code BEFORE composer install
+# This is needed because post-autoload-dump scripts require Laravel bootstrap
+COPY . .
+
 # Install PHP dependencies with optimizations
+# Note: We keep --no-scripts here and run scripts manually to control the flow
 RUN --mount=type=cache,target=/tmp/composer \
     composer install \
         --no-dev \
@@ -105,12 +110,11 @@ RUN --mount=type=cache,target=/tmp/composer \
         --no-progress \
         --prefer-dist \
         --optimize-autoloader \
-        --classmap-authoritative
+        --classmap-authoritative \
+    && echo "✅ Dependencies installed"
 
-# Copy application code to run post-autoload-dump scripts
-COPY . .
-
-# Generate optimized autoloader with application structure
+# Now run the autoload optimization with scripts
+# This will execute post-autoload-dump hooks (package:discover, filament:upgrade)
 RUN composer dump-autoload \
         --optimize \
         --classmap-authoritative \
