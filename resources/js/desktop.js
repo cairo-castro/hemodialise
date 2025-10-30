@@ -15,10 +15,12 @@ const router = createRouter({
 // Create and mount app
 const app = createApp(DesktopApp);
 app.use(router);
+
+// Mount app and hide loading screen after mount
 app.mount('#desktop-app');
 
-// Hide loading screen when app is ready
-app.config.globalProperties.$nextTick(() => {
+// Hide loading screen after Vue is mounted
+setTimeout(() => {
     const loadingScreen = document.getElementById('loading-screen');
     if (loadingScreen) {
         loadingScreen.classList.add('fade-out');
@@ -26,4 +28,4 @@ app.config.globalProperties.$nextTick(() => {
             loadingScreen.style.display = 'none';
         }, 500);
     }
-});
+}, 100);
