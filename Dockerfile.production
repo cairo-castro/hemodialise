@@ -68,24 +68,33 @@ WORKDIR /build
 # Install runtime libraries FIRST (must persist after build-deps are removed)
 RUN apk add --no-cache \
     libzip \
+    libpng \
+    libjpeg-turbo \
+    freetype \
     icu-libs \
     icu-data-full \
     git \
     unzip
 
 # Install build dependencies and PHP extensions
+# IMPORTANT: GD extension is required by phpoffice/phpspreadsheet during composer install
 RUN apk add --no-cache --virtual .build-deps \
     libzip-dev \
+    libpng-dev \
+    libjpeg-turbo-dev \
+    freetype-dev \
     icu-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) \
         zip \
+        gd \
         intl \
         bcmath \
     && apk del .build-deps \
     && rm -rf /var/cache/apk/* /tmp/*
 
-# Verify extensions are loaded
-RUN php -m | grep -E 'zip|intl|bcmath'
+# Verify extensions are loaded (including GD for PhpSpreadsheet)
+RUN php -m | grep -E 'zip|gd|intl|bcmath'
 
 # Copy Composer binary from official image
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -100,27 +109,19 @@ COPY composer.json composer.lock ./
 # This is needed because post-autoload-dump scripts require Laravel bootstrap
 COPY . .
 
-# Create temporary .env file for build process
-# Laravel needs this for artisan commands during composer scripts
-RUN cp .env.example .env \
-    && echo "APP_KEY=base64:$(openssl rand -base64 32)" >> .env \
-    && echo "✅ Temporary .env created for build"
-
 # Install PHP dependencies with optimizations
-# We can now allow scripts to run since .env exists
+# Note: Using --no-scripts to avoid artisan commands during build (no .env available)
+# Scripts will run on container startup via entrypoint
 RUN --mount=type=cache,target=/tmp/composer \
     composer install \
         --no-dev \
         --no-interaction \
+        --no-scripts \
         --no-progress \
         --prefer-dist \
         --optimize-autoloader \
         --classmap-authoritative \
-    && echo "✅ Dependencies installed with scripts executed"
-
-# Remove temporary .env (will be injected by Dokploy at runtime)
-RUN rm -f .env \
-    && echo "✅ Temporary .env removed - will use Dokploy environment variables"
+    && echo "✅ Dependencies installed successfully"
 
 # ==============================================
 # Stage 3: Production Runtime (MariaDB Support)

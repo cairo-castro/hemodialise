@@ -56,7 +56,17 @@ chown -R laravel:laravel /var/www/html/storage /var/www/html/bootstrap/cache
 chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 echo ""
-echo "Step 3: Verifying Composer autoload..."
+echo "Step 3: Running Composer post-install scripts..."
+
+# Run composer scripts that were skipped during build (package:discover, filament:upgrade)
+echo "  → Running package discovery..."
+su-exec laravel php artisan package:discover --ansi || echo "⚠️ Package discovery failed (non-fatal)"
+
+echo "  → Running Filament upgrade..."
+su-exec laravel php artisan filament:upgrade --ansi || echo "⚠️ Filament upgrade failed (non-fatal)"
+
+echo ""
+echo "Step 4: Verifying Composer autoload..."
 
 # Verify autoload files exist
 if [ ! -f "/var/www/html/vendor/autoload.php" ]; then
