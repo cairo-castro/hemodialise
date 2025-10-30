@@ -8,9 +8,9 @@ class DesktopController extends Controller
 {
     public function index()
     {
-        return view('desktop.preline', [
+        return view('desktop.index', [
             'title' => 'Sistema de Hemodiálise - Desktop',
-            'interface_type' => 'preline'
+            'interface_type' => 'vue'
         ]);
     }
 

@@ -95,14 +95,32 @@ export default defineConfig(({ mode }) => {
         config.plugins.push(
             laravel({
                 input: [
-                    'resources/css/app.css',
-                    'resources/js/app.js',
-                    // NOTE: login.js removed - loaded only on /login page
+                    'resources/js/desktop.js',
                 ],
                 refresh: true,
                 buildDirectory: 'desktop',
             })
         );
+
+        config.build = {
+            outDir: 'public/desktop',
+            emptyOutDir: true,
+            sourcemap: false,
+            rollupOptions: {
+                output: {
+                    manualChunks: {
+                        'heroicons': ['@heroicons/vue'],
+                        'headlessui': ['@headlessui/vue'],
+                        'vendor': ['vue', 'vue-router']
+                    }
+                }
+            }
+        };
+
+        config.optimizeDeps = {
+            include: ['vue', 'vue-router', '@heroicons/vue/24/outline', '@headlessui/vue'],
+            exclude: []
+        };
     }
 
     // Default configuration (development and Filament)
