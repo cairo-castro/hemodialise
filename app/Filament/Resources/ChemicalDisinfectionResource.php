@@ -17,7 +17,17 @@ class ChemicalDisinfectionResource extends Resource
 {
     protected static ?string $model = ChemicalDisinfection::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-beaker';
+
+    protected static ?string $navigationLabel = 'Desinfecção Química';
+
+    protected static ?string $modelLabel = 'Desinfecção Química';
+
+    protected static ?string $pluralModelLabel = 'Desinfecções Químicas';
+
+    protected static ?string $navigationGroup = 'Operacional';
+
+    protected static ?int $navigationSort = 3;
 
     public static function form(Form $form): Form
     {

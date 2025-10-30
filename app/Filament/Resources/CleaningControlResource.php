@@ -17,7 +17,17 @@ class CleaningControlResource extends Resource
 {
     protected static ?string $model = CleaningControl::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-sparkles';
+
+    protected static ?string $navigationLabel = 'Controle de Limpeza';
+
+    protected static ?string $modelLabel = 'Controle de Limpeza';
+
+    protected static ?string $pluralModelLabel = 'Controles de Limpeza';
+
+    protected static ?string $navigationGroup = 'Operacional';
+
+    protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form
     {

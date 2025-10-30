@@ -17,7 +17,17 @@ class SafetyChecklistResource extends Resource
 {
     protected static ?string $model = SafetyChecklist::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-check';
+
+    protected static ?string $navigationLabel = 'Checklists de Segurança';
+
+    protected static ?string $modelLabel = 'Checklist de Segurança';
+
+    protected static ?string $pluralModelLabel = 'Checklists de Segurança';
+
+    protected static ?string $navigationGroup = 'Operacional';
+
+    protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form
     {
