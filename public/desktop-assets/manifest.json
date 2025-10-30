@@ -1,35 +1,85 @@
 {
-  "__plugin-vue_export-helper-DMaL9WP0.js": {
-    "file": "assets/_plugin-vue_export-helper-DMaL9WP0.js",
-    "name": "_plugin-vue_export-helper"
+  "_headlessui-l0sNRNKZ.js": {
+    "file": "assets/headlessui-l0sNRNKZ.js",
+    "name": "headlessui"
   },
-  "resources/css/app.css": {
-    "file": "assets/app-DYUMPPCG.css",
-    "src": "resources/css/app.css",
-    "isEntry": true
+  "_heroicons-l0sNRNKZ.js": {
+    "file": "assets/heroicons-l0sNRNKZ.js",
+    "name": "heroicons"
   },
-  "resources/js/app.js": {
-    "file": "assets/app-ecpdqr8W.js",
-    "name": "app",
-    "src": "resources/js/app.js",
+  "_vendor-DpClryQt.js": {
+    "file": "assets/vendor-DpClryQt.js",
+    "name": "vendor"
+  },
+  "resources/js/desktop.js": {
+    "file": "assets/desktop-Bi6rxq2H.js",
+    "name": "desktop",
+    "src": "resources/js/desktop.js",
     "isEntry": true,
     "imports": [
-      "__plugin-vue_export-helper-DMaL9WP0.js"
+      "_vendor-DpClryQt.js"
+    ],
+    "dynamicImports": [
+      "resources/js/desktop/views/DashboardView.vue",
+      "resources/js/desktop/views/ChecklistsView.vue",
+      "resources/js/desktop/views/MachinesView.vue",
+      "resources/js/desktop/views/PatientsView.vue",
+      "resources/js/desktop/views/ProfileView.vue"
     ],
     "css": [
-      "assets/app-DN9y5Ksk.css"
+      "assets/desktop-BdZulYsk.css"
     ]
   },
-  "resources/js/auth/login.js": {
-    "file": "assets/login-Ce8Hia56.js",
-    "name": "login",
-    "src": "resources/js/auth/login.js",
-    "isEntry": true,
+  "resources/js/desktop/views/ChecklistsView.vue": {
+    "file": "assets/ChecklistsView-IuFL_gqv.js",
+    "name": "ChecklistsView",
+    "src": "resources/js/desktop/views/ChecklistsView.vue",
+    "isDynamicEntry": true,
     "imports": [
-      "__plugin-vue_export-helper-DMaL9WP0.js"
+      "_vendor-DpClryQt.js"
+    ]
+  },
+  "resources/js/desktop/views/DashboardView.vue": {
+    "file": "assets/DashboardView-Clv7zoNE.js",
+    "name": "DashboardView",
+    "src": "resources/js/desktop/views/DashboardView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/desktop.js",
+      "_vendor-DpClryQt.js"
     ],
     "css": [
-      "assets/login-CEehNpVs.css"
+      "assets/DashboardView-C2q3J00u.css"
+    ]
+  },
+  "resources/js/desktop/views/MachinesView.vue": {
+    "file": "assets/MachinesView-BFvBUqvi.js",
+    "name": "MachinesView",
+    "src": "resources/js/desktop/views/MachinesView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/desktop.js",
+      "_vendor-DpClryQt.js"
+    ]
+  },
+  "resources/js/desktop/views/PatientsView.vue": {
+    "file": "assets/PatientsView-BXqGK0NB.js",
+    "name": "PatientsView",
+    "src": "resources/js/desktop/views/PatientsView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/desktop.js",
+      "_vendor-DpClryQt.js"
+    ]
+  },
+  "resources/js/desktop/views/ProfileView.vue": {
+    "file": "assets/ProfileView-D1BmHTha.js",
+    "name": "ProfileView",
+    "src": "resources/js/desktop/views/ProfileView.vue",
+    "isDynamicEntry": true,
+    "imports": [
+      "resources/js/desktop.js",
+      "_vendor-DpClryQt.js"
     ]
   }
 }

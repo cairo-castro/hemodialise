@@ -98,12 +98,12 @@ export default defineConfig(({ mode }) => {
                     'resources/js/desktop.js',
                 ],
                 refresh: true,
-                buildDirectory: 'desktop',
+                buildDirectory: 'desktop-assets',
             })
         );
 
         config.build = {
-            outDir: 'public/desktop',
+            outDir: 'public/desktop-assets',
             emptyOutDir: true,
             sourcemap: false,
             rollupOptions: {
