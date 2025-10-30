@@ -4,9 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 
 class SafetyChecklist extends Model
 {
+    use LogsActivity;
+
     protected $fillable = [
         'patient_id',
         'machine_id',
@@ -50,6 +54,14 @@ class SafetyChecklist extends Model
         'paused_reason',
         'resumed_at',
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['patient_id', 'machine_id', 'session_date', 'shift', 'current_phase', 'is_interrupted'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
 
     protected $casts = [
         'session_date' => 'date',

@@ -5,9 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Carbon\Carbon;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 
 class Patient extends Model
 {
+    use LogsActivity;
+
     protected $fillable = [
         'full_name',
         'birth_date',
@@ -23,6 +27,14 @@ class Patient extends Model
         'birth_date' => 'date',
         'active' => 'boolean',
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['full_name', 'birth_date', 'blood_group', 'rh_factor', 'allergies', 'active', 'unit_id'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
 
     protected $appends = [
         'name',

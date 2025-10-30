@@ -125,6 +125,7 @@ class PatientResource extends Resource
             'index' => Pages\ListPatients::route('/'),
             'create' => Pages\CreatePatient::route('/create'),
             'edit' => Pages\EditPatient::route('/{record}/edit'),
+            'activities' => Pages\ListPatientActivities::route('/{record}/activities'),
         ];
     }
 }

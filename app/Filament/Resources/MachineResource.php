@@ -89,6 +89,7 @@ class MachineResource extends Resource
             'index' => Pages\ListMachines::route('/'),
             'create' => Pages\CreateMachine::route('/create'),
             'edit' => Pages\EditMachine::route('/{record}/edit'),
+            'activities' => Pages\ListMachineActivities::route('/{record}/activities'),
         ];
     }
 }

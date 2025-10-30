@@ -119,6 +119,7 @@ class UnitResource extends Resource
             'index' => Pages\ListUnits::route('/'),
             'create' => Pages\CreateUnit::route('/create'),
             'edit' => Pages\EditUnit::route('/{record}/edit'),
+            'activities' => Pages\ListUnitActivities::route('/{record}/activities'),
         ];
     }
 }

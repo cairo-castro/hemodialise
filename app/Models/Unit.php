@@ -4,9 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Spatie\Activitylog\LogOptions;
 
 class Unit extends Model
 {
+    use LogsActivity;
+
     protected $fillable = [
         'name',
         'code',
@@ -19,6 +23,14 @@ class Unit extends Model
     protected $casts = [
         'active' => 'boolean',
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['name', 'code', 'address', 'phone', 'manager_name', 'active'])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
 
     public function users(): HasMany
     {

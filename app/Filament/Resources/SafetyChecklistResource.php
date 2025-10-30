@@ -138,6 +138,7 @@ class SafetyChecklistResource extends Resource
             'index' => Pages\ListSafetyChecklists::route('/'),
             'create' => Pages\CreateSafetyChecklist::route('/create'),
             'edit' => Pages\EditSafetyChecklist::route('/{record}/edit'),
+            'activities' => Pages\ListSafetyChecklistActivities::route('/{record}/activities'),
         ];
     }
 }
