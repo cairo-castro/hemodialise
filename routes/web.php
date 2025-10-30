@@ -14,19 +14,9 @@ use Illuminate\Http\Request;
 Route::get('/', function (Request $request) {
     $isMobile = DeviceDetector::isMobile($request);
 
-    // If already authenticated, redirect to appropriate interface
-    if (auth()->check()) {
-        return redirect($isMobile ? '/mobile' : '/desktop');
-    }
-
-    // Not authenticated
-    if ($isMobile) {
-        // Mobile: go to PWA (will show login if needed)
-        return redirect('/mobile');
-    } else {
-        // Desktop: go to centralized login
-        return redirect('/login');
-    }
+    // Redirect to appropriate interface based on device
+    // Auth middleware on /desktop will handle login redirect if needed
+    return redirect($isMobile ? '/mobile' : '/desktop');
 })->name('home');
 
 // Mobile/Ionic interface - PWA with session authentication
@@ -35,8 +25,8 @@ Route::get('/mobile/{any?}', function () {
     return view('mobile.app');
 })->where('any', '.*')->name('mobile.spa');
 
-// Desktop interface routes - with authentication middleware
-Route::prefix('desktop')->name('desktop.')->middleware('auth')->group(function () {
+// Desktop interface routes - WITHOUT auth middleware (handles auth internally like /mobile)
+Route::prefix('desktop')->name('desktop.')->group(function () {
     // Desktop/Preline interface - gestão
     Route::get('/', [DesktopController::class, 'index'])->name('index');
     Route::get('/preline', [DesktopController::class, 'preline'])->name('preline');
