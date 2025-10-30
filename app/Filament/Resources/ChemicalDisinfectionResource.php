@@ -12,6 +12,8 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
+use pxlrbt\FilamentExcel\Exports\ExcelExport;
 
 class ChemicalDisinfectionResource extends Resource
 {
@@ -150,6 +152,14 @@ class ChemicalDisinfectionResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+                    ExportBulkAction::make()
+                        ->label('Exportar para Excel')
+                        ->exports([
+                            ExcelExport::make()
+                                ->fromTable()
+                                ->withFilename(fn () => 'desinfeccao-quimica-' . now()->format('Y-m-d-His'))
+                                ->withWriterType(\Maatwebsite\Excel\Excel::XLSX),
+                        ]),
                 ]),
             ]);
     }
