@@ -84,57 +84,60 @@ class ChemicalDisinfectionResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('machine.name')
-                    ->numeric()
+                    ->label('Máquina')
+                    ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('user.name')
-                    ->numeric()
+                    ->label('Responsável')
+                    ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('disinfection_date')
-                    ->date()
+                    ->label('Data da Desinfecção')
+                    ->date('d/m/Y')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('shift')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('start_time'),
-                Tables\Columns\TextColumn::make('end_time'),
+                    ->label('Turno')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'manha' => 'success',
+                        'tarde' => 'warning',
+                        'noite' => 'info',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'manha' => 'Manhã',
+                        'tarde' => 'Tarde',
+                        'noite' => 'Noite',
+                        default => $state,
+                    })
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('start_time')
+                    ->label('Hora Início'),
+                Tables\Columns\TextColumn::make('end_time')
+                    ->label('Hora Fim'),
                 Tables\Columns\TextColumn::make('chemical_product')
+                    ->label('Produto Químico')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('concentration')
+                    ->label('Concentração')
                     ->numeric()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('concentration_unit')
-                    ->searchable(),
                 Tables\Columns\TextColumn::make('contact_time_minutes')
+                    ->label('Tempo de Contato (min)')
                     ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('initial_temperature')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('final_temperature')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\IconColumn::make('circulation_verified')
-                    ->boolean(),
-                Tables\Columns\IconColumn::make('contact_time_completed')
-                    ->boolean(),
-                Tables\Columns\IconColumn::make('rinse_performed')
-                    ->boolean(),
-                Tables\Columns\IconColumn::make('system_tested')
-                    ->boolean(),
-                Tables\Columns\TextColumn::make('batch_number')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('expiry_date')
-                    ->date()
                     ->sortable(),
                 Tables\Columns\IconColumn::make('effectiveness_verified')
+                    ->label('Eficácia Verificada')
                     ->boolean(),
-                Tables\Columns\TextColumn::make('responsible_signature')
-                    ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
+                    ->label('Criado em')
+                    ->dateTime('d/m/Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
+                    ->label('Atualizado em')
+                    ->dateTime('d/m/Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])

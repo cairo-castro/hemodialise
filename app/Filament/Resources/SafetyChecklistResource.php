@@ -73,42 +73,67 @@ class SafetyChecklistResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('patient.id')
-                    ->numeric()
+                Tables\Columns\TextColumn::make('patient.full_name')
+                    ->label('Paciente')
+                    ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('machine.name')
-                    ->numeric()
+                    ->label('Máquina')
+                    ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('user.name')
-                    ->numeric()
+                    ->label('Responsável')
+                    ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('session_date')
-                    ->date()
+                    ->label('Data da Sessão')
+                    ->date('d/m/Y')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('shift')
-                    ->searchable(),
-                Tables\Columns\IconColumn::make('machine_disinfected')
-                    ->boolean(),
-                Tables\Columns\IconColumn::make('capillary_lines_identified')
-                    ->boolean(),
-                Tables\Columns\IconColumn::make('patient_identification_confirmed')
-                    ->boolean(),
-                Tables\Columns\IconColumn::make('vascular_access_evaluated')
-                    ->boolean(),
-                Tables\Columns\IconColumn::make('vital_signs_checked')
-                    ->boolean(),
-                Tables\Columns\IconColumn::make('medications_reviewed')
-                    ->boolean(),
-                Tables\Columns\IconColumn::make('dialyzer_membrane_checked')
-                    ->boolean(),
-                Tables\Columns\IconColumn::make('equipment_functioning_verified')
+                    ->label('Turno')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'manha' => 'success',
+                        'tarde' => 'warning',
+                        'noite' => 'info',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'manha' => 'Manhã',
+                        'tarde' => 'Tarde',
+                        'noite' => 'Noite',
+                        default => $state,
+                    })
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('current_phase')
+                    ->label('Fase Atual')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'pre_dialysis' => 'warning',
+                        'during_session' => 'info',
+                        'post_dialysis' => 'success',
+                        'completed' => 'success',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'pre_dialysis' => 'Pré-Diálise',
+                        'during_session' => 'Durante Sessão',
+                        'post_dialysis' => 'Pós-Diálise',
+                        'completed' => 'Completo',
+                        default => $state,
+                    }),
+                Tables\Columns\IconColumn::make('is_interrupted')
+                    ->label('Interrompido')
                     ->boolean(),
                 Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
+                    ->label('Criado em')
+                    ->dateTime('d/m/Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
+                    ->label('Atualizado em')
+                    ->dateTime('d/m/Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])

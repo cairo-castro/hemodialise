@@ -75,43 +75,53 @@ class CleaningControlResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('machine.name')
-                    ->numeric()
+                    ->label('Máquina')
+                    ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('user.name')
-                    ->numeric()
+                    ->label('Responsável')
+                    ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('cleaning_date')
-                    ->date()
+                    ->label('Data da Limpeza')
+                    ->date('d/m/Y')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('shift')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('cleaning_time'),
+                    ->label('Turno')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'manha' => 'success',
+                        'tarde' => 'warning',
+                        'noite' => 'info',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'manha' => 'Manhã',
+                        'tarde' => 'Tarde',
+                        'noite' => 'Noite',
+                        default => $state,
+                    })
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('cleaning_time')
+                    ->label('Horário'),
                 Tables\Columns\IconColumn::make('daily_cleaning')
+                    ->label('Limpeza Diária')
                     ->boolean(),
                 Tables\Columns\IconColumn::make('weekly_cleaning')
+                    ->label('Limpeza Semanal')
                     ->boolean(),
                 Tables\Columns\IconColumn::make('monthly_cleaning')
+                    ->label('Limpeza Mensal')
                     ->boolean(),
-                Tables\Columns\IconColumn::make('special_cleaning')
-                    ->boolean(),
-                Tables\Columns\TextColumn::make('cleaning_products_used')
-                    ->searchable(),
-                Tables\Columns\IconColumn::make('external_cleaning_done')
-                    ->boolean(),
-                Tables\Columns\IconColumn::make('internal_cleaning_done')
-                    ->boolean(),
-                Tables\Columns\IconColumn::make('filter_replacement')
-                    ->boolean(),
-                Tables\Columns\IconColumn::make('system_disinfection')
-                    ->boolean(),
-                Tables\Columns\TextColumn::make('responsible_signature')
-                    ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
+                    ->label('Criado em')
+                    ->dateTime('d/m/Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
+                    ->label('Atualizado em')
+                    ->dateTime('d/m/Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])

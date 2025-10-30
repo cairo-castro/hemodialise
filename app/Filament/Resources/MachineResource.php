@@ -49,17 +49,43 @@ class MachineResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')
-                    ->searchable(),
+                    ->label('Nome')
+                    ->searchable()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('identifier')
-                    ->searchable(),
+                    ->label('Identificador')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('unit.name')
+                    ->label('Unidade')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('status')
+                    ->label('Status')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'disponivel' => 'success',
+                        'em_uso' => 'warning',
+                        'manutencao' => 'danger',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'disponivel' => 'Disponível',
+                        'em_uso' => 'Em Uso',
+                        'manutencao' => 'Manutenção',
+                        default => $state,
+                    }),
                 Tables\Columns\IconColumn::make('active')
+                    ->label('Ativo')
                     ->boolean(),
                 Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
+                    ->label('Criado em')
+                    ->dateTime('d/m/Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
+                    ->label('Atualizado em')
+                    ->dateTime('d/m/Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
