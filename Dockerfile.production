@@ -100,27 +100,27 @@ COPY composer.json composer.lock ./
 # This is needed because post-autoload-dump scripts require Laravel bootstrap
 COPY . .
 
+# Create temporary .env file for build process
+# Laravel needs this for artisan commands during composer scripts
+RUN cp .env.example .env \
+    && echo "APP_KEY=base64:$(openssl rand -base64 32)" >> .env \
+    && echo "✅ Temporary .env created for build"
+
 # Install PHP dependencies with optimizations
-# Note: We keep --no-scripts here and run scripts manually to control the flow
+# We can now allow scripts to run since .env exists
 RUN --mount=type=cache,target=/tmp/composer \
     composer install \
         --no-dev \
         --no-interaction \
-        --no-scripts \
         --no-progress \
         --prefer-dist \
         --optimize-autoloader \
         --classmap-authoritative \
-    && echo "✅ Dependencies installed"
+    && echo "✅ Dependencies installed with scripts executed"
 
-# Now run the autoload optimization with scripts
-# This will execute post-autoload-dump hooks (package:discover, filament:upgrade)
-RUN composer dump-autoload \
-        --optimize \
-        --classmap-authoritative \
-        --no-dev \
-    && echo "✅ Autoload optimized successfully!" \
-    && ls -lah vendor/composer/autoload_*.php
+# Remove temporary .env (will be injected by Dokploy at runtime)
+RUN rm -f .env \
+    && echo "✅ Temporary .env removed - will use Dokploy environment variables"
 
 # ==============================================
 # Stage 3: Production Runtime (MariaDB Support)
