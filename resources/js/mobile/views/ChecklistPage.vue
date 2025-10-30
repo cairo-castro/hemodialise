@@ -373,7 +373,7 @@
           </div>
 
           <!-- Interrupted State -->
-          <div v-else class="interrupted-section">
+          <div v-else-if="activeChecklist.is_interrupted" class="interrupted-section">
             <ion-card class="interrupted-card">
               <ion-card-content>
               <div class="interrupted-content">
@@ -586,24 +586,34 @@ const checklistForm = ref({
   machine_id: 0,
   shift: 'matutino' as 'matutino' | 'vespertino' | 'noturno' | 'madrugada',
   observations: '',
-  // Pre-dialysis items
+  // Pre-dialysis items (13 campos)
   machine_disinfected: false,
   capillary_lines_identified: false,
+  reagent_test_performed: false,
+  pressure_sensors_verified: false,
+  air_bubble_detector_verified: false,
   patient_identification_confirmed: false,
   vascular_access_evaluated: false,
+  av_fistula_arm_washed: false,
+  patient_weighed: false,
   vital_signs_checked: false,
   medications_reviewed: false,
   dialyzer_membrane_checked: false,
   equipment_functioning_verified: false,
-  // During session items
+  // During session items (8 campos)
   dialysis_parameters_verified: false,
+  heparin_double_checked: false,
+  antisepsis_performed: false,
+  vascular_access_monitored: false,
+  vital_signs_monitored_during: false,
   patient_comfort_assessed: false,
   fluid_balance_monitored: false,
   alarms_responded: false,
-  // Post-dialysis items
+  // Post-dialysis items (5 campos)
   session_completed_safely: false,
   vascular_access_secured: false,
   patient_vital_signs_stable: false,
+  complications_assessed: false,
   equipment_cleaned: false
 });
 
@@ -739,38 +749,63 @@ const getCurrentPhaseItems = () => {
     'pre_dialysis': [
       {
         key: 'machine_disinfected',
-        label: 'Máquina Desinfetada',
+        label: '1. Máquina Desinfetada',
         description: 'Verificar se a máquina foi devidamente desinfetada'
       },
       {
         key: 'capillary_lines_identified',
-        label: 'Linhas Capilares Identificadas',
-        description: 'Identificar e verificar as linhas capilares'
+        label: '2. Linhas e Capilar Identificados (quando há reuso)',
+        description: 'Identificar e verificar corretamente as linhas capilares'
+      },
+      {
+        key: 'reagent_test_performed',
+        label: '3. Teste de Reagente Realizado (pré/pós) (quando há reuso)',
+        description: 'Realizar teste de reagente antes e após o procedimento'
+      },
+      {
+        key: 'pressure_sensors_verified',
+        label: '4. Sensores de Pressão Verificados',
+        description: 'Verificar sensores: pressão venosa, arterial e transmembrana'
+      },
+      {
+        key: 'air_bubble_detector_verified',
+        label: '5. Detector de Bolhas Funcional e Alinhado',
+        description: 'Verificar detector de bolhas de ar e alinhamento à câmara venosa'
       },
       {
         key: 'patient_identification_confirmed',
-        label: 'Identificação do Paciente',
-        description: 'Confirmar identidade com dois identificadores'
+        label: '6. Identificação do Paciente Conferida',
+        description: 'Confirmar: crachá, pulseira, cadeira e confirmação verbal'
       },
       {
         key: 'vascular_access_evaluated',
-        label: 'Acesso Vascular Avaliado',
-        description: 'Avaliar condições do acesso vascular'
+        label: '10. Acesso Vascular Verificado',
+        description: 'Verificar: curativo, sinais de infecção, integridade, heparina no lúmen'
+      },
+      {
+        key: 'av_fistula_arm_washed',
+        label: '7. Lavagem do Braço da Fístula (quando aplicável)',
+        description: 'Realizar lavagem do braço da fístula arteriovenosa'
+      },
+      {
+        key: 'patient_weighed',
+        label: '8. Pesagem do Paciente Realizada',
+        description: 'Pesar o paciente antes da sessão'
       },
       {
         key: 'vital_signs_checked',
-        label: 'Sinais Vitais Verificados',
-        description: 'Aferir pressão arterial, temperatura e peso'
+        label: '9. Sinais Vitais Conferidos',
+        description: 'Verificar sinais vitais conforme protocolo'
       },
       {
         key: 'medications_reviewed',
-        label: 'Medicações Revisadas',
-        description: 'Revisar medicações e dosagens prescritas'
+        label: '11. Prescrição Médica Conferida',
+        description: 'Conferir parâmetros da máquina e medicações'
       },
       {
         key: 'dialyzer_membrane_checked',
         label: 'Membrana do Dialisador Verificada',
-        description: 'Verificar integridade da membrana'
+        description: 'Verificar integridade da membrana do dialisador'
       },
       {
         key: 'equipment_functioning_verified',
@@ -783,6 +818,26 @@ const getCurrentPhaseItems = () => {
         key: 'dialysis_parameters_verified',
         label: 'Parâmetros de Diálise Verificados',
         description: 'Confirmar e ajustar parâmetros de diálise'
+      },
+      {
+        key: 'heparin_double_checked',
+        label: '1. Dupla Checagem de Heparina',
+        description: 'Realizar dupla checagem da heparina antes de administrar'
+      },
+      {
+        key: 'antisepsis_performed',
+        label: '2. Antissepsia Realizada',
+        description: 'Antissepsia da pele ou cateter antes da punção/conexão'
+      },
+      {
+        key: 'vascular_access_monitored',
+        label: '3. Acesso Vascular Monitorado',
+        description: 'Monitorar fluxo sanguíneo, fixação, conexão, sangramento'
+      },
+      {
+        key: 'vital_signs_monitored_during',
+        label: '4. Sinais Vitais Durante Sessão',
+        description: 'Verificar sinais vitais conforme quadro clínico e protocolo'
       },
       {
         key: 'patient_comfort_assessed',
@@ -803,23 +858,28 @@ const getCurrentPhaseItems = () => {
     'post_dialysis': [
       {
         key: 'session_completed_safely',
-        label: 'Sessão Finalizada com Segurança',
-        description: 'Finalizar sessão seguindo protocolos de segurança'
+        label: '1. Desconexão Segura Realizada',
+        description: 'Desconexão sem perda de sangue e sem risco de embolia'
       },
       {
         key: 'vascular_access_secured',
-        label: 'Acesso Vascular Protegido',
-        description: 'Proteger e cuidar do acesso vascular'
+        label: '2. Hemostasia e Curativo do Acesso',
+        description: 'Realizar hemostasia e curativo conforme protocolo'
       },
       {
         key: 'patient_vital_signs_stable',
-        label: 'Sinais Vitais Estáveis',
-        description: 'Confirmar estabilidade dos sinais vitais'
+        label: '3. Sinais Vitais Conferidos',
+        description: 'Verificar sinais vitais conforme protocolo ou prescrição'
+      },
+      {
+        key: 'complications_assessed',
+        label: '4. Paciente Avaliado para Complicações',
+        description: 'Avaliar: sangramento, instabilidade hemodinâmica, risco de queda'
       },
       {
         key: 'equipment_cleaned',
-        label: 'Equipamentos Limpos',
-        description: 'Limpar e preparar equipamentos para próximo uso'
+        label: '5. Materiais Descartados e Máquina Programada',
+        description: 'Descartar materiais corretamente e programar desinfecção'
       }
     ]
   };
