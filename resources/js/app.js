@@ -1,10 +1,8 @@
 import './bootstrap';
 import { createApp } from 'vue';
 
-// Import Preline components
-import 'preline/preline';
-
-// Main desktop app
+// Main desktop app (LEGACY - keeping for backward compatibility)
+// New desktop uses resources/js/desktop.js
 import DesktopApp from './desktop/presentation/components/DesktopApp.vue';
 
 // Import dependencies for desktop app
