@@ -14,6 +14,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 use pxlrbt\FilamentExcel\Exports\ExcelExport;
+use App\Exports\SafetyChecklistExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class SafetyChecklistResource extends Resource
 {
@@ -148,48 +150,14 @@ class SafetyChecklistResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
-                    ExportBulkAction::make()
-                        ->label('Exportar para Excel')
-                        ->exports([
-                            ExcelExport::make()
-                                ->fromTable()
-                                ->withFilename(fn () => 'checklists-seguranca-' . now()->format('Y-m-d-His'))
-                                ->withWriterType(\Maatwebsite\Excel\Excel::XLSX)
-                                ->withColumns([
-                                    \pxlrbt\FilamentExcel\Columns\Column::make('patient.full_name')
-                                        ->heading('Paciente'),
-                                    \pxlrbt\FilamentExcel\Columns\Column::make('machine.name')
-                                        ->heading('Máquina'),
-                                    \pxlrbt\FilamentExcel\Columns\Column::make('user.name')
-                                        ->heading('Responsável'),
-                                    \pxlrbt\FilamentExcel\Columns\Column::make('session_date')
-                                        ->heading('Data da Sessão')
-                                        ->formatStateUsing(fn ($state) => $state ? $state->format('d/m/Y') : ''),
-                                    \pxlrbt\FilamentExcel\Columns\Column::make('shift')
-                                        ->heading('Turno')
-                                        ->formatStateUsing(fn ($state) => match($state) {
-                                            'manha' => 'Manhã',
-                                            'tarde' => 'Tarde',
-                                            'noite' => 'Noite',
-                                            default => $state
-                                        }),
-                                    \pxlrbt\FilamentExcel\Columns\Column::make('current_phase')
-                                        ->heading('Fase Atual')
-                                        ->formatStateUsing(fn ($state) => match($state) {
-                                            'pre_dialysis' => 'Pré-Diálise',
-                                            'during_session' => 'Durante Sessão',
-                                            'post_dialysis' => 'Pós-Diálise',
-                                            'completed' => 'Completo',
-                                            default => $state
-                                        }),
-                                    \pxlrbt\FilamentExcel\Columns\Column::make('is_interrupted')
-                                        ->heading('Interrompido')
-                                        ->formatStateUsing(fn ($state) => $state ? 'Sim' : 'Não'),
-                                    \pxlrbt\FilamentExcel\Columns\Column::make('created_at')
-                                        ->heading('Criado em')
-                                        ->formatStateUsing(fn ($state) => $state ? $state->format('d/m/Y H:i') : ''),
-                                ])
-                        ]),
+                    Tables\Actions\BulkAction::make('export')
+                        ->label('Exportar para Excel (Formato Padrão)')
+                        ->icon('heroicon-o-document-arrow-down')
+                        ->action(function ($records) {
+                            $filename = 'checklist-seguranca-' . now()->format('Y-m-d-His') . '.xlsx';
+                            return Excel::download(new SafetyChecklistExport($records), $filename);
+                        })
+                        ->deselectRecordsAfterCompletion(),
                 ]),
             ]);
     }
