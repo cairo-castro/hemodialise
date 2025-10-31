@@ -32,24 +32,94 @@
       </div>
 
       <!-- Stats Cards -->
-      <div class="stats-grid">
-        <div class="stat-card primary" :class="{ 'updating': isStatsRefreshing }">
+      <div class="stats-grid-extended">
+        <!-- Total -->
+        <div
+          class="stat-card primary clickable"
+          :class="{ 'updating': isStatsRefreshing, 'active': activeStatusFilter === null }"
+          @click="filterByStatus(null)"
+        >
           <div class="stat-icon">
             <ion-icon :icon="peopleOutline"></ion-icon>
           </div>
           <div class="stat-info">
-            <span class="stat-value">{{ patients.length }}</span>
+            <span class="stat-value">{{ totalPatients }}</span>
             <span class="stat-label">Total</span>
           </div>
         </div>
 
-        <div class="stat-card success" :class="{ 'updating': isStatsRefreshing }">
+        <!-- Ativos -->
+        <div
+          class="stat-card success clickable"
+          :class="{ 'updating': isStatsRefreshing, 'active': activeStatusFilter === 'ativo' }"
+          @click="filterByStatus('ativo')"
+        >
           <div class="stat-icon">
             <ion-icon :icon="checkmarkCircleOutline"></ion-icon>
           </div>
           <div class="stat-info">
-            <span class="stat-value">{{ patients.length }}</span>
+            <span class="stat-value">{{ statusCounts.ativo }}</span>
             <span class="stat-label">Ativos</span>
+          </div>
+        </div>
+
+        <!-- Inativos -->
+        <div
+          class="stat-card warning clickable"
+          :class="{ 'updating': isStatsRefreshing, 'active': activeStatusFilter === 'inativo' }"
+          @click="filterByStatus('inativo')"
+        >
+          <div class="stat-icon">
+            <ion-icon :icon="pauseCircleOutline"></ion-icon>
+          </div>
+          <div class="stat-info">
+            <span class="stat-value">{{ statusCounts.inativo }}</span>
+            <span class="stat-label">Inativos</span>
+          </div>
+        </div>
+
+        <!-- Transferidos -->
+        <div
+          class="stat-card info clickable"
+          :class="{ 'updating': isStatsRefreshing, 'active': activeStatusFilter === 'transferido' }"
+          @click="filterByStatus('transferido')"
+        >
+          <div class="stat-icon">
+            <ion-icon :icon="swapHorizontalOutline"></ion-icon>
+          </div>
+          <div class="stat-info">
+            <span class="stat-value">{{ statusCounts.transferido }}</span>
+            <span class="stat-label">Transferidos</span>
+          </div>
+        </div>
+
+        <!-- Alta -->
+        <div
+          class="stat-card medium clickable"
+          :class="{ 'updating': isStatsRefreshing, 'active': activeStatusFilter === 'alta' }"
+          @click="filterByStatus('alta')"
+        >
+          <div class="stat-icon">
+            <ion-icon :icon="arrowUpCircleOutline"></ion-icon>
+          </div>
+          <div class="stat-info">
+            <span class="stat-value">{{ statusCounts.alta }}</span>
+            <span class="stat-label">Alta</span>
+          </div>
+        </div>
+
+        <!-- Óbito -->
+        <div
+          class="stat-card danger clickable"
+          :class="{ 'updating': isStatsRefreshing, 'active': activeStatusFilter === 'obito' }"
+          @click="filterByStatus('obito')"
+        >
+          <div class="stat-icon">
+            <ion-icon :icon="closeCircleOutline"></ion-icon>
+          </div>
+          <div class="stat-info">
+            <span class="stat-value">{{ statusCounts.obito }}</span>
+            <span class="stat-label">Óbito</span>
           </div>
         </div>
       </div>
@@ -75,7 +145,9 @@
             <div class="patient-content">
               <div class="patient-header-dash">
                 <h3>{{ patient.full_name }}</h3>
-                <ion-badge color="success" class="status-badge">Ativo</ion-badge>
+                <ion-badge :color="getStatusColor(patient.status)" class="status-badge">
+                  {{ patient.status_label || 'Ativo' }}
+                </ion-badge>
               </div>
 
               <div class="patient-meta">
@@ -279,8 +351,8 @@
                   </div>
                   <div class="details-title">
                     <h2>{{ selectedPatientDetails.full_name }}</h2>
-                    <ion-badge :color="selectedPatientDetails.active ? 'success' : 'danger'">
-                      {{ selectedPatientDetails.active ? 'Ativo' : 'Inativo' }}
+                    <ion-badge :color="getStatusColor(selectedPatientDetails.status)">
+                      {{ selectedPatientDetails.status_label || 'Ativo' }}
                     </ion-badge>
                   </div>
                 </div>
@@ -331,21 +403,192 @@
               </ion-card-content>
             </ion-card>
 
-            <!-- Actions -->
-            <div class="details-actions">
-              <ion-button
-                expand="block"
-                :color="selectedPatientDetails.active ? 'warning' : 'success'"
-                @click="togglePatientStatus"
-                :disabled="isTogglingStatus"
-              >
-                <ion-icon
-                  :icon="selectedPatientDetails.active ? closeOutline : checkmarkCircleOutline"
-                  slot="start"
-                ></ion-icon>
-                {{ selectedPatientDetails.active ? 'Desativar Paciente' : 'Ativar Paciente' }}
-              </ion-button>
-            </div>
+            <!-- Status Management -->
+            <ion-card class="status-management-card">
+              <ion-card-content>
+                <h4 class="status-title">
+                  <ion-icon :icon="alertCircleOutline"></ion-icon>
+                  Gerenciar Status do Paciente
+                </h4>
+                <p class="status-description">
+                  Selecione o novo status do paciente. O status determina se ele pode ter novas sessões.
+                </p>
+
+                <!-- Terminal Warning (shown if current status is terminal) -->
+                <div v-if="isTerminalStatus(selectedPatientDetails.status)" class="terminal-alert">
+                  <ion-icon :icon="warningOutline"></ion-icon>
+                  <div>
+                    <strong>Status Terminal</strong>
+                    <p>Este paciente possui status terminal ({{ selectedPatientDetails.status_label }}) e não pode ser alterado.</p>
+                  </div>
+                </div>
+
+                <!-- Status Options Grid -->
+                <div v-else class="status-options-grid">
+                  <!-- Ativo -->
+                  <div
+                    class="status-option"
+                    :class="{
+                      'selected': selectedStatus === 'ativo',
+                      'current': selectedPatientDetails.status === 'ativo'
+                    }"
+                    @click="selectStatusOption('ativo')"
+                  >
+                    <div class="status-option-icon success">
+                      <ion-icon :icon="checkmarkCircleOutline"></ion-icon>
+                    </div>
+                    <div class="status-option-content">
+                      <h5>Ativo</h5>
+                      <p>Pode realizar sessões</p>
+                    </div>
+                    <ion-badge
+                      v-if="selectedPatientDetails.status === 'ativo'"
+                      color="success"
+                      class="current-badge"
+                    >
+                      Atual
+                    </ion-badge>
+                    <div v-if="selectedStatus === 'ativo'" class="selection-indicator">
+                      <ion-icon :icon="checkmarkCircleOutline"></ion-icon>
+                    </div>
+                  </div>
+
+                  <!-- Inativo -->
+                  <div
+                    class="status-option"
+                    :class="{
+                      'selected': selectedStatus === 'inativo',
+                      'current': selectedPatientDetails.status === 'inativo'
+                    }"
+                    @click="selectStatusOption('inativo')"
+                  >
+                    <div class="status-option-icon warning">
+                      <ion-icon :icon="pauseCircleOutline"></ion-icon>
+                    </div>
+                    <div class="status-option-content">
+                      <h5>Inativo</h5>
+                      <p>Temporariamente suspenso</p>
+                    </div>
+                    <ion-badge
+                      v-if="selectedPatientDetails.status === 'inativo'"
+                      color="warning"
+                      class="current-badge"
+                    >
+                      Atual
+                    </ion-badge>
+                    <div v-if="selectedStatus === 'inativo'" class="selection-indicator">
+                      <ion-icon :icon="checkmarkCircleOutline"></ion-icon>
+                    </div>
+                  </div>
+
+                  <!-- Transferido -->
+                  <div
+                    class="status-option"
+                    :class="{
+                      'selected': selectedStatus === 'transferido',
+                      'current': selectedPatientDetails.status === 'transferido'
+                    }"
+                    @click="selectStatusOption('transferido')"
+                  >
+                    <div class="status-option-icon primary">
+                      <ion-icon :icon="swapHorizontalOutline"></ion-icon>
+                    </div>
+                    <div class="status-option-content">
+                      <h5>Transferido</h5>
+                      <p>Transferido para outra unidade</p>
+                    </div>
+                    <ion-badge
+                      v-if="selectedPatientDetails.status === 'transferido'"
+                      color="primary"
+                      class="current-badge"
+                    >
+                      Atual
+                    </ion-badge>
+                    <div v-if="selectedStatus === 'transferido'" class="selection-indicator">
+                      <ion-icon :icon="checkmarkCircleOutline"></ion-icon>
+                    </div>
+                  </div>
+
+                  <!-- Alta -->
+                  <div
+                    class="status-option"
+                    :class="{
+                      'selected': selectedStatus === 'alta',
+                      'current': selectedPatientDetails.status === 'alta'
+                    }"
+                    @click="selectStatusOption('alta')"
+                  >
+                    <div class="status-option-icon medium">
+                      <ion-icon :icon="arrowUpCircleOutline"></ion-icon>
+                    </div>
+                    <div class="status-option-content">
+                      <h5>Alta Médica</h5>
+                      <p>Alta permanente (irreversível)</p>
+                    </div>
+                    <ion-badge
+                      v-if="selectedPatientDetails.status === 'alta'"
+                      color="medium"
+                      class="current-badge"
+                    >
+                      Atual
+                    </ion-badge>
+                    <div v-if="selectedStatus === 'alta'" class="selection-indicator">
+                      <ion-icon :icon="checkmarkCircleOutline"></ion-icon>
+                    </div>
+                  </div>
+
+                  <!-- Óbito -->
+                  <div
+                    class="status-option"
+                    :class="{
+                      'selected': selectedStatus === 'obito',
+                      'current': selectedPatientDetails.status === 'obito'
+                    }"
+                    @click="selectStatusOption('obito')"
+                  >
+                    <div class="status-option-icon danger">
+                      <ion-icon :icon="closeCircleOutline"></ion-icon>
+                    </div>
+                    <div class="status-option-content">
+                      <h5>Óbito</h5>
+                      <p>Falecimento (irreversível)</p>
+                    </div>
+                    <ion-badge
+                      v-if="selectedPatientDetails.status === 'obito'"
+                      color="danger"
+                      class="current-badge"
+                    >
+                      Atual
+                    </ion-badge>
+                    <div v-if="selectedStatus === 'obito'" class="selection-indicator">
+                      <ion-icon :icon="checkmarkCircleOutline"></ion-icon>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Terminal Status Warning (shown when selecting alta or obito) -->
+                <div v-if="!isTerminalStatus(selectedPatientDetails.status) && (selectedStatus === 'alta' || selectedStatus === 'obito')" class="terminal-warning">
+                  <ion-icon :icon="warningOutline"></ion-icon>
+                  <p><strong>Atenção:</strong> Status terminal não pode ser revertido após confirmação.</p>
+                </div>
+
+                <!-- Action Button -->
+                <div class="status-actions">
+                  <ion-button
+                    expand="block"
+                    color="primary"
+                    @click="updatePatientStatus"
+                    :disabled="isTogglingStatus || !selectedStatus || selectedStatus === selectedPatientDetails.status || isTerminalStatus(selectedPatientDetails.status)"
+                  >
+                    <ion-icon :icon="checkmarkCircleOutline" slot="start"></ion-icon>
+                    {{ isTogglingStatus ? 'Atualizando...' : 'Confirmar Alteração de Status' }}
+                  </ion-button>
+                  <p class="help-text" v-if="selectedStatus && selectedStatus !== selectedPatientDetails.status">
+                    Mudando de "{{ getStatusLabel(selectedPatientDetails.status) }}" para "{{ getStatusLabel(selectedStatus) }}"
+                  </p>
+                </div>
+              </ion-card-content>
+            </ion-card>
           </div>
         </ion-content>
       </ion-modal>
@@ -395,7 +638,11 @@ import {
   checkmarkCircleOutline,
   informationCircleOutline,
   warningOutline,
-  arrowForwardOutline
+  arrowForwardOutline,
+  pauseCircleOutline,
+  swapHorizontalOutline,
+  arrowUpCircleOutline,
+  closeCircleOutline
 } from 'ionicons/icons';
 
 import { Container } from '@mobile/core/di/Container';
@@ -415,8 +662,10 @@ const searchQuery = ref('');
 const showCreateModal = ref(false);
 const showDetailsModal = ref(false);
 const selectedPatientDetails = ref<any>(null);
+const selectedStatus = ref<string>('');
 const isSearching = ref(false);
 const isTogglingStatus = ref(false);
+const activeStatusFilter = ref<string | null>(null);
 let searchTimeout: NodeJS.Timeout | null = null;
 
 const newPatient = ref<CreatePatientData>({
@@ -429,13 +678,39 @@ const newPatient = ref<CreatePatientData>({
 
 // Computed properties
 const filteredPatients = computed(() => {
-  // Como a busca agora é feita no backend, apenas retorna os pacientes
+  // Se há um filtro de status ativo, filtra os pacientes
+  if (activeStatusFilter.value !== null) {
+    return patients.value.filter(patient => patient.status === activeStatusFilter.value);
+  }
+  // Caso contrário, retorna todos os pacientes
   return patients.value;
 });
 
 const canCreatePatient = computed(() => {
   return newPatient.value.full_name.length > 0 &&
          newPatient.value.birth_date.length > 0;
+});
+
+// Status statistics
+const totalPatients = computed(() => patients.value.length);
+
+const statusCounts = computed(() => {
+  const counts = {
+    ativo: 0,
+    inativo: 0,
+    transferido: 0,
+    alta: 0,
+    obito: 0
+  };
+
+  patients.value.forEach(patient => {
+    const status = patient.status || 'ativo';
+    if (counts.hasOwnProperty(status)) {
+      counts[status]++;
+    }
+  });
+
+  return counts;
 });
 
 // Methods
@@ -447,8 +722,27 @@ const loadPatients = async (search: string = '') => {
   await loading.present();
 
   try {
-    // Carrega os 100 últimos pacientes ou busca com o termo
-    patients.value = await patientRepository.getAll(search, 100);
+    // Carrega TODOS os pacientes (incluindo inativos) para mostrar estatísticas completas
+    // Usa parâmetro include_inactive=true na API
+    const response = await fetch(`/api/patients?per_page=100&include_inactive=true${search ? `&search=${encodeURIComponent(search)}` : ''}`, {
+      credentials: 'include',
+      headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Erro ao carregar pacientes');
+    }
+
+    const data = await response.json();
+
+    if (data.success) {
+      patients.value = data.patients || [];
+    } else {
+      throw new Error(data.message || 'Erro ao carregar pacientes');
+    }
   } catch (error) {
     console.error('Error loading patients:', error);
     const toast = await toastController.create({
@@ -501,6 +795,10 @@ const handleSearch = (event: any) => {
   }, 500);
 };
 
+const filterByStatus = (status: string | null) => {
+  activeStatusFilter.value = status;
+};
+
 const selectPatient = async (patient: Patient) => {
   try {
     const loading = await loadingController.create({
@@ -522,6 +820,7 @@ const selectPatient = async (patient: Patient) => {
 
     if (data.success) {
       selectedPatientDetails.value = data.patient;
+      selectedStatus.value = data.patient.status || 'ativo';
       showDetailsModal.value = true;
     } else {
       throw new Error(data.message || 'Erro ao carregar detalhes');
@@ -560,12 +859,20 @@ const togglePatientStatus = async () => {
 
     if (data.success) {
       // Atualiza o status no modal
-      selectedPatientDetails.value.active = data.patient.active;
+      selectedPatientDetails.value.status = data.patient.status;
+      selectedPatientDetails.value.status_label = data.patient.status_label;
+      selectedPatientDetails.value.status_color = data.patient.status_color;
+      selectedStatus.value = data.patient.status;
 
       // Atualiza na lista também
       const patientIndex = patients.value.findIndex(p => p.id === selectedPatientDetails.value.id);
       if (patientIndex !== -1) {
-        patients.value[patientIndex] = { ...patients.value[patientIndex], active: data.patient.active };
+        patients.value[patientIndex] = {
+          ...patients.value[patientIndex],
+          status: data.patient.status,
+          status_label: data.patient.status_label,
+          status_color: data.patient.status_color
+        };
       }
 
       const toast = await toastController.create({
@@ -590,6 +897,104 @@ const togglePatientStatus = async () => {
   } finally {
     isTogglingStatus.value = false;
   }
+};
+
+const updatePatientStatus = async () => {
+  if (!selectedPatientDetails.value || !selectedStatus.value) return;
+
+  try {
+    isTogglingStatus.value = true;
+
+    const response = await fetch(`/api/patients/${selectedPatientDetails.value.id}/status`, {
+      method: 'PATCH',
+      credentials: 'include',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: JSON.stringify({ status: selectedStatus.value })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      // Atualiza o status no modal
+      selectedPatientDetails.value.status = data.patient.status;
+      selectedPatientDetails.value.status_label = data.patient.status_label;
+      selectedPatientDetails.value.status_color = data.patient.status_color;
+      selectedPatientDetails.value.can_have_sessions = data.patient.can_have_sessions;
+
+      // Atualiza na lista também
+      const patientIndex = patients.value.findIndex(p => p.id === selectedPatientDetails.value.id);
+      if (patientIndex !== -1) {
+        patients.value[patientIndex] = {
+          ...patients.value[patientIndex],
+          status: data.patient.status,
+          status_label: data.patient.status_label,
+          status_color: data.patient.status_color,
+          can_have_sessions: data.patient.can_have_sessions
+        };
+      }
+
+      const toast = await toastController.create({
+        message: data.message,
+        duration: 2000,
+        color: 'success',
+        position: 'top'
+      });
+      await toast.present();
+    } else {
+      throw new Error(data.message || 'Erro ao atualizar status');
+    }
+  } catch (error: any) {
+    console.error('Error updating patient status:', error);
+    const toast = await toastController.create({
+      message: error.message || 'Erro ao atualizar status do paciente',
+      duration: 3000,
+      color: 'danger',
+      position: 'top'
+    });
+    await toast.present();
+  } finally {
+    isTogglingStatus.value = false;
+  }
+};
+
+// Helper function to get status color
+const getStatusColor = (status: string): string => {
+  const colorMap: Record<string, string> = {
+    'ativo': 'success',
+    'inativo': 'warning',
+    'transferido': 'primary',
+    'alta': 'medium',
+    'obito': 'danger'
+  };
+  return colorMap[status] || 'success';
+};
+
+// Helper function to check if status is terminal
+const isTerminalStatus = (status: string): boolean => {
+  return status === 'alta' || status === 'obito';
+};
+
+// Helper function to select status option
+const selectStatusOption = (status: string) => {
+  if (!isTogglingStatus.value && !isTerminalStatus(selectedPatientDetails.value?.status)) {
+    selectedStatus.value = status;
+  }
+};
+
+// Helper function to get status label
+const getStatusLabel = (status: string): string => {
+  const labelMap: Record<string, string> = {
+    'ativo': 'Ativo',
+    'inativo': 'Inativo',
+    'transferido': 'Transferido',
+    'alta': 'Alta Médica',
+    'obito': 'Óbito'
+  };
+  return labelMap[status] || status;
 };
 
 const createPatient = async () => {
@@ -741,6 +1146,25 @@ onMounted(() => {
   padding: 0 16px 20px 16px;
 }
 
+.stats-grid-extended {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  padding: 0 16px 20px 16px;
+}
+
+@media (min-width: 640px) {
+  .stats-grid-extended {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .stats-grid-extended {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
 .stat-card {
   display: flex;
   align-items: center;
@@ -771,6 +1195,22 @@ onMounted(() => {
   color: var(--ion-color-success);
 }
 
+.stat-card.warning {
+  color: #f59e0b;
+}
+
+.stat-card.info {
+  color: var(--ion-color-primary);
+}
+
+.stat-card.medium {
+  color: #6b7280;
+}
+
+.stat-card.danger {
+  color: #ef4444;
+}
+
 .stat-icon {
   width: 48px;
   height: 48px;
@@ -789,6 +1229,22 @@ onMounted(() => {
   background: rgba(16, 185, 129, 0.2);
 }
 
+.stat-card.warning .stat-icon {
+  background: rgba(245, 158, 11, 0.2);
+}
+
+.stat-card.info .stat-icon {
+  background: rgba(59, 130, 246, 0.2);
+}
+
+.stat-card.medium .stat-icon {
+  background: rgba(107, 114, 128, 0.2);
+}
+
+.stat-card.danger .stat-icon {
+  background: rgba(239, 68, 68, 0.2);
+}
+
 .stat-icon ion-icon {
   font-size: 2rem;
   position: relative;
@@ -802,6 +1258,22 @@ onMounted(() => {
 
 .stat-card.success .stat-icon ion-icon {
   color: #059669;
+}
+
+.stat-card.warning .stat-icon ion-icon {
+  color: #d97706;
+}
+
+.stat-card.info .stat-icon ion-icon {
+  color: var(--ion-color-primary);
+}
+
+.stat-card.medium .stat-icon ion-icon {
+  color: #4b5563;
+}
+
+.stat-card.danger .stat-icon ion-icon {
+  color: #dc2626;
 }
 
 .stat-info {
@@ -836,6 +1308,34 @@ onMounted(() => {
     opacity: 0.8;
     transform: scale(0.98);
   }
+}
+
+/* Clickable and Active States */
+.stat-card.clickable {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.stat-card.clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.stat-card.clickable:active {
+  transform: translateY(0);
+}
+
+.stat-card.active {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  border: 2px solid currentColor;
+}
+
+.stat-card.active::before {
+  height: 6px;
+}
+
+.stat-card.active .stat-value {
+  font-size: 2rem;
 }
 
 /* ===== PATIENTS CONTAINER ===== */
@@ -1456,5 +1956,260 @@ onMounted(() => {
   .details-title h2 {
     font-size: 20px;
   }
+}
+
+/* Status Management Card */
+.status-management-card {
+  margin-top: 16px;
+  border-radius: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.status-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ion-text-color);
+  margin-bottom: 8px;
+}
+
+.status-title ion-icon {
+  font-size: 24px;
+  color: var(--ion-color-primary);
+}
+
+.status-description {
+  font-size: 14px;
+  color: var(--ion-color-step-600);
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+/* Terminal Alert (when status is already terminal) */
+.terminal-alert {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 16px;
+  background: linear-gradient(135deg, #fff3cd 0%, #ffe4a8 100%);
+  border: 2px solid #ffc107;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.terminal-alert ion-icon {
+  font-size: 32px;
+  color: #856404;
+  flex-shrink: 0;
+}
+
+.terminal-alert strong {
+  display: block;
+  font-size: 16px;
+  color: #856404;
+  margin-bottom: 4px;
+}
+
+.terminal-alert p {
+  margin: 0;
+  font-size: 14px;
+  color: #856404;
+  line-height: 1.5;
+}
+
+/* Status Options Grid */
+.status-options-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+@media (max-width: 480px) {
+  .status-options-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Status Option Card */
+.status-option {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 16px;
+  background: var(--ion-background-color);
+  border: 2px solid var(--ion-color-step-150);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: center;
+}
+
+.status-option:active {
+  transform: scale(0.96);
+}
+
+.status-option.selected {
+  border-color: var(--ion-color-primary);
+  background: rgba(59, 130, 246, 0.05);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+.status-option.current {
+  background: var(--ion-card-background);
+  border-style: dashed;
+}
+
+/* Status Option Icon */
+.status-option-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.status-option-icon ion-icon {
+  font-size: 32px;
+  color: white;
+}
+
+.status-option-icon.success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.status-option-icon.warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.status-option-icon.primary {
+  background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-primary-shade) 100%);
+}
+
+.status-option-icon.medium {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+}
+
+.status-option-icon.danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+/* Status Option Content */
+.status-option-content {
+  flex: 1;
+}
+
+.status-option-content h5 {
+  margin: 0 0 4px 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ion-text-color);
+}
+
+.status-option-content p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--ion-color-step-600);
+  line-height: 1.4;
+}
+
+/* Current Badge */
+.current-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  font-size: 11px;
+  padding: 4px 8px;
+  font-weight: 700;
+}
+
+/* Selection Indicator */
+.selection-indicator {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--ion-color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+  animation: scaleIn 0.2s ease;
+}
+
+.selection-indicator ion-icon {
+  font-size: 18px;
+  color: white;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Terminal Warning (when selecting alta or obito) */
+.terminal-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  background: #fff3cd;
+  border: 2px solid #ffc107;
+  border-radius: 10px;
+  margin-bottom: 16px;
+}
+
+.terminal-warning ion-icon {
+  font-size: 24px;
+  color: #856404;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.terminal-warning p {
+  margin: 0;
+  font-size: 14px;
+  color: #856404;
+  line-height: 1.5;
+}
+
+.terminal-warning strong {
+  font-weight: 700;
+}
+
+/* Status Actions */
+.status-actions {
+  margin-top: 20px;
+}
+
+.status-actions ion-button {
+  --border-radius: 12px;
+  --padding-top: 16px;
+  --padding-bottom: 16px;
+  font-weight: 700;
+  font-size: 15px;
+  text-transform: none;
+}
+
+.help-text {
+  margin: 12px 0 0 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--ion-color-step-600);
+  line-height: 1.4;
 }
 </style>

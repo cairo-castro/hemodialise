@@ -26,7 +26,11 @@ class PatientController extends Controller
         $includeInactive = $request->input('include_inactive', false);
 
         // Por padrão, apenas pacientes que podem ter sessões
-        $query = $includeInactive ? Patient::query() : Patient::canHaveSessions();
+        if ($includeInactive) {
+            $query = Patient::query();
+        } else {
+            $query = Patient::where('status', PatientStatus::ATIVO->value);
+        }
 
         // Aplicar filtro de unidade do middleware
         $scopedUnitId = $request->get('scoped_unit_id');
@@ -92,7 +96,7 @@ class PatientController extends Controller
         $limit = $request->input('limit', 20); // Apenas 20 resultados na busca rápida
 
         // Por padrão, apenas pacientes que podem ter sessões
-        $query = Patient::canHaveSessions();
+        $query = Patient::where('status', PatientStatus::ATIVO->value);
 
         // Aplicar filtro de unidade do middleware
         $scopedUnitId = $request->get('scoped_unit_id');
@@ -202,7 +206,7 @@ class PatientController extends Controller
         // Busca apenas pacientes que podem ter sessões (status: ativo)
         $query = Patient::where('full_name', $request->full_name)
             ->where('birth_date', $request->birth_date)
-            ->canHaveSessions()
+            ->where('status', PatientStatus::ATIVO->value)
             ->where('unit_id', $scopedUnitId);
 
         $patient = $query->first();
