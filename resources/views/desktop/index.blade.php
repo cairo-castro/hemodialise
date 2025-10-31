@@ -31,6 +31,18 @@
                 document.documentElement.classList.add('dark');
             }
         })();
+
+        // Unregister service worker in development
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                    for (let registration of registrations) {
+                        registration.unregister();
+                        console.log('Service Worker unregistered for development');
+                    }
+                });
+            }
+        }
     </script>
 
     <!-- Loading screen styles -->
