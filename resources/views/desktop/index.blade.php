@@ -20,7 +20,7 @@
     <link rel="manifest" href="{{ asset('manifest.json') }}">
 
     <!-- Desktop assets -->
-    @vite(['resources/js/desktop.js'])
+    @vite(['resources/js/desktop.js'], 'desktop-assets')
 
     <!-- Loading screen styles -->
     <style>
