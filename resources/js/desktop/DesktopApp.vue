@@ -1,5 +1,5 @@
 <template>
-  <div class="desktop-app h-screen bg-gray-50 antialiased">
+  <div class="desktop-app h-screen bg-gray-50 dark:bg-gray-900 antialiased">
     <!-- Authentication Check -->
     <div v-if="!isAuthenticated" class="auth-container">
       <LoginView @login-success="handleLoginSuccess" />

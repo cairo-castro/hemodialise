@@ -22,6 +22,17 @@
     <!-- Desktop assets -->
     @vite(['resources/js/desktop.js'], 'desktop-assets')
 
+    <!-- Theme initialization script (prevent flash) -->
+    <script>
+        // Initialize theme before page renders to prevent flash
+        (function() {
+            const theme = localStorage.getItem('theme') || 'light';
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
+
     <!-- Loading screen styles -->
     <style>
         .loading-screen {
