@@ -12,7 +12,7 @@
     "name": "vendor"
   },
   "resources/js/desktop.js": {
-    "file": "assets/desktop-BENzwHKj.js",
+    "file": "assets/desktop-BWbBZCdP.js",
     "name": "desktop",
     "src": "resources/js/desktop.js",
     "isEntry": true,
@@ -27,7 +27,7 @@
       "resources/js/desktop/views/ProfileView.vue"
     ],
     "css": [
-      "assets/desktop-C1n3FEYq.css"
+      "assets/desktop-aY7v2r1M.css"
     ]
   },
   "resources/js/desktop/views/ChecklistsView.vue": {
@@ -40,7 +40,7 @@
     ]
   },
   "resources/js/desktop/views/DashboardView.vue": {
-    "file": "assets/DashboardView-DaPsW8rc.js",
+    "file": "assets/DashboardView-bUcvSKhD.js",
     "name": "DashboardView",
     "src": "resources/js/desktop/views/DashboardView.vue",
     "isDynamicEntry": true,
@@ -53,7 +53,7 @@
     ]
   },
   "resources/js/desktop/views/MachinesView.vue": {
-    "file": "assets/MachinesView-C0-kctPG.js",
+    "file": "assets/MachinesView-CX0YMPtN.js",
     "name": "MachinesView",
     "src": "resources/js/desktop/views/MachinesView.vue",
     "isDynamicEntry": true,
@@ -63,7 +63,7 @@
     ]
   },
   "resources/js/desktop/views/PatientsView.vue": {
-    "file": "assets/PatientsView-B99uYHRN.js",
+    "file": "assets/PatientsView-CLLu69EG.js",
     "name": "PatientsView",
     "src": "resources/js/desktop/views/PatientsView.vue",
     "isDynamicEntry": true,
@@ -73,7 +73,7 @@
     ]
   },
   "resources/js/desktop/views/ProfileView.vue": {
-    "file": "assets/ProfileView-CriAP0KT.js",
+    "file": "assets/ProfileView-w1GEW8bt.js",
     "name": "ProfileView",
     "src": "resources/js/desktop/views/ProfileView.vue",
     "isDynamicEntry": true,
