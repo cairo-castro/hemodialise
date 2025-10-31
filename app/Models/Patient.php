@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Carbon\Carbon;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
+use App\Enums\PatientStatus;
 
 class Patient extends Model
 {
@@ -19,19 +20,21 @@ class Patient extends Model
         'rh_factor',
         'allergies',
         'observations',
-        'active',
+        'active',      // Mantido para compatibilidade
+        'status',      // Novo campo
         'unit_id',
     ];
 
     protected $casts = [
         'birth_date' => 'date',
         'active' => 'boolean',
+        'status' => PatientStatus::class,
     ];
 
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['full_name', 'birth_date', 'blood_group', 'rh_factor', 'allergies', 'active', 'unit_id'])
+            ->logOnly(['full_name', 'birth_date', 'blood_group', 'rh_factor', 'allergies', 'status', 'unit_id'])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs();
     }
@@ -70,13 +73,75 @@ class Patient extends Model
         return null;
     }
 
+    /**
+     * Scope: Pacientes ativos (apenas com status 'ativo')
+     */
     public function scopeActive($query)
     {
-        return $query->where('active', true);
+        return $query->where('status', PatientStatus::ATIVO->value);
     }
 
+    /**
+     * Scope: Pacientes que podem ter sessões (status: ativo)
+     */
+    public function scopeCanHaveSessions($query)
+    {
+        return $query->where('status', PatientStatus::ATIVO->value);
+    }
+
+    /**
+     * Scope: Pacientes por unidade
+     */
     public function scopeForUnit($query, $unitId)
     {
         return $query->where('unit_id', $unitId);
+    }
+
+    /**
+     * Scope: Pacientes por status
+     */
+    public function scopeByStatus($query, PatientStatus $status)
+    {
+        return $query->where('status', $status->value);
+    }
+
+    /**
+     * Scope: Excluir pacientes com status terminal (alta, óbito)
+     */
+    public function scopeExcludeTerminal($query)
+    {
+        return $query->whereNotIn('status', [PatientStatus::ALTA->value, PatientStatus::OBITO->value]);
+    }
+
+    /**
+     * Check if patient can have new sessions
+     */
+    public function canHaveSessions(): bool
+    {
+        return $this->status === PatientStatus::ATIVO;
+    }
+
+    /**
+     * Check if patient status is terminal
+     */
+    public function isTerminal(): bool
+    {
+        return in_array($this->status, [PatientStatus::ALTA, PatientStatus::OBITO]);
+    }
+
+    /**
+     * Get status label for display
+     */
+    public function getStatusLabelAttribute(): string
+    {
+        return $this->status?->label() ?? 'Desconhecido';
+    }
+
+    /**
+     * Get status color for UI
+     */
+    public function getStatusColorAttribute(): string
+    {
+        return $this->status?->color() ?? 'secondary';
     }
 }

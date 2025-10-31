@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\PatientResource\Pages;
 use App\Filament\Resources\PatientResource\RelationManagers;
 use App\Models\Patient;
+use App\Enums\PatientStatus;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -59,9 +60,18 @@ class PatientResource extends Resource
                 Forms\Components\Textarea::make('observations')
                     ->label('Observações')
                     ->columnSpanFull(),
-                Forms\Components\Toggle::make('active')
-                    ->label('Ativo')
-                    ->required(),
+                Forms\Components\Select::make('status')
+                    ->options([
+                        PatientStatus::ATIVO->value => PatientStatus::ATIVO->label(),
+                        PatientStatus::INATIVO->value => PatientStatus::INATIVO->label(),
+                        PatientStatus::TRANSFERIDO->value => PatientStatus::TRANSFERIDO->label(),
+                        PatientStatus::ALTA->value => PatientStatus::ALTA->label(),
+                        PatientStatus::OBITO->value => PatientStatus::OBITO->label(),
+                    ])
+                    ->default(PatientStatus::ATIVO->value)
+                    ->required()
+                    ->label('Status')
+                    ->helperText('Status atual do paciente no serviço de hemodiálise'),
             ]);
     }
 
@@ -85,9 +95,12 @@ class PatientResource extends Resource
                 Tables\Columns\TextColumn::make('rh_factor')
                     ->label('RH')
                     ->searchable(),
-                Tables\Columns\IconColumn::make('active')
-                    ->label('Ativo')
-                    ->boolean(),
+                Tables\Columns\TextColumn::make('status')
+                    ->label('Status')
+                    ->badge()
+                    ->formatStateUsing(fn (string $state): string => PatientStatus::from($state)->label())
+                    ->color(fn (string $state): string => PatientStatus::from($state)->color())
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Criado em')
                     ->dateTime()
@@ -100,7 +113,24 @@ class PatientResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('status')
+                    ->label('Status')
+                    ->options([
+                        PatientStatus::ATIVO->value => PatientStatus::ATIVO->label(),
+                        PatientStatus::INATIVO->value => PatientStatus::INATIVO->label(),
+                        PatientStatus::TRANSFERIDO->value => PatientStatus::TRANSFERIDO->label(),
+                        PatientStatus::ALTA->value => PatientStatus::ALTA->label(),
+                        PatientStatus::OBITO->value => PatientStatus::OBITO->label(),
+                    ])
+                    ->multiple(),
+                Tables\Filters\Filter::make('exclude_terminal')
+                    ->label('Excluir Status Terminal (Alta/Óbito)')
+                    ->query(fn (Builder $query): Builder => $query->excludeTerminal())
+                    ->toggle(),
+                Tables\Filters\Filter::make('can_have_sessions')
+                    ->label('Apenas Pacientes Ativos para Sessão')
+                    ->query(fn (Builder $query): Builder => $query->canHaveSessions())
+                    ->toggle(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

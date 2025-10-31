@@ -4,9 +4,11 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Patient;
+use App\Enums\PatientStatus;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Validation\Rules\Enum;
 
 class PatientController extends Controller
 {
@@ -14,21 +16,24 @@ class PatientController extends Controller
      * Lista pacientes com paginação e busca otimizada
      * Retorna os 100 últimos pacientes por padrão
      * Filtra automaticamente pela unidade do usuário autenticado
+     * Por padrão, retorna apenas pacientes que podem ter sessões (status: ativo)
      */
     public function index(Request $request): JsonResponse
     {
         $user = auth()->user();
         $perPage = $request->input('per_page', 100);
         $search = $request->input('search', '');
-        
-        $query = Patient::where('active', true);
-        
+        $includeInactive = $request->input('include_inactive', false);
+
+        // Por padrão, apenas pacientes que podem ter sessões
+        $query = $includeInactive ? Patient::query() : Patient::canHaveSessions();
+
         // Aplicar filtro de unidade do middleware
         $scopedUnitId = $request->get('scoped_unit_id');
         if ($scopedUnitId !== null) {
             $query->where('unit_id', $scopedUnitId);
         }
-        
+
         // Se houver busca, aplica filtros otimizados
         if (!empty($search)) {
             $query->where(function ($q) use ($search) {
@@ -42,7 +47,7 @@ class PatientController extends Controller
             // Sem busca, retorna os mais recentes primeiro
             $query->orderBy('created_at', 'desc');
         }
-        
+
         $patients = $query->limit($perPage)
             ->get()
             ->map(function ($patient) {
@@ -54,6 +59,10 @@ class PatientController extends Controller
                     'age' => $patient->age,
                     'allergies' => $patient->allergies,
                     'observations' => $patient->observations,
+                    'status' => $patient->status->value,
+                    'status_label' => $patient->status->label(),
+                    'status_color' => $patient->status->color(),
+                    'can_have_sessions' => $patient->canHaveSessions(),
                 ];
             });
 
@@ -70,25 +79,27 @@ class PatientController extends Controller
      * Busca inteligente de pacientes com debounce
      * Otimizada para grandes volumes de dados
      * Filtra automaticamente pela unidade do usuário autenticado
+     * Por padrão, retorna apenas pacientes que podem ter sessões (status: ativo)
      */
     public function quickSearch(Request $request): JsonResponse
     {
         $request->validate([
             'query' => 'required|string|min:2|max:255'
         ]);
-        
+
         $user = auth()->user();
         $searchTerm = $request->input('query');
         $limit = $request->input('limit', 20); // Apenas 20 resultados na busca rápida
-        
-        $query = Patient::where('active', true);
-        
+
+        // Por padrão, apenas pacientes que podem ter sessões
+        $query = Patient::canHaveSessions();
+
         // Aplicar filtro de unidade do middleware
         $scopedUnitId = $request->get('scoped_unit_id');
         if ($scopedUnitId !== null) {
             $query->where('unit_id', $scopedUnitId);
         }
-        
+
         $patients = $query->where(function ($q) use ($searchTerm) {
                 // Busca otimizada com prioridade
                 $q->where('full_name', 'LIKE', "%{$searchTerm}%")
@@ -109,6 +120,8 @@ class PatientController extends Controller
                     'birth_date' => $patient->birth_date->format('Y-m-d'),
                     'blood_type' => $patient->blood_type,
                     'age' => $patient->age,
+                    'status' => $patient->status->value,
+                    'status_label' => $patient->status->label(),
                 ];
             });
 
@@ -158,7 +171,10 @@ class PatientController extends Controller
                 'allergies' => $patient->allergies,
                 'observations' => $patient->observations,
                 'unit_id' => $patient->unit_id,
-                'active' => $patient->active,
+                'status' => $patient->status->value,
+                'status_label' => $patient->status->label(),
+                'status_color' => $patient->status->color(),
+                'can_have_sessions' => $patient->canHaveSessions(),
                 'checklists_count' => $checklistsCount,
             ]
         ]);
@@ -183,9 +199,10 @@ class PatientController extends Controller
         }
 
         // SEGURANÇA: First, try to find existing patient in the scoped unit
+        // Busca apenas pacientes que podem ter sessões (status: ativo)
         $query = Patient::where('full_name', $request->full_name)
             ->where('birth_date', $request->birth_date)
-            ->where('active', true)
+            ->canHaveSessions()
             ->where('unit_id', $scopedUnitId);
 
         $patient = $query->first();
@@ -199,16 +216,19 @@ class PatientController extends Controller
                     'birth_date' => $patient->birth_date->format('Y-m-d'),
                     'blood_type' => $patient->blood_type,
                     'age' => $patient->age,
+                    'status' => $patient->status->value,
+                    'status_label' => $patient->status->label(),
                 ]
             ]);
         }
 
-        // Patient not found, create new one automatically
+        // Patient not found, create new one automatically with status ATIVO
         try {
             $newPatient = Patient::create([
                 'full_name' => $request->full_name,
                 'birth_date' => $request->birth_date,
-                'active' => true,
+                'status' => PatientStatus::ATIVO->value,
+                'active' => true, // Backward compatibility
                 'unit_id' => $scopedUnitId, // SEGURANÇA: Associa à unidade selecionada pelo middleware
             ]);
 
@@ -221,6 +241,8 @@ class PatientController extends Controller
                     'birth_date' => $newPatient->birth_date->format('Y-m-d'),
                     'blood_type' => $newPatient->blood_type,
                     'age' => $newPatient->age,
+                    'status' => $newPatient->status->value,
+                    'status_label' => $newPatient->status->label(),
                 ]
             ], 201);
 
@@ -254,10 +276,19 @@ class PatientController extends Controller
                 'rh_factor' => 'nullable|in:+,-',
                 'allergies' => 'nullable|string',
                 'observations' => 'nullable|string',
+                'status' => ['nullable', new Enum(PatientStatus::class)],
             ]);
 
             // SEGURANÇA: Associa automaticamente o paciente à unidade selecionada pelo middleware
             $validated['unit_id'] = $scopedUnitId;
+
+            // Set default status if not provided
+            if (!isset($validated['status'])) {
+                $validated['status'] = PatientStatus::ATIVO->value;
+            }
+
+            // Set active field for backward compatibility
+            $validated['active'] = ($validated['status'] === PatientStatus::ATIVO->value);
 
             $patient = Patient::create($validated);
 
@@ -269,6 +300,9 @@ class PatientController extends Controller
                     'birth_date' => $patient->birth_date->format('Y-m-d'),
                     'blood_type' => $patient->blood_type,
                     'age' => $patient->age,
+                    'status' => $patient->status->value,
+                    'status_label' => $patient->status->label(),
+                    'status_color' => $patient->status->color(),
                 ]
             ], 201);
 
@@ -295,7 +329,8 @@ class PatientController extends Controller
     }
 
     /**
-     * Ativa ou desativa um paciente
+     * Ativa ou desativa um paciente (toggle entre ATIVO e INATIVO)
+     * Mantido para compatibilidade com código existente
      */
     public function toggleActive(Request $request, $id): JsonResponse
     {
@@ -317,16 +352,24 @@ class PatientController extends Controller
                 ], 404);
             }
 
-            // Alterna o status
-            $patient->active = !$patient->active;
+            // Alterna entre ATIVO e INATIVO
+            if ($patient->status === PatientStatus::ATIVO) {
+                $patient->status = PatientStatus::INATIVO;
+                $patient->active = false;
+            } else {
+                $patient->status = PatientStatus::ATIVO;
+                $patient->active = true;
+            }
             $patient->save();
 
             return response()->json([
                 'success' => true,
-                'message' => $patient->active ? 'Paciente ativado com sucesso.' : 'Paciente desativado com sucesso.',
+                'message' => $patient->status === PatientStatus::ATIVO ? 'Paciente ativado com sucesso.' : 'Paciente desativado com sucesso.',
                 'patient' => [
                     'id' => $patient->id,
-                    'active' => $patient->active,
+                    'status' => $patient->status->value,
+                    'status_label' => $patient->status->label(),
+                    'status_color' => $patient->status->color(),
                 ]
             ]);
 
@@ -334,6 +377,74 @@ class PatientController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Erro ao alterar status do paciente.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Atualiza o status de um paciente
+     */
+    public function updateStatus(Request $request, $id): JsonResponse
+    {
+        try {
+            $validated = $request->validate([
+                'status' => ['required', new Enum(PatientStatus::class)],
+            ]);
+
+            $query = Patient::where('id', $id);
+
+            // Aplicar filtro de unidade do middleware
+            $scopedUnitId = $request->get('scoped_unit_id');
+            if ($scopedUnitId !== null) {
+                $query->where('unit_id', $scopedUnitId);
+            }
+
+            $patient = $query->first();
+
+            if (!$patient) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Paciente não encontrado ou não pertence à sua unidade.'
+                ], 404);
+            }
+
+            // Valida se é uma mudança válida
+            $newStatus = PatientStatus::from($validated['status']);
+
+            // Não permite reverter status terminal (alta, óbito)
+            if ($patient->isTerminal() && $newStatus !== $patient->status) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Não é possível alterar o status de um paciente com alta ou óbito registrado.'
+                ], 422);
+            }
+
+            $patient->status = $newStatus;
+            $patient->active = ($newStatus === PatientStatus::ATIVO);
+            $patient->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Status do paciente atualizado com sucesso.',
+                'patient' => [
+                    'id' => $patient->id,
+                    'status' => $patient->status->value,
+                    'status_label' => $patient->status->label(),
+                    'status_color' => $patient->status->color(),
+                    'can_have_sessions' => $patient->canHaveSessions(),
+                ]
+            ]);
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao atualizar status do paciente.',
                 'error' => $e->getMessage()
             ], 500);
         }

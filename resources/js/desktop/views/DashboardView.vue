@@ -1,11 +1,35 @@
 <template>
   <div class="dashboard-view space-y-6">
+    <!-- Live Update Indicator -->
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center space-x-2">
+        <div class="relative">
+          <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+          <div class="absolute inset-0 w-2 h-2 bg-green-500 rounded-full animate-ping"></div>
+        </div>
+        <span class="text-sm font-medium text-gray-600 dark:text-gray-400">
+          Atualizações em tempo real ativas
+        </span>
+      </div>
+      <button
+        @click="refreshAll"
+        class="px-3 py-1.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+        :disabled="statsPolling.loading.value"
+      >
+        <svg class="w-4 h-4 inline-block mr-1" :class="{ 'animate-spin': statsPolling.loading.value }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+        Atualizar Agora
+      </button>
+    </div>
+
     <!-- Metric Cards Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <div
         v-for="metric in metrics"
         :key="metric.label"
-        class="metric-card bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 p-6 hover:shadow-lg transition-shadow duration-200"
+        class="metric-card bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 p-6 hover:shadow-lg transition-all duration-200"
+        :class="{ 'ring-2 ring-blue-500 ring-opacity-50': statsPolling.loading.value }"
       >
         <div class="flex items-start justify-between">
           <div class="flex-1">
@@ -118,13 +142,14 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, watch } from 'vue';
 import {
   ClipboardDocumentCheckIcon,
   CpuChipIcon,
   UsersIcon,
   CheckCircleIcon,
 } from '@heroicons/vue/24/outline';
+import { usePolling } from '../composables/usePolling';
 
 const loading = ref(true);
 const metrics = ref([
@@ -161,72 +186,95 @@ const metrics = ref([
 const sessionsByShiftData = ref(null);
 const recentActivity = ref([]);
 
-onMounted(async () => {
-  await Promise.all([
-    loadStats(),
-    loadSessionsByShift(),
-    loadRecentActivity(),
-  ]);
-  loading.value = false;
+// Setup polling for stats (every 10 seconds)
+const statsPolling = usePolling(loadStats, {
+  interval: 10000,
+  immediate: true,
 });
 
-async function loadStats() {
-  try {
-    const response = await fetch('/api/dashboard/stats', {
-      credentials: 'same-origin',
-      headers: { 'Accept': 'application/json' },
-    });
+// Setup polling for sessions by shift (every 30 seconds)
+const sessionsPolling = usePolling(loadSessionsByShift, {
+  interval: 30000,
+  immediate: true,
+});
 
-    if (response.ok) {
-      const { data } = await response.json();
+// Setup polling for recent activity (every 15 seconds)
+const activityPolling = usePolling(loadRecentActivity, {
+  interval: 15000,
+  immediate: true,
+});
 
-      metrics.value[0].value = data.checklists.value.toString();
-      metrics.value[0].change = data.checklists.change;
-
-      metrics.value[1].value = `${data.machines.active}/${data.machines.total}`;
-      metrics.value[1].change = data.machines.change;
-
-      metrics.value[2].value = data.patients.value.toString();
-      metrics.value[2].change = data.patients.change;
-
-      metrics.value[3].value = `${data.conformity.value}%`;
-      metrics.value[3].change = data.conformity.change;
-    }
-  } catch (error) {
-    console.error('Error loading stats:', error);
+// Watch for initial data load
+watch([statsPolling.data, sessionsPolling.data, activityPolling.data], () => {
+  if (statsPolling.data.value && sessionsPolling.data.value && activityPolling.data.value) {
+    loading.value = false;
   }
+});
+
+// Manual refresh function
+const refreshAll = () => {
+  statsPolling.refresh();
+  sessionsPolling.refresh();
+  activityPolling.refresh();
+};
+
+async function loadStats() {
+  const response = await fetch('/api/dashboard/stats', {
+    credentials: 'same-origin',
+    headers: { 'Accept': 'application/json' },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Stats API error: ${response.status}`);
+  }
+
+  const result = await response.json();
+  const { data } = result;
+
+  // Update metrics with new data
+  metrics.value[0].value = data.checklists.value.toString();
+  metrics.value[0].change = data.checklists.change;
+
+  metrics.value[1].value = `${data.machines.active}/${data.machines.total}`;
+  metrics.value[1].change = data.machines.change;
+
+  metrics.value[2].value = data.patients.value.toString();
+  metrics.value[2].change = data.patients.change;
+
+  metrics.value[3].value = `${data.conformity.value}%`;
+  metrics.value[3].change = data.conformity.change;
+
+  return data;
 }
 
 async function loadSessionsByShift() {
-  try {
-    const response = await fetch('/api/dashboard/sessions-by-shift', {
-      credentials: 'same-origin',
-      headers: { 'Accept': 'application/json' },
-    });
+  const response = await fetch('/api/dashboard/sessions-by-shift', {
+    credentials: 'same-origin',
+    headers: { 'Accept': 'application/json' },
+  });
 
-    if (response.ok) {
-      const { data } = await response.json();
-      sessionsByShiftData.value = data;
-    }
-  } catch (error) {
-    console.error('Error loading sessions by shift:', error);
+  if (!response.ok) {
+    throw new Error(`Sessions API error: ${response.status}`);
   }
+
+  const { data } = await response.json();
+  sessionsByShiftData.value = data;
+  return data;
 }
 
 async function loadRecentActivity() {
-  try {
-    const response = await fetch('/api/dashboard/recent-activity', {
-      credentials: 'same-origin',
-      headers: { 'Accept': 'application/json' },
-    });
+  const response = await fetch('/api/dashboard/recent-activity', {
+    credentials: 'same-origin',
+    headers: { 'Accept': 'application/json' },
+  });
 
-    if (response.ok) {
-      const { data } = await response.json();
-      recentActivity.value = data;
-    }
-  } catch (error) {
-    console.error('Error loading recent activity:', error);
+  if (!response.ok) {
+    throw new Error(`Activity API error: ${response.status}`);
   }
+
+  const { data } = await response.json();
+  recentActivity.value = data;
+  return data;
 }
 
 function getBarHeight(value) {

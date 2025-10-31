@@ -8,18 +8,50 @@ use App\Models\Machine;
 use App\Models\Patient;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 
 class DashboardController extends Controller
 {
     /**
-     * Get dashboard statistics
+     * Get dashboard statistics with caching
      */
     public function stats(Request $request)
     {
         $user = $request->user();
-        $unitId = $user->unit_id;
+        $unitId = $user->current_unit_id ?? $user->unit_id;
 
+        // If user has no unit assigned, use first available unit or return empty data
+        if (!$unitId) {
+            $firstUnit = \App\Models\Unit::first();
+            $unitId = $firstUnit ? $firstUnit->id : null;
+        }
+
+        if (!$unitId) {
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'checklists' => ['value' => 0, 'change' => 0],
+                    'machines' => ['active' => 0, 'total' => 0, 'change' => 0],
+                    'patients' => ['value' => 0, 'change' => 0],
+                    'conformity' => ['value' => 0, 'change' => 0],
+                ]
+            ]);
+        }
+
+        // Cache key specific to unit and current minute
+        $cacheKey = "dashboard_stats_unit_{$unitId}_" . now()->format('Y-m-d_H:i');
+
+        return Cache::remember($cacheKey, 60, function () use ($unitId) {
+            return $this->calculateStats($unitId);
+        });
+    }
+
+    /**
+     * Calculate dashboard statistics
+     */
+    private function calculateStats($unitId)
+    {
         $today = Carbon::today();
         $yesterday = Carbon::yesterday();
 
@@ -38,17 +70,12 @@ class DashboardController extends Controller
 
         // Machines stats
         $totalMachines = Machine::where('unit_id', $unitId)->count();
-        $activeMachines = Machine::where('unit_id', $unitId)
-            ->where('is_active', true)
-            ->count();
+        $activeMachines = Machine::where('unit_id', $unitId)->count(); // All machines are considered active if no is_active column
 
         // Patients count
-        $totalPatients = Patient::where('unit_id', $unitId)
-            ->where('is_active', true)
-            ->count();
+        $totalPatients = Patient::where('unit_id', $unitId)->count();
 
         $patientsLastMonth = Patient::where('unit_id', $unitId)
-            ->where('is_active', true)
             ->whereDate('created_at', '<=', Carbon::now()->subMonth())
             ->count();
 
@@ -63,7 +90,7 @@ class DashboardController extends Controller
 
         $completedChecklistsMonth = SafetyChecklist::where('unit_id', $unitId)
             ->whereMonth('created_at', now()->month)
-            ->where('phase', 'dialise')
+            ->where('current_phase', 'completed')
             ->count();
 
         $conformityRate = $totalChecklistsMonth > 0
@@ -95,13 +122,46 @@ class DashboardController extends Controller
     }
 
     /**
-     * Get sessions by shift (for chart)
+     * Get sessions by shift (for chart) with caching
      */
     public function sessionsByShift(Request $request)
     {
         $user = $request->user();
-        $unitId = $user->unit_id;
+        $unitId = $user->current_unit_id ?? $user->unit_id;
 
+        // If user has no unit assigned, use first available unit or return empty data
+        if (!$unitId) {
+            $firstUnit = \App\Models\Unit::first();
+            $unitId = $firstUnit ? $firstUnit->id : null;
+        }
+
+        if (!$unitId) {
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'labels' => [],
+                    'datasets' => [
+                        ['label' => 'Matutino', 'data' => [], 'backgroundColor' => 'rgba(59, 130, 246, 0.5)'],
+                        ['label' => 'Vespertino', 'data' => [], 'backgroundColor' => 'rgba(16, 185, 129, 0.5)'],
+                        ['label' => 'Noturno', 'data' => [], 'backgroundColor' => 'rgba(139, 92, 246, 0.5)'],
+                    ],
+                ]
+            ]);
+        }
+
+        // Cache for 5 minutes (chart data changes less frequently)
+        $cacheKey = "dashboard_sessions_unit_{$unitId}_" . now()->format('Y-m-d_H:i');
+
+        return Cache::remember($cacheKey, 300, function () use ($unitId) {
+            return $this->calculateSessionsByShift($unitId);
+        });
+    }
+
+    /**
+     * Calculate sessions by shift
+     */
+    private function calculateSessionsByShift($unitId)
+    {
         // Get last 7 days of data
         $startDate = Carbon::now()->subDays(6)->startOfDay();
 
@@ -116,7 +176,11 @@ class DashboardController extends Controller
                 END as shift'),
                 DB::raw('COUNT(*) as count')
             )
-            ->groupBy('date', 'shift')
+            ->groupBy(DB::raw('DATE(created_at)'), DB::raw('CASE
+                WHEN HOUR(created_at) BETWEEN 6 AND 11 THEN "Matutino"
+                WHEN HOUR(created_at) BETWEEN 12 AND 17 THEN "Vespertino"
+                ELSE "Noturno"
+            END'))
             ->orderBy('date')
             ->get();
 
@@ -164,13 +228,39 @@ class DashboardController extends Controller
     }
 
     /**
-     * Get recent activity
+     * Get recent activity with caching
      */
     public function recentActivity(Request $request)
     {
         $user = $request->user();
-        $unitId = $user->unit_id;
+        $unitId = $user->current_unit_id ?? $user->unit_id;
 
+        // If user has no unit assigned, use first available unit or return empty data
+        if (!$unitId) {
+            $firstUnit = \App\Models\Unit::first();
+            $unitId = $firstUnit ? $firstUnit->id : null;
+        }
+
+        if (!$unitId) {
+            return response()->json([
+                'success' => true,
+                'data' => []
+            ]);
+        }
+
+        // Cache for 1 minute (activity should update frequently)
+        $cacheKey = "dashboard_activity_unit_{$unitId}_" . now()->format('Y-m-d_H:i');
+
+        return Cache::remember($cacheKey, 60, function () use ($unitId) {
+            return $this->calculateRecentActivity($unitId);
+        });
+    }
+
+    /**
+     * Calculate recent activity
+     */
+    private function calculateRecentActivity($unitId)
+    {
         $activities = [];
 
         // Recent checklists
@@ -184,16 +274,15 @@ class DashboardController extends Controller
             $activities[] = [
                 'type' => 'checklist',
                 'title' => 'Checklist Concluído',
-                'description' => 'Máquina ' . $checklist->machine->code . ' - ' . $checklist->patient->name,
+                'description' => 'Máquina ' . $checklist->machine->identifier . ' - ' . $checklist->patient->full_name,
                 'time' => $checklist->created_at->diffForHumans(),
-                'dotColor' => $checklist->phase === 'dialise' ? 'bg-green-500' : 'bg-yellow-500',
+                'dotColor' => $checklist->current_phase === 'completed' ? 'bg-green-500' : 'bg-yellow-500',
                 'timestamp' => $checklist->created_at->timestamp,
             ];
         }
 
         // Recent patients
         $recentPatients = Patient::where('unit_id', $unitId)
-            ->where('is_active', true)
             ->orderBy('created_at', 'desc')
             ->limit(3)
             ->get();

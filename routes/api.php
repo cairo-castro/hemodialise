@@ -93,6 +93,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/patients/{id}', [PatientController::class, 'show']);
         Route::post('/patients', [PatientController::class, 'store']);
         Route::patch('/patients/{id}/toggle-active', [PatientController::class, 'toggleActive']);
+        Route::patch('/patients/{id}/status', [PatientController::class, 'updateStatus']);
 
         Route::get('/machines', [MachineController::class, 'index']);
         Route::get('/machines/available', [MachineController::class, 'available']);
