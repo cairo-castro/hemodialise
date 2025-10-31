@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\PatientController;
 use App\Http\Controllers\Api\MachineController;
 use App\Http\Controllers\Api\DataSyncController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 // Endpoint for user info - session authentication only
@@ -60,6 +61,11 @@ Route::prefix('user-units')->middleware('auth')->group(function () {
 
 // API routes with session authentication
 Route::middleware('auth')->group(function () {
+
+    // Dashboard routes - available to all authenticated users
+    Route::get('/dashboard/stats', [DashboardController::class, 'stats']);
+    Route::get('/dashboard/sessions-by-shift', [DashboardController::class, 'sessionsByShift']);
+    Route::get('/dashboard/recent-activity', [DashboardController::class, 'recentActivity']);
 
     // Profile routes - available to all authenticated users
     Route::put('/profile/update', [ProfileController::class, 'update']);

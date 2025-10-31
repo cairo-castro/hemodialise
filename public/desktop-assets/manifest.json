@@ -7,17 +7,17 @@
     "file": "assets/heroicons-l0sNRNKZ.js",
     "name": "heroicons"
   },
-  "_vendor-D1Wpeub6.js": {
-    "file": "assets/vendor-D1Wpeub6.js",
+  "_vendor-DRnPkkuw.js": {
+    "file": "assets/vendor-DRnPkkuw.js",
     "name": "vendor"
   },
   "resources/js/desktop.js": {
-    "file": "assets/desktop-4n9cl6w8.js",
+    "file": "assets/desktop-DoVdHZQN.js",
     "name": "desktop",
     "src": "resources/js/desktop.js",
     "isEntry": true,
     "imports": [
-      "_vendor-D1Wpeub6.js"
+      "_vendor-DRnPkkuw.js"
     ],
     "dynamicImports": [
       "resources/js/desktop/views/DashboardView.vue",
@@ -27,59 +27,59 @@
       "resources/js/desktop/views/ProfileView.vue"
     ],
     "css": [
-      "assets/desktop-LQHnRfAx.css"
+      "assets/desktop-DqrcP0_j.css"
     ]
   },
   "resources/js/desktop/views/ChecklistsView.vue": {
-    "file": "assets/ChecklistsView-Dz3NsG54.js",
+    "file": "assets/ChecklistsView-SqZIcI3R.js",
     "name": "ChecklistsView",
     "src": "resources/js/desktop/views/ChecklistsView.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_vendor-D1Wpeub6.js"
+      "_vendor-DRnPkkuw.js"
     ]
   },
   "resources/js/desktop/views/DashboardView.vue": {
-    "file": "assets/DashboardView-D-oby7mf.js",
+    "file": "assets/DashboardView-BCzI1sq_.js",
     "name": "DashboardView",
     "src": "resources/js/desktop/views/DashboardView.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/desktop.js",
-      "_vendor-D1Wpeub6.js"
+      "_vendor-DRnPkkuw.js"
     ],
     "css": [
-      "assets/DashboardView-CVemd5dm.css"
+      "assets/DashboardView-lqgCyVkX.css"
     ]
   },
   "resources/js/desktop/views/MachinesView.vue": {
-    "file": "assets/MachinesView-DBQqpeVw.js",
+    "file": "assets/MachinesView-B7z_GdoK.js",
     "name": "MachinesView",
     "src": "resources/js/desktop/views/MachinesView.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/desktop.js",
-      "_vendor-D1Wpeub6.js"
+      "_vendor-DRnPkkuw.js"
     ]
   },
   "resources/js/desktop/views/PatientsView.vue": {
-    "file": "assets/PatientsView-Bdf_JQp5.js",
+    "file": "assets/PatientsView-CXGhviz6.js",
     "name": "PatientsView",
     "src": "resources/js/desktop/views/PatientsView.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/desktop.js",
-      "_vendor-D1Wpeub6.js"
+      "_vendor-DRnPkkuw.js"
     ]
   },
   "resources/js/desktop/views/ProfileView.vue": {
-    "file": "assets/ProfileView-BEgm0o9U.js",
+    "file": "assets/ProfileView-f0oSQwfq.js",
     "name": "ProfileView",
     "src": "resources/js/desktop/views/ProfileView.vue",
     "isDynamicEntry": true,
     "imports": [
       "resources/js/desktop.js",
-      "_vendor-D1Wpeub6.js"
+      "_vendor-DRnPkkuw.js"
     ]
   }
 }
