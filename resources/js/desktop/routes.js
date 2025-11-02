@@ -29,4 +29,16 @@ export const routes = [
     component: () => import('./views/ProfileView.vue'),
     meta: { requiresAuth: true }
   },
+  {
+    path: '/desktop/settings',
+    name: 'desktop.settings',
+    component: () => import('./views/SettingsView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/desktop/help',
+    name: 'desktop.help',
+    component: () => import('./views/HelpView.vue'),
+    meta: { requiresAuth: true }
+  },
 ];

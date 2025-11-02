@@ -54,11 +54,65 @@
       </div>
     </div>
 
+    <!-- Quick Actions -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <button
+        @click="navigateTo('/desktop/checklists')"
+        class="flex items-center p-4 bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-md transition-all group"
+      >
+        <div class="w-12 h-12 bg-primary-100 dark:bg-primary-900/20 rounded-lg flex items-center justify-center mr-4 group-hover:bg-primary-200 dark:group-hover:bg-primary-900/30 transition-colors">
+          <ClipboardDocumentCheckIcon class="w-6 h-6 text-primary-600 dark:text-primary-400" />
+        </div>
+        <div class="flex-1 text-left">
+          <p class="text-sm font-medium text-gray-900 dark:text-white">Novo Checklist</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">Criar checklist de segurança</p>
+        </div>
+        <svg class="w-5 h-5 text-gray-400 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+
+      <button
+        @click="navigateTo('/desktop/patients')"
+        class="flex items-center p-4 bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 hover:border-green-300 dark:hover:border-green-700 hover:shadow-md transition-all group"
+      >
+        <div class="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center mr-4 group-hover:bg-green-200 dark:group-hover:bg-green-900/30 transition-colors">
+          <UsersIcon class="w-6 h-6 text-green-600 dark:text-green-400" />
+        </div>
+        <div class="flex-1 text-left">
+          <p class="text-sm font-medium text-gray-900 dark:text-white">Novo Paciente</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">Cadastrar novo paciente</p>
+        </div>
+        <svg class="w-5 h-5 text-gray-400 group-hover:text-green-600 dark:group-hover:text-green-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+
+      <button
+        @click="navigateTo('/desktop/machines')"
+        class="flex items-center p-4 bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 hover:border-purple-300 dark:hover:border-purple-700 hover:shadow-md transition-all group"
+      >
+        <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center mr-4 group-hover:bg-purple-200 dark:group-hover:bg-purple-900/30 transition-colors">
+          <CpuChipIcon class="w-6 h-6 text-purple-600 dark:text-purple-400" />
+        </div>
+        <div class="flex-1 text-left">
+          <p class="text-sm font-medium text-gray-900 dark:text-white">Ver Máquinas</p>
+          <p class="text-xs text-gray-500 dark:text-gray-400">Gerenciar equipamentos</p>
+        </div>
+        <svg class="w-5 h-5 text-gray-400 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+    </div>
+
     <!-- Charts Row -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- Sessions by Shift Chart -->
       <div class="bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Sessões por Turno - Últimos 7 Dias</h3>
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Sessões por Turno</h3>
+          <span class="text-xs text-gray-500 dark:text-gray-400">Últimos 7 dias</span>
+        </div>
         <div v-if="sessionsByShiftData" class="h-64">
           <div class="h-full flex items-end justify-between space-x-2">
             <div
@@ -115,27 +169,128 @@
 
       <!-- Recent Activity -->
       <div class="bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Atividade Recente</h3>
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Atividade Recente</h3>
+          <button
+            @click="navigateTo('/desktop/checklists')"
+            class="text-xs font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors"
+          >
+            Ver todas →
+          </button>
+        </div>
         <div v-if="recentActivity.length > 0" class="space-y-2">
           <div
             v-for="(activity, index) in recentActivity"
             :key="index"
-            class="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors cursor-pointer"
+            class="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors cursor-pointer group"
+            @click="handleActivityClick(activity)"
           >
-            <div class="w-2 h-2 rounded-full mt-2 flex-shrink-0" :class="activity.dotColor"></div>
+            <div
+              class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+              :class="activity.bgColor"
+            >
+              <component :is="getActivityIcon(activity.type)" class="w-5 h-5 text-white" />
+            </div>
             <div class="flex-1 min-w-0">
               <p class="text-sm font-medium text-gray-900 dark:text-white">{{ activity.title }}</p>
-              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate">{{ activity.description }}</p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">{{ activity.description }}</p>
+              <div class="flex items-center mt-2 space-x-3">
+                <span class="text-xs text-gray-400 dark:text-gray-500">{{ activity.time }}</span>
+                <span
+                  v-if="activity.status"
+                  class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium"
+                  :class="getStatusColor(activity.status)"
+                >
+                  {{ activity.status }}
+                </span>
+              </div>
             </div>
-            <span class="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0">{{ activity.time }}</span>
+            <svg class="w-5 h-5 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
           </div>
         </div>
         <div v-else-if="loading" class="h-64 flex items-center justify-center">
-          <p class="text-gray-500 dark:text-gray-400">Carregando...</p>
+          <div class="text-center">
+            <div class="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin mx-auto mb-3"></div>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Carregando atividades...</p>
+          </div>
         </div>
         <div v-else class="h-64 flex items-center justify-center">
-          <p class="text-gray-500 dark:text-gray-400">Nenhuma atividade recente</p>
+          <div class="text-center">
+            <svg class="w-12 h-12 mx-auto text-gray-300 dark:text-gray-600 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Nenhuma atividade recente</p>
+          </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Transactions/Records Table -->
+    <div class="bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 p-6 mt-6">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Checklists Recentes</h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Últimas verificações de segurança realizadas</p>
+        </div>
+        <button
+          @click="navigateTo('/desktop/checklists')"
+          class="px-4 py-2 text-sm font-medium text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors"
+        >
+          Ver todos
+        </button>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="text-xs text-gray-500 dark:text-gray-400 uppercase bg-gray-50 dark:bg-gray-800/50">
+            <tr>
+              <th class="px-4 py-3 text-left font-semibold">ID</th>
+              <th class="px-4 py-3 text-left font-semibold">Data</th>
+              <th class="px-4 py-3 text-left font-semibold">Paciente</th>
+              <th class="px-4 py-3 text-left font-semibold">Máquina</th>
+              <th class="px-4 py-3 text-left font-semibold">Turno</th>
+              <th class="px-4 py-3 text-left font-semibold">Status</th>
+              <th class="px-4 py-3 text-right font-semibold">Ações</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+            <tr
+              v-for="record in tableRecords"
+              :key="record.id"
+              class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+            >
+              <td class="px-4 py-3 text-gray-900 dark:text-white font-medium">#{{ record.id }}</td>
+              <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ record.date }}</td>
+              <td class="px-4 py-3 text-gray-900 dark:text-white">{{ record.patient }}</td>
+              <td class="px-4 py-3 text-gray-600 dark:text-gray-400">{{ record.machine }}</td>
+              <td class="px-4 py-3">
+                <span
+                  class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                  :class="getShiftColor(record.shift)"
+                >
+                  {{ record.shift }}
+                </span>
+              </td>
+              <td class="px-4 py-3">
+                <span
+                  class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                  :class="getStatusColor(record.status)"
+                >
+                  {{ record.status }}
+                </span>
+              </td>
+              <td class="px-4 py-3 text-right">
+                <button
+                  @click="viewRecord(record.id)"
+                  class="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium transition-colors"
+                >
+                  Ver detalhes
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -143,13 +298,19 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import {
   ClipboardDocumentCheckIcon,
   CpuChipIcon,
   UsersIcon,
   CheckCircleIcon,
+  BeakerIcon,
+  SparklesIcon,
+  ExclamationTriangleIcon,
 } from '@heroicons/vue/24/outline';
 import { usePolling } from '../composables/usePolling';
+
+const router = useRouter();
 
 const loading = ref(true);
 const metrics = ref([
@@ -185,6 +346,48 @@ const metrics = ref([
 
 const sessionsByShiftData = ref(null);
 const recentActivity = ref([]);
+const tableRecords = ref([
+  {
+    id: 1234,
+    date: '02/11/2025 08:30',
+    patient: 'Maria Silva Santos',
+    machine: 'Máquina 05',
+    shift: 'Matutino',
+    status: 'Concluído',
+  },
+  {
+    id: 1233,
+    date: '02/11/2025 07:45',
+    patient: 'João Carlos Oliveira',
+    machine: 'Máquina 03',
+    shift: 'Matutino',
+    status: 'Concluído',
+  },
+  {
+    id: 1232,
+    date: '01/11/2025 19:20',
+    patient: 'Ana Paula Costa',
+    machine: 'Máquina 08',
+    shift: 'Noturno',
+    status: 'Concluído',
+  },
+  {
+    id: 1231,
+    date: '01/11/2025 15:15',
+    patient: 'Pedro Henrique Lima',
+    machine: 'Máquina 02',
+    shift: 'Vespertino',
+    status: 'Interrompido',
+  },
+  {
+    id: 1230,
+    date: '01/11/2025 14:30',
+    patient: 'Carla Souza Mendes',
+    machine: 'Máquina 01',
+    shift: 'Vespertino',
+    status: 'Concluído',
+  },
+]);
 
 // Setup polling for stats (every 10 seconds)
 const statsPolling = usePolling(loadStats, {
@@ -290,6 +493,54 @@ function getBarHeight(value) {
   // Return height as percentage (minimum 10% for visibility)
   return Math.max((value / maxValue) * 90, 10);
 }
+
+// Navigation helpers
+function navigateTo(path) {
+  router.push(path);
+}
+
+function viewRecord(id) {
+  console.log('View record:', id);
+  // Navigate to checklist detail view
+  router.push(`/desktop/checklists/${id}`);
+}
+
+function handleActivityClick(activity) {
+  console.log('Activity clicked:', activity);
+  // Navigate based on activity type
+}
+
+// Activity icon helper
+function getActivityIcon(type) {
+  const icons = {
+    checklist: ClipboardDocumentCheckIcon,
+    cleaning: SparklesIcon,
+    disinfection: BeakerIcon,
+    warning: ExclamationTriangleIcon,
+  };
+  return icons[type] || ClipboardDocumentCheckIcon;
+}
+
+// Status color helper
+function getStatusColor(status) {
+  const colors = {
+    'Concluído': 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
+    'Interrompido': 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400',
+    'Em Andamento': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400',
+    'Pendente': 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400',
+  };
+  return colors[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400';
+}
+
+// Shift color helper
+function getShiftColor(shift) {
+  const colors = {
+    'Matutino': 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400',
+    'Vespertino': 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
+    'Noturno': 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400',
+  };
+  return colors[shift] || 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400';
+}
 </script>
 
 <style scoped>
@@ -310,5 +561,12 @@ function getBarHeight(value) {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 </style>

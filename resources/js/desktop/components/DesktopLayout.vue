@@ -113,45 +113,17 @@
         </router-link>
       </nav>
 
-      <!-- User Section -->
+      <!-- Sidebar Footer - Compact mode when collapsed -->
       <div class="border-t border-gray-200 dark:border-gray-800 p-3">
-        <div
-          v-if="!sidebarCollapsed"
-          class="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer transition-colors"
-        >
-          <div class="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center text-white text-sm font-semibold">
-            {{ userInitials }}
-          </div>
-          <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
-              {{ user?.name || 'Usuário' }}
-            </p>
-            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
-              {{ user?.email }}
-            </p>
-          </div>
-        </div>
-
         <button
-          v-else
-          @click="handleLogout"
+          v-if="sidebarCollapsed"
+          @click="openCommandPalette"
           class="w-full p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          title="Buscar (⌘K)"
         >
-          <div class="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center text-white text-sm font-semibold mx-auto">
-            {{ userInitials }}
-          </div>
-        </button>
-
-        <!-- Logout Button (expanded) -->
-        <button
-          v-if="!sidebarCollapsed"
-          @click="handleLogout"
-          class="mt-2 w-full flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-        >
-          <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          <svg class="w-5 h-5 mx-auto text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
-          Sair
         </button>
       </div>
     </aside>
@@ -181,27 +153,43 @@
             </div>
           </div>
 
-          <div class="flex items-center space-x-4">
-            <!-- Search Button -->
-            <button class="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
+          <div class="flex items-center space-x-2">
+            <!-- Command Palette Button -->
+            <button
+              @click="openCommandPalette"
+              class="hidden lg:flex items-center space-x-2 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors border border-gray-200 dark:border-gray-700"
+              title="Buscar (⌘K)"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <span>Buscar...</span>
+              <kbd class="px-2 py-0.5 text-xs font-semibold text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded">
+                ⌘K
+              </kbd>
+            </button>
+
+            <!-- Mobile Search Button -->
+            <button
+              @click="openCommandPalette"
+              class="lg:hidden p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+              title="Buscar"
+            >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </button>
 
-            <!-- Theme Toggle -->
-            <button
-              @click="toggleTheme"
-              class="p-2 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
-              title="Alternar tema"
-            >
-              <svg v-if="theme === 'dark'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-              <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-              </svg>
-            </button>
+            <!-- Notifications -->
+            <NotificationsDropdown />
+
+            <!-- User Menu -->
+            <UserMenuDropdown
+              :user="user"
+              :theme="theme"
+              @logout="handleLogout"
+              @theme-change="handleThemeChange"
+            />
           </div>
         </div>
       </header>
@@ -211,6 +199,13 @@
         <slot></slot>
       </main>
     </div>
+
+    <!-- Command Palette -->
+    <CommandPalette
+      ref="commandPaletteRef"
+      @toggle-theme="handleThemeChange"
+      @logout="handleLogout"
+    />
   </div>
 </template>
 
@@ -225,6 +220,9 @@ import {
   UserCircleIcon,
   InboxIcon,
 } from '@heroicons/vue/24/outline';
+import CommandPalette from './CommandPalette.vue';
+import NotificationsDropdown from './NotificationsDropdown.vue';
+import UserMenuDropdown from './UserMenuDropdown.vue';
 
 const route = useRoute();
 
@@ -232,8 +230,12 @@ const sidebarCollapsed = ref(false);
 const theme = ref('light');
 const user = ref({
   name: 'Usuário',
-  email: 'usuario@hemodialise.ma.gov.br'
+  email: 'usuario@hemodialise.ma.gov.br',
+  role: 'user'
 });
+
+// Command Palette ref
+const commandPaletteRef = ref(null);
 
 // Unit management
 const availableUnits = ref([]);
@@ -246,7 +248,6 @@ const navigationItems = [
   { name: 'checklists', path: '/desktop/checklists', label: 'Checklists', icon: ClipboardDocumentCheckIcon, badge: 4 },
   { name: 'machines', path: '/desktop/machines', label: 'Máquinas', icon: CpuChipIcon },
   { name: 'patients', path: '/desktop/patients', label: 'Pacientes', icon: UsersIcon },
-  { name: 'profile', path: '/desktop/profile', label: 'Perfil', icon: UserCircleIcon },
 ];
 
 const pageTitle = computed(() => {
@@ -260,7 +261,9 @@ const pageSubtitle = computed(() => {
     '/desktop/checklists': 'Checklists de segurança',
     '/desktop/machines': 'Gerenciamento de máquinas',
     '/desktop/patients': 'Cadastro de pacientes',
-    '/desktop/profile': 'Configurações do perfil',
+    '/desktop/profile': 'Gerenciar informações pessoais',
+    '/desktop/settings': 'Configurações do sistema',
+    '/desktop/help': 'Central de ajuda e suporte',
   };
   return subtitles[route.path] || '';
 });
@@ -283,7 +286,27 @@ onMounted(async () => {
 
   // Load available units
   await loadAvailableUnits();
+
+  // Load user data
+  await loadUserData();
 });
+
+// Load user data from API
+async function loadUserData() {
+  try {
+    const response = await fetch('/api/me', {
+      credentials: 'same-origin',
+      headers: { 'Accept': 'application/json' }
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      user.value = data.user || user.value;
+    }
+  } catch (error) {
+    console.error('Error loading user data:', error);
+  }
+}
 
 // Load available units
 async function loadAvailableUnits() {
@@ -379,11 +402,18 @@ function toggleSidebar() {
 
 function toggleTheme() {
   const newTheme = theme.value === 'dark' ? 'light' : 'dark';
+  handleThemeChange(newTheme);
+}
+
+function handleThemeChange(newTheme) {
   theme.value = newTheme;
   localStorage.setItem('theme', newTheme);
   applyTheme(newTheme);
-  console.log('Theme toggled to:', newTheme);
-  console.log('HTML classList:', document.documentElement.classList.toString());
+  console.log('Theme changed to:', newTheme);
+}
+
+function openCommandPalette() {
+  commandPaletteRef.value?.open();
 }
 
 function applyTheme(newTheme) {

@@ -1,0 +1,407 @@
+<template>
+  <div class="help-view space-y-6">
+    <!-- Help Header -->
+    <div class="bg-gradient-to-r from-primary-600 to-primary-700 rounded-xl p-8 text-white">
+      <div class="max-w-3xl">
+        <h1 class="text-3xl font-bold mb-2">Central de Ajuda e Suporte</h1>
+        <p class="text-primary-100 mb-6">
+          Encontre respostas para suas dúvidas e aprenda a usar o Sistema de Hemodiálise
+        </p>
+
+        <!-- Search Box -->
+        <div class="relative">
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="Pesquisar ajuda..."
+            class="w-full px-5 py-3 pl-12 rounded-lg bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 backdrop-blur-sm"
+          >
+          <svg class="absolute left-4 top-3.5 w-5 h-5 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <button
+        v-for="link in quickLinks"
+        :key="link.id"
+        @click="scrollToSection(link.section)"
+        class="flex items-start p-4 bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-md transition-all group text-left"
+      >
+        <div class="w-12 h-12 rounded-lg flex items-center justify-center mr-4 flex-shrink-0" :class="link.bgColor">
+          <component :is="link.icon" class="w-6 h-6 text-white" />
+        </div>
+        <div class="flex-1">
+          <h3 class="font-semibold text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+            {{ link.title }}
+          </h3>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ link.description }}</p>
+        </div>
+      </button>
+    </div>
+
+    <!-- FAQs Section -->
+    <div ref="faqsSection" class="bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 p-6">
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Perguntas Frequentes</h2>
+
+      <div class="space-y-3">
+        <div
+          v-for="(faq, index) in filteredFAQs"
+          :key="index"
+          class="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden"
+        >
+          <button
+            @click="toggleFAQ(index)"
+            class="w-full flex items-center justify-between p-4 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+          >
+            <span class="font-medium text-gray-900 dark:text-white pr-4">{{ faq.question }}</span>
+            <svg
+              class="w-5 h-5 text-gray-500 dark:text-gray-400 flex-shrink-0 transition-transform"
+              :class="{ 'rotate-180': faq.isOpen }"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          <Transition name="accordion">
+            <div v-if="faq.isOpen" class="px-4 pb-4 text-gray-600 dark:text-gray-400">
+              <p v-html="faq.answer"></p>
+            </div>
+          </Transition>
+        </div>
+      </div>
+
+      <div v-if="filteredFAQs.length === 0" class="text-center py-12">
+        <svg class="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <p class="text-gray-500 dark:text-gray-400">Nenhuma FAQ encontrada para sua busca</p>
+      </div>
+    </div>
+
+    <!-- Getting Started Guide -->
+    <div ref="guideSection" class="bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 p-6">
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Guia de Início Rápido</h2>
+
+      <div class="space-y-6">
+        <div v-for="(step, index) in guideSteps" :key="index" class="flex items-start">
+          <div class="flex-shrink-0 w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900/20 flex items-center justify-center text-primary-600 dark:text-primary-400 font-bold mr-4">
+            {{ index + 1 }}
+          </div>
+          <div class="flex-1">
+            <h3 class="font-semibold text-gray-900 dark:text-white mb-2">{{ step.title }}</h3>
+            <p class="text-gray-600 dark:text-gray-400 mb-3">{{ step.description }}</p>
+            <div v-if="step.tips" class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+              <p class="text-sm text-blue-800 dark:text-blue-300">
+                <svg class="w-4 h-4 inline-block mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                </svg>
+                <strong>Dica:</strong> {{ step.tips }}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Video Tutorials -->
+    <div ref="tutorialsSection" class="bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 p-6">
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Tutoriais em Vídeo</h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div
+          v-for="video in videoTutorials"
+          :key="video.id"
+          class="group border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden hover:shadow-lg transition-all"
+        >
+          <div class="aspect-video bg-gray-200 dark:bg-gray-800 flex items-center justify-center relative overflow-hidden">
+            <svg class="w-16 h-16 text-gray-400 dark:text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" />
+            </svg>
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
+              <span class="text-white text-sm font-medium">{{ video.duration }}</span>
+            </div>
+          </div>
+          <div class="p-4">
+            <h3 class="font-semibold text-gray-900 dark:text-white mb-1 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors">
+              {{ video.title }}
+            </h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400">{{ video.description }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact Support -->
+    <div ref="contactSection" class="bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 p-6">
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Entre em Contato</h2>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="text-center p-6 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg">
+          <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <h3 class="font-semibold text-gray-900 dark:text-white mb-2">Email</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">Envie uma mensagem para nossa equipe</p>
+          <a href="mailto:suporte@hemodialise.ma.gov.br" class="text-primary-600 dark:text-primary-400 hover:underline text-sm font-medium">
+            suporte@hemodialise.ma.gov.br
+          </a>
+        </div>
+
+        <div class="text-center p-6 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg">
+          <div class="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+            </svg>
+          </div>
+          <h3 class="font-semibold text-gray-900 dark:text-white mb-2">Telefone</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">Seg-Sex, 8h às 18h</p>
+          <a href="tel:+559832000000" class="text-primary-600 dark:text-primary-400 hover:underline text-sm font-medium">
+            (98) 3200-0000
+          </a>
+        </div>
+
+        <div class="text-center p-6 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg">
+          <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+            </svg>
+          </div>
+          <h3 class="font-semibold text-gray-900 dark:text-white mb-2">Chat ao Vivo</h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">Resposta rápida e eficiente</p>
+          <button class="text-primary-600 dark:text-primary-400 hover:underline text-sm font-medium">
+            Iniciar chat
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed } from 'vue';
+import {
+  BookOpenIcon,
+  PlayIcon,
+  QuestionMarkCircleIcon,
+} from '@heroicons/vue/24/outline';
+
+const searchQuery = ref('');
+const faqsSection = ref(null);
+const guideSection = ref(null);
+const tutorialsSection = ref(null);
+const contactSection = ref(null);
+
+const quickLinks = [
+  {
+    id: 'getting-started',
+    title: 'Guia de Início',
+    description: 'Aprenda o básico do sistema',
+    icon: BookOpenIcon,
+    bgColor: 'bg-blue-500',
+    section: 'guide',
+  },
+  {
+    id: 'video-tutorials',
+    title: 'Vídeos Tutoriais',
+    description: 'Aprenda assistindo',
+    icon: PlayIcon,
+    bgColor: 'bg-purple-500',
+    section: 'tutorials',
+  },
+  {
+    id: 'faqs',
+    title: 'FAQs',
+    description: 'Perguntas frequentes',
+    icon: QuestionMarkCircleIcon,
+    bgColor: 'bg-green-500',
+    section: 'faqs',
+  },
+];
+
+const faqs = ref([
+  {
+    question: 'Como criar um novo checklist de segurança?',
+    answer: 'Para criar um novo checklist, acesse o menu <strong>Checklists</strong> na barra lateral e clique no botão <strong>Novo Checklist</strong>. Preencha os dados do paciente, selecione a máquina e o turno, e siga as etapas de verificação.',
+    isOpen: false,
+    category: 'checklist',
+  },
+  {
+    question: 'Como alterar minha senha?',
+    answer: 'Vá para o seu <strong>Perfil</strong> clicando no menu do usuário no canto superior direito. Na seção "Alterar Senha", preencha sua senha atual e a nova senha. Clique em <strong>Salvar</strong> para confirmar.',
+    isOpen: false,
+    category: 'conta',
+  },
+  {
+    question: 'O que fazer se uma máquina apresentar falha durante o checklist?',
+    answer: 'Se detectar alguma falha, marque o item correspondente no checklist e adicione observações detalhadas. O checklist ficará com status de "Atenção" e a máquina deve ser verificada pela equipe de manutenção antes de novo uso.',
+    isOpen: false,
+    category: 'checklist',
+  },
+  {
+    question: 'Como cadastrar um novo paciente?',
+    answer: 'Acesse <strong>Pacientes</strong> no menu lateral e clique em <strong>Novo Paciente</strong>. Preencha todos os dados obrigatórios (nome completo, CPF, data de nascimento) e informações médicas relevantes. Clique em <strong>Salvar</strong>.',
+    isOpen: false,
+    category: 'paciente',
+  },
+  {
+    question: 'Como visualizar o histórico de checklists de um paciente?',
+    answer: 'Acesse a página de <strong>Pacientes</strong>, encontre o paciente desejado e clique em "Ver Detalhes". Na aba "Histórico", você verá todos os checklists realizados com aquele paciente.',
+    isOpen: false,
+    category: 'paciente',
+  },
+  {
+    question: 'Posso editar um checklist após finalização?',
+    answer: 'Não. Por questões de auditoria e segurança, checklists finalizados não podem ser editados. Caso identifique algum erro, entre em contato com seu supervisor ou administrador do sistema.',
+    isOpen: false,
+    category: 'checklist',
+  },
+  {
+    question: 'Como trocar entre diferentes unidades?',
+    answer: 'Se você tem acesso a múltiplas unidades, use o seletor de unidades no topo da barra lateral. Clique na unidade atual e selecione a unidade desejada. Todos os dados exibidos serão filtrados para a unidade selecionada.',
+    isOpen: false,
+    category: 'sistema',
+  },
+  {
+    question: 'O sistema funciona offline?',
+    answer: 'Sim! O sistema possui funcionalidade PWA que permite uso limitado offline. Checklists podem ser preenchidos sem internet e serão sincronizados automaticamente quando a conexão for restabelecida.',
+    isOpen: false,
+    category: 'sistema',
+  },
+  {
+    question: 'Como ativar o modo escuro?',
+    answer: 'Clique no menu do usuário no canto superior direito e use o toggle de tema. Você também pode acessar <strong>Configurações > Aparência</strong> para escolher entre tema claro e escuro.',
+    isOpen: false,
+    category: 'sistema',
+  },
+  {
+    question: 'Onde encontro relatórios e estatísticas?',
+    answer: 'O <strong>Dashboard</strong> exibe as principais métricas e estatísticas em tempo real. Para relatórios mais detalhados, acesse o menu <strong>Relatórios</strong> (disponível para gerentes e administradores).',
+    isOpen: false,
+    category: 'relatorio',
+  },
+]);
+
+const guideSteps = [
+  {
+    title: 'Faça login no sistema',
+    description: 'Use suas credenciais fornecidas pela administração para acessar o sistema. Caso não tenha credenciais, entre em contato com seu supervisor.',
+    tips: 'Mantenha sua senha segura e não a compartilhe com outros usuários.',
+  },
+  {
+    title: 'Selecione sua unidade',
+    description: 'Se você trabalha em múltiplas unidades, selecione a unidade correta no topo da barra lateral. Todos os dados exibidos serão filtrados para essa unidade.',
+    tips: 'Sempre verifique se está na unidade correta antes de realizar checklists.',
+  },
+  {
+    title: 'Explore o Dashboard',
+    description: 'O Dashboard mostra as principais informações: checklists do dia, máquinas ativas, pacientes e taxa de conformidade. Use-o para ter uma visão geral da unidade.',
+  },
+  {
+    title: 'Crie seu primeiro checklist',
+    description: 'Acesse Checklists > Novo Checklist. Selecione o paciente, máquina, turno e preencha todas as verificações de segurança obrigatórias.',
+    tips: 'Cada checklist tem 8 itens obrigatórios que devem ser verificados antes do início da sessão.',
+  },
+  {
+    title: 'Acompanhe as atividades',
+    description: 'Use a seção "Atividade Recente" no Dashboard para acompanhar as últimas ações da equipe em tempo real.',
+  },
+];
+
+const videoTutorials = [
+  {
+    id: 1,
+    title: 'Introdução ao Sistema',
+    description: 'Visão geral das funcionalidades principais',
+    duration: '5:30',
+  },
+  {
+    id: 2,
+    title: 'Como criar Checklists',
+    description: 'Passo a passo completo do processo',
+    duration: '8:15',
+  },
+  {
+    id: 3,
+    title: 'Gerenciamento de Pacientes',
+    description: 'Cadastro e acompanhamento de pacientes',
+    duration: '6:45',
+  },
+  {
+    id: 4,
+    title: 'Controle de Máquinas',
+    description: 'Manutenção e histórico de equipamentos',
+    duration: '7:20',
+  },
+];
+
+const filteredFAQs = computed(() => {
+  if (!searchQuery.value) return faqs.value;
+
+  const query = searchQuery.value.toLowerCase();
+  return faqs.value.filter(faq =>
+    faq.question.toLowerCase().includes(query) ||
+    faq.answer.toLowerCase().includes(query)
+  );
+});
+
+function toggleFAQ(index) {
+  faqs.value[index].isOpen = !faqs.value[index].isOpen;
+}
+
+function scrollToSection(section) {
+  const sections = {
+    faqs: faqsSection.value,
+    guide: guideSection.value,
+    tutorials: tutorialsSection.value,
+    contact: contactSection.value,
+  };
+
+  const element = sections[section];
+  if (element) {
+    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+</script>
+
+<style scoped>
+.help-view {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.accordion-enter-active,
+.accordion-leave-active {
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.accordion-enter-from,
+.accordion-leave-to {
+  max-height: 0;
+  opacity: 0;
+}
+
+.accordion-enter-to,
+.accordion-leave-from {
+  max-height: 500px;
+  opacity: 1;
+}
+</style>
