@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\MachineController;
 use App\Http\Controllers\Api\DataSyncController;
 use App\Http\Controllers\Api\ProfileController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\NotificationController;
 use Illuminate\Support\Facades\Route;
 
 // Endpoint for user info - session authentication only
@@ -74,6 +75,16 @@ Route::middleware('auth')->group(function () {
     // Data sync endpoint - lightweight polling system for real-time updates
     Route::get('/sync/check-updates', [DataSyncController::class, 'checkUpdates']);
     Route::post('/sync/invalidate-cache', [DataSyncController::class, 'invalidateCache']);
+
+    // Notification routes - available to all authenticated users
+    Route::prefix('notifications')->group(function () {
+        Route::get('/', [NotificationController::class, 'index']);
+        Route::get('/poll', [NotificationController::class, 'poll']);
+        Route::get('/unread-count', [NotificationController::class, 'unreadCount']);
+        Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead']);
+        Route::post('/{id}/mark-read', [NotificationController::class, 'markAsRead']);
+        Route::delete('/{id}', [NotificationController::class, 'destroy']);
+    });
 
     Route::middleware(['role:tecnico,gestor,coordenador,supervisor,admin', 'unit.scope'])->group(function () {
         // Rotas específicas devem vir ANTES do apiResource para evitar conflitos

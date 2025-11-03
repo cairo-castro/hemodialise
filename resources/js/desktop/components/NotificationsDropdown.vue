@@ -118,77 +118,161 @@ import {
 
 const isOpen = ref(false);
 const dropdownRef = ref(null);
+const notifications = ref([]);
+const unreadCount = ref(0);
+const lastCheckTimestamp = ref(null);
+const pollingInterval = ref(null);
+const isLoading = ref(false);
 
-// Mock notifications (replace with real API data)
-const notifications = ref([
-  {
-    id: 1,
-    type: 'checklist',
-    title: 'Novo checklist criado',
-    message: 'Checklist de segurança para Máquina 5 foi criado por João Silva',
-    created_at: new Date(Date.now() - 5 * 60 * 1000),
-    read: false,
-  },
-  {
-    id: 2,
-    type: 'success',
-    title: 'Limpeza concluída',
-    message: 'Limpeza diária da Máquina 3 foi concluída com sucesso',
-    created_at: new Date(Date.now() - 30 * 60 * 1000),
-    read: false,
-  },
-  {
-    id: 3,
-    type: 'warning',
-    title: 'Manutenção agendada',
-    message: 'Máquina 2 tem manutenção preventiva agendada para amanhã',
-    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000),
-    read: false,
-  },
-  {
-    id: 4,
-    type: 'info',
-    title: 'Novo paciente cadastrado',
-    message: 'Paciente Maria Santos foi cadastrado no sistema',
-    created_at: new Date(Date.now() - 4 * 60 * 60 * 1000),
-    read: true,
-  },
-  {
-    id: 5,
-    type: 'error',
-    title: 'Checklist incompleto',
-    message: 'Checklist da Máquina 1 foi interrompido e precisa ser revisado',
-    created_at: new Date(Date.now() - 24 * 60 * 60 * 1000),
-    read: true,
-  },
-]);
+const POLLING_INTERVAL_MS = 30000; // Poll every 30 seconds
 
-const unreadCount = computed(() => {
-  return notifications.value.filter(n => !n.read).length;
-});
+// Load initial notifications
+async function loadNotifications() {
+  try {
+    isLoading.value = true;
+    const response = await fetch('/api/notifications?per_page=10', {
+      credentials: 'same-origin',
+      headers: { 'Accept': 'application/json' }
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      notifications.value = data.notifications.map(n => ({
+        ...n,
+        created_at: new Date(n.created_at),
+        read: !!n.read_at,
+      }));
+      unreadCount.value = data.unread_count;
+      lastCheckTimestamp.value = new Date().toISOString();
+    }
+  } catch (error) {
+    console.error('Error loading notifications:', error);
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+// Poll for new notifications
+async function pollNotifications() {
+  try {
+    const params = new URLSearchParams();
+    if (lastCheckTimestamp.value) {
+      params.append('last_check', lastCheckTimestamp.value);
+    }
+
+    const response = await fetch(`/api/notifications/poll?${params}`, {
+      credentials: 'same-origin',
+      headers: { 'Accept': 'application/json' }
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+
+      // Add new notifications to the list
+      if (data.notifications && data.notifications.length > 0) {
+        const newNotifications = data.notifications.map(n => ({
+          ...n,
+          created_at: new Date(n.created_at),
+          read: !!n.read_at,
+        }));
+
+        // Prepend new notifications
+        notifications.value = [...newNotifications, ...notifications.value].slice(0, 20);
+      }
+
+      unreadCount.value = data.unread_count;
+      lastCheckTimestamp.value = data.timestamp;
+    }
+  } catch (error) {
+    console.error('Error polling notifications:', error);
+  }
+}
+
+// Start polling
+function startPolling() {
+  // Poll immediately
+  pollNotifications();
+
+  // Then poll every POLLING_INTERVAL_MS
+  pollingInterval.value = setInterval(() => {
+    pollNotifications();
+  }, POLLING_INTERVAL_MS);
+}
+
+// Stop polling
+function stopPolling() {
+  if (pollingInterval.value) {
+    clearInterval(pollingInterval.value);
+    pollingInterval.value = null;
+  }
+}
 
 function toggleDropdown() {
   isOpen.value = !isOpen.value;
+
+  // Reload notifications when opening dropdown
+  if (isOpen.value) {
+    loadNotifications();
+  }
 }
 
-function handleNotificationClick(notification) {
+async function handleNotificationClick(notification) {
   // Mark as read
-  notification.read = true;
+  try {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
-  // Handle navigation based on notification type
-  // You can implement specific actions here
-  console.log('Notification clicked:', notification);
+    await fetch(`/api/notifications/${notification.id}/mark-read`, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': csrfToken,
+      }
+    });
+
+    // Update local state
+    notification.read = true;
+    unreadCount.value = Math.max(0, unreadCount.value - 1);
+
+    // Navigate if action_url exists
+    if (notification.action_url) {
+      window.location.href = notification.action_url;
+    }
+  } catch (error) {
+    console.error('Error marking notification as read:', error);
+  }
 }
 
-function markAllAsRead() {
-  notifications.value.forEach(n => {
-    n.read = true;
-  });
+async function markAllAsRead() {
+  try {
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+    const response = await fetch('/api/notifications/mark-all-read', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': csrfToken,
+      }
+    });
+
+    if (response.ok) {
+      // Update local state
+      notifications.value.forEach(n => {
+        n.read = true;
+      });
+      unreadCount.value = 0;
+    }
+  } catch (error) {
+    console.error('Error marking all as read:', error);
+  }
 }
 
 function viewAll() {
   isOpen.value = false;
-  // Navigate to notifications page
+  // Navigate to notifications page (can be implemented later)
   console.log('View all notifications');
 }
 
@@ -235,10 +319,19 @@ function handleClickOutside(event) {
 
 onMounted(() => {
   document.addEventListener('click', handleClickOutside);
+
+  // Load initial notifications
+  loadNotifications();
+
+  // Start polling
+  startPolling();
 });
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside);
+
+  // Stop polling when component unmounts
+  stopPolling();
 });
 </script>
 
