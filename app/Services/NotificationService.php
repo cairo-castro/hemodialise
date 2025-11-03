@@ -34,7 +34,7 @@ class NotificationService
                 'machine_id' => $machine->id ?? null,
                 'patient_id' => $patient->id ?? null,
             ],
-            actionUrl: "/admin/safety-checklists",
+            actionUrl: "/desktop/checklists",
             excludeUserId: $creator->id // Don't notify the creator
         );
     }
@@ -65,7 +65,7 @@ class NotificationService
                 'machine_id' => $machine->id ?? null,
                 'patient_id' => $patient->id ?? null,
             ],
-            actionUrl: "/admin/safety-checklists"
+            actionUrl: "/desktop/checklists"
         );
     }
 
@@ -94,7 +94,7 @@ class NotificationService
                 'machine_id' => $machine->id ?? null,
                 'reason' => $reason,
             ],
-            actionUrl: "/admin/safety-checklists"
+            actionUrl: "/desktop/checklists"
         );
     }
 
@@ -126,7 +126,7 @@ class NotificationService
                 'machine_id' => $machine->id ?? null,
                 'cleaning_type' => $typeLabel,
             ],
-            actionUrl: "/admin/cleaning-controls"
+            actionUrl: "/desktop/checklists"
         );
     }
 
@@ -150,7 +150,7 @@ class NotificationService
             data: [
                 'patient_id' => $patient->id,
             ],
-            actionUrl: "/admin/patients",
+            actionUrl: "/desktop/patients",
             excludeUserId: $creator->id
         );
     }
@@ -181,7 +181,7 @@ class NotificationService
                 'old_status' => $oldStatus->value,
                 'new_status' => $newStatus->value,
             ],
-            actionUrl: "/admin/patients"
+            actionUrl: "/desktop/patients"
         );
     }
 
@@ -211,7 +211,7 @@ class NotificationService
                 'old_status' => $oldStatus,
                 'new_status' => $newStatus,
             ],
-            actionUrl: "/admin/machines"
+            actionUrl: "/desktop/machines"
         );
     }
 
@@ -237,7 +237,7 @@ class NotificationService
                 'machine_id' => $machine->id,
                 'problem' => $problem,
             ],
-            actionUrl: "/admin/machines"
+            actionUrl: "/desktop/machines"
         );
     }
 
@@ -264,7 +264,7 @@ class NotificationService
                 'disinfection_id' => $disinfection->id,
                 'machine_id' => $machine->id ?? null,
             ],
-            actionUrl: "/admin/chemical-disinfections"
+            actionUrl: "/desktop/checklists"
         );
     }
 
