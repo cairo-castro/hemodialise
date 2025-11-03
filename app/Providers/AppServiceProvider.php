@@ -6,10 +6,12 @@ use App\Models\ChemicalDisinfection;
 use App\Models\CleaningChecklist;
 use App\Models\CleaningControl;
 use App\Models\SafetyChecklist;
+use App\Models\Patient;
 use App\Observers\ChemicalDisinfectionObserver;
 use App\Observers\CleaningChecklistObserver;
 use App\Observers\CleaningControlObserver;
 use App\Observers\SafetyChecklistObserver;
+use App\Observers\PatientObserver;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
@@ -39,7 +41,9 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
-        // Observers removidos para máxima performance
-        // unit_id é preenchido explicitamente nos controllers (zero overhead)
+        // Register observers for automatic notifications
+        SafetyChecklist::observe(SafetyChecklistObserver::class);
+        Patient::observe(PatientObserver::class);
+        CleaningControl::observe(CleaningControlObserver::class);
     }
 }
