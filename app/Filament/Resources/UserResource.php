@@ -84,6 +84,26 @@ class UserResource extends Resource
                     ->maxLength(255)
                     ->visibleOn('create')
                     ->label('Senha'),
+
+                // Alteração de senha (somente na edição)
+                Forms\Components\Section::make('Alterar Senha')
+                    ->schema([
+                        Forms\Components\TextInput::make('new_password')
+                            ->password()
+                            ->label('Nova Senha')
+                            ->helperText('Deixe em branco para manter a senha atual')
+                            ->dehydrated(fn ($state) => filled($state))
+                            ->dehydrateStateUsing(fn ($state) => filled($state) ? bcrypt($state) : null)
+                            ->minLength(6),
+                        Forms\Components\TextInput::make('new_password_confirmation')
+                            ->password()
+                            ->label('Confirmar Nova Senha')
+                            ->same('new_password')
+                            ->dehydrated(false),
+                    ])
+                    ->visibleOn('edit')
+                    ->collapsible()
+                    ->collapsed(),
             ]);
     }
 

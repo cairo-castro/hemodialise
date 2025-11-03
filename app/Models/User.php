@@ -76,6 +76,14 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
+     * Preferências de notificação do usuário
+     */
+    public function notificationPreferences()
+    {
+        return $this->hasOne(NotificationPreference::class);
+    }
+
+    /**
      * Todas as unidades às quais o usuário tem acesso
      */
     public function units()

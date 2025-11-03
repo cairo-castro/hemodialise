@@ -363,10 +363,10 @@ async function saveProfile() {
     };
 
     isEditing.value = false;
-    alert('Perfil atualizado com sucesso!');
+    showSuccessToast('Perfil atualizado com sucesso!');
   } catch (error) {
     console.error('Error saving profile:', error);
-    alert('Erro ao salvar perfil. Tente novamente.');
+    showErrorToast('Erro ao salvar perfil. Tente novamente.');
   } finally {
     isSaving.value = false;
   }
@@ -385,11 +385,43 @@ async function changePassword() {
       confirm_password: '',
     };
 
-    alert('Senha alterada com sucesso!');
+    showSuccessToast('Senha alterada com sucesso!');
   } catch (error) {
     console.error('Error changing password:', error);
-    alert('Erro ao alterar senha. Tente novamente.');
+    showErrorToast('Erro ao alterar senha. Tente novamente.');
   }
+}
+
+function showSuccessToast(message) {
+  const toast = document.createElement('div');
+  toast.className = 'fixed top-4 right-4 z-[100] px-6 py-4 bg-green-600 text-white rounded-lg shadow-lg flex items-center gap-3 animate-slide-in-right';
+  toast.innerHTML = `
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+    </svg>
+    <span class="font-medium">${message}</span>
+  `;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.animation = 'slide-out-right 0.3s ease-out forwards';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+function showErrorToast(message) {
+  const toast = document.createElement('div');
+  toast.className = 'fixed top-4 right-4 z-[100] px-6 py-4 bg-red-600 text-white rounded-lg shadow-lg flex items-center gap-3 animate-slide-in-right';
+  toast.innerHTML = `
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+    </svg>
+    <span class="font-medium">${message}</span>
+  `;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.animation = 'slide-out-right 0.3s ease-out forwards';
+    setTimeout(() => toast.remove(), 300);
+  }, 4000);
 }
 
 function getRoleName(role) {

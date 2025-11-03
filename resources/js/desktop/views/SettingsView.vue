@@ -143,120 +143,33 @@
 
         <button
           @click="saveNotificationSettings"
-          class="mt-6 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium"
+          :disabled="isSavingPreferences"
+          class="mt-6 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Salvar Preferências
+          {{ isSavingPreferences ? 'Salvando...' : 'Salvar Preferências' }}
         </button>
       </div>
     </div>
 
-    <!-- Data & Privacy Settings -->
-    <div v-if="activeTab === 'privacy'" class="space-y-6">
-      <div class="bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Privacidade de Dados</h3>
-
-        <div class="space-y-4">
-          <div class="flex items-start space-x-3">
-            <input type="checkbox" id="data-collection" class="mt-1 w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500">
-            <div>
-              <label for="data-collection" class="font-medium text-gray-900 dark:text-white">Coleta de Dados de Uso</label>
-              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                Permitir coleta anônima de dados para melhorar a experiência do sistema
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Exportar Dados</h3>
-        <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-          Baixe uma cópia de todos os seus dados armazenados no sistema
-        </p>
-        <button class="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-medium">
-          Exportar Meus Dados
-        </button>
-      </div>
-
-      <div class="bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800 p-6">
-        <h3 class="text-lg font-semibold text-red-900 dark:text-red-400 mb-4">Zona de Perigo</h3>
-        <p class="text-sm text-red-700 dark:text-red-300 mb-4">
-          Ações irreversíveis. Tenha cuidado ao prosseguir.
-        </p>
-        <button class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium">
-          Deletar Conta
-        </button>
-      </div>
-    </div>
-
-    <!-- System Settings (Admin Only) -->
-    <div v-if="activeTab === 'system'" class="space-y-6">
-      <div class="bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Backup e Manutenção</h3>
-
-        <div class="space-y-4">
-          <div class="flex items-center justify-between py-3 border-b border-gray-200 dark:border-gray-700">
-            <div>
-              <p class="font-medium text-gray-900 dark:text-white">Backup Automático</p>
-              <p class="text-sm text-gray-500 dark:text-gray-400">Backup diário do banco de dados às 03:00</p>
-            </div>
-            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
-              Ativo
-            </span>
-          </div>
-
-          <div class="flex items-center justify-between py-3">
-            <div>
-              <p class="font-medium text-gray-900 dark:text-white">Último Backup</p>
-              <p class="text-sm text-gray-500 dark:text-gray-400">02 de novembro de 2025, 03:00</p>
-            </div>
-            <button class="px-3 py-1 text-sm font-medium text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded transition-colors">
-              Fazer Backup Agora
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 p-6">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Cache e Performance</h3>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <button class="flex flex-col items-center p-4 border-2 border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary-500 dark:hover:border-primary-500 transition-colors">
-            <svg class="w-8 h-8 text-gray-600 dark:text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            <span class="font-medium text-gray-900 dark:text-white">Limpar Cache</span>
-          </button>
-
-          <button class="flex flex-col items-center p-4 border-2 border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary-500 dark:hover:border-primary-500 transition-colors">
-            <svg class="w-8 h-8 text-gray-600 dark:text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-            </svg>
-            <span class="font-medium text-gray-900 dark:text-white">Otimizar BD</span>
-          </button>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import axios from 'axios';
 import {
   Cog6ToothIcon,
   BellIcon,
-  ShieldCheckIcon,
-  ServerIcon,
 } from '@heroicons/vue/24/outline';
 
 const activeTab = ref('general');
 const currentTheme = ref('light');
+const isLoadingPreferences = ref(false);
+const isSavingPreferences = ref(false);
 
 const tabs = [
   { id: 'general', label: 'Geral', icon: Cog6ToothIcon },
   { id: 'notifications', label: 'Notificações', icon: BellIcon },
-  { id: 'privacy', label: 'Privacidade', icon: ShieldCheckIcon },
-  { id: 'system', label: 'Sistema', icon: ServerIcon },
 ];
 
 const notifications = ref({
@@ -266,9 +179,32 @@ const notifications = ref({
   systemUpdates: true,
 });
 
-onMounted(() => {
+onMounted(async () => {
   currentTheme.value = localStorage.getItem('theme') || 'light';
+  await fetchNotificationPreferences();
 });
+
+async function fetchNotificationPreferences() {
+  try {
+    isLoadingPreferences.value = true;
+    const response = await axios.get('/api/notification-preferences');
+
+    if (response.data.success && response.data.preferences) {
+      const prefs = response.data.preferences;
+      notifications.value = {
+        newChecklists: prefs.email_new_checklists,
+        maintenance: prefs.email_maintenance,
+        weeklyReports: prefs.email_weekly_reports,
+        systemUpdates: prefs.email_system_updates,
+      };
+    }
+  } catch (error) {
+    console.error('Erro ao carregar preferências:', error);
+    showErrorToast('Erro ao carregar preferências de notificação');
+  } finally {
+    isLoadingPreferences.value = false;
+  }
+}
 
 function changeTheme(theme) {
   currentTheme.value = theme;
@@ -282,8 +218,60 @@ function changeTheme(theme) {
   }
 }
 
-function saveNotificationSettings() {
-  alert('Preferências de notificação salvas com sucesso!');
+async function saveNotificationSettings() {
+  if (isSavingPreferences.value) return;
+
+  try {
+    isSavingPreferences.value = true;
+
+    const response = await axios.put('/api/notification-preferences', {
+      email_new_checklists: notifications.value.newChecklists,
+      email_maintenance: notifications.value.maintenance,
+      email_weekly_reports: notifications.value.weeklyReports,
+      email_system_updates: notifications.value.systemUpdates,
+    });
+
+    if (response.data.success) {
+      showSuccessToast('Preferências de notificação salvas com sucesso!');
+    }
+  } catch (error) {
+    console.error('Erro ao salvar preferências:', error);
+    showErrorToast(error.response?.data?.message || 'Erro ao salvar preferências');
+  } finally {
+    isSavingPreferences.value = false;
+  }
+}
+
+function showSuccessToast(message) {
+  const toast = document.createElement('div');
+  toast.className = 'fixed top-4 right-4 z-[100] px-6 py-4 bg-green-600 text-white rounded-lg shadow-lg flex items-center gap-3 animate-slide-in-right';
+  toast.innerHTML = `
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+    </svg>
+    <span class="font-medium">${message}</span>
+  `;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.animation = 'slide-out-right 0.3s ease-out forwards';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+function showErrorToast(message) {
+  const toast = document.createElement('div');
+  toast.className = 'fixed top-4 right-4 z-[100] px-6 py-4 bg-red-600 text-white rounded-lg shadow-lg flex items-center gap-3 animate-slide-in-right';
+  toast.innerHTML = `
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+    </svg>
+    <span class="font-medium">${message}</span>
+  `;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.animation = 'slide-out-right 0.3s ease-out forwards';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
 }
 </script>
 

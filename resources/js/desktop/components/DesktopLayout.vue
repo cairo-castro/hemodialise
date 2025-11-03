@@ -219,6 +219,7 @@ import {
   UsersIcon,
   UserCircleIcon,
   InboxIcon,
+  ChartBarIcon,
 } from '@heroicons/vue/24/outline';
 import CommandPalette from './CommandPalette.vue';
 import NotificationsDropdown from './NotificationsDropdown.vue';
@@ -245,9 +246,11 @@ const showUnitSelector = ref(false);
 
 const navigationItems = [
   { name: 'dashboard', path: '/desktop', label: 'Dashboard', icon: HomeIcon },
-  { name: 'checklists', path: '/desktop/checklists', label: 'Checklists', icon: ClipboardDocumentCheckIcon, badge: 4 },
+  { name: 'checklists', path: '/desktop/checklists', label: 'Checklists de Segurança', icon: ClipboardDocumentCheckIcon, badge: 4 },
+  { name: 'cleaning-checklists', path: '/desktop/cleaning-checklists', label: 'Checklist de Limpeza', icon: ClipboardDocumentCheckIcon },
   { name: 'machines', path: '/desktop/machines', label: 'Máquinas', icon: CpuChipIcon },
   { name: 'patients', path: '/desktop/patients', label: 'Pacientes', icon: UsersIcon },
+  { name: 'reports', path: '/desktop/reports', label: 'Relatórios', icon: ChartBarIcon },
 ];
 
 const pageTitle = computed(() => {
@@ -259,8 +262,11 @@ const pageSubtitle = computed(() => {
   const subtitles = {
     '/desktop': 'Visão geral do sistema',
     '/desktop/checklists': 'Checklists de segurança',
+    '/desktop/cleaning-checklists': 'Controle de limpeza e desinfecção',
     '/desktop/machines': 'Gerenciamento de máquinas',
     '/desktop/patients': 'Cadastro de pacientes',
+    '/desktop/reports': 'Análises detalhadas e comparações de desempenho',
+    '/desktop/notifications': 'Central de avisos e atualizações',
     '/desktop/profile': 'Gerenciar informações pessoais',
     '/desktop/settings': 'Configurações do sistema',
     '/desktop/help': 'Central de ajuda e suporte',

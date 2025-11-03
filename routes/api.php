@@ -86,8 +86,15 @@ Route::middleware('auth')->group(function () {
         Route::delete('/{id}', [NotificationController::class, 'destroy']);
     });
 
+    // Notification Preferences routes - available to all authenticated users
+    Route::prefix('notification-preferences')->group(function () {
+        Route::get('/', [App\Http\Controllers\Api\NotificationPreferenceController::class, 'index']);
+        Route::put('/', [App\Http\Controllers\Api\NotificationPreferenceController::class, 'update']);
+    });
+
     Route::middleware(['role:tecnico,gestor,coordenador,supervisor,admin', 'unit.scope'])->group(function () {
         // Rotas específicas devem vir ANTES do apiResource para evitar conflitos
+        Route::get('/checklists/stats', [ChecklistController::class, 'stats']);
         Route::get('/checklists/active', [ChecklistController::class, 'active']);
         Route::get('/checklists/recent', [ChecklistController::class, 'recent']);
         Route::patch('/checklists/{checklist}/phase', [ChecklistController::class, 'updatePhase']);
@@ -120,5 +127,9 @@ Route::middleware('auth')->group(function () {
         // Cleaning Checklist routes
         Route::get('/cleaning-checklists/stats', [CleaningChecklistController::class, 'stats']);
         Route::apiResource('cleaning-checklists', CleaningChecklistController::class);
+
+        // Cleaning Control routes
+        Route::get('/cleaning-controls/stats', [App\Http\Controllers\Api\CleaningControlController::class, 'stats']);
+        Route::apiResource('cleaning-controls', App\Http\Controllers\Api\CleaningControlController::class);
     });
 });

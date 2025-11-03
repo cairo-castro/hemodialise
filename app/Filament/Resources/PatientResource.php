@@ -113,6 +113,11 @@ class PatientResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                Tables\Filters\SelectFilter::make('unit_id')
+                    ->label('Unidade')
+                    ->relationship('unit', 'name')
+                    ->searchable()
+                    ->preload(),
                 Tables\Filters\SelectFilter::make('status')
                     ->label('Status')
                     ->options([
@@ -123,6 +128,14 @@ class PatientResource extends Resource
                         PatientStatus::OBITO->value => PatientStatus::OBITO->label(),
                     ])
                     ->multiple(),
+                Tables\Filters\SelectFilter::make('blood_group')
+                    ->label('Tipo Sanguíneo')
+                    ->options([
+                        'A' => 'A',
+                        'B' => 'B',
+                        'AB' => 'AB',
+                        'O' => 'O',
+                    ]),
                 Tables\Filters\Filter::make('exclude_terminal')
                     ->label('Excluir Status Terminal (Alta/Óbito)')
                     ->query(fn (Builder $query): Builder => $query->excludeTerminal())

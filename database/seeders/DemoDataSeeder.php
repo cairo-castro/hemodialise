@@ -7,6 +7,7 @@ use App\Models\Unit;
 use App\Models\Machine;
 use App\Models\Patient;
 use App\Models\SafetyChecklist;
+use App\Models\CleaningControl;
 use App\Models\User;
 use App\Enums\PatientStatus;
 use Carbon\Carbon;
@@ -117,89 +118,207 @@ class DemoDataSeeder extends Seeder
                 return $patient->status === PatientStatus::ATIVO->value;
             });
 
-            // Skip if no active patients
+            $checklistsCreated = 0;
+
+            // Skip checklist creation if no active patients, but continue with other data
             if (count($activePatients) === 0) {
                 $this->command->warn("  - No active patients, skipping checklist creation");
-                continue;
+            } else {
+                $checklistsPerDay = rand(5, 15);
+
+                for ($day = 0; $day < 30; $day++) {
+                    $date = Carbon::now()->subDays($day);
+
+                    for ($c = 0; $c < $checklistsPerDay; $c++) {
+                        try {
+                            // Random shift based on time
+                            $hour = rand(6, 22);
+                            $shift = $hour >= 6 && $hour < 12 ? 'Matutino' : ($hour >= 12 && $hour < 18 ? 'Vespertino' : 'Noturno');
+
+                            $sessionDate = $date->copy()->setHour($hour)->setMinute(rand(0, 59))->setSecond(rand(0, 59));
+
+                            // Random phase
+                            $phases = ['pre_dialysis', 'during_session', 'post_dialysis', 'completed'];
+                            $phaseWeights = [10, 20, 20, 50]; // More completed checklists
+                            $randomPhase = $this->weightedRandom($phases, $phaseWeights);
+
+                            $checklist = SafetyChecklist::create([
+                            'patient_id' => $faker->randomElement($activePatients)->id,
+                            'machine_id' => $faker->randomElement($machines)->id,
+                            'unit_id' => $unit->id,
+                            'user_id' => $defaultUser->id,
+                            'session_date' => $sessionDate,
+                            'shift' => $shift,
+                            'current_phase' => $randomPhase,
+
+                            // Pre-dialysis checks (always filled if phase >= pre_dialise)
+                            'machine_disinfected' => true,
+                            'capillary_lines_identified' => true,
+                            'reagent_test_performed' => true,
+                            'pressure_sensors_verified' => true,
+                            'air_bubble_detector_verified' => true,
+                            'patient_identification_confirmed' => true,
+                            'vascular_access_evaluated' => true,
+                            'av_fistula_arm_washed' => true,
+                            'patient_weighed' => true,
+                            'vital_signs_checked' => true,
+                            'medications_reviewed' => true,
+                            'dialyzer_membrane_checked' => true,
+                            'equipment_functioning_verified' => true,
+
+                            'pre_dialysis_started_at' => $sessionDate,
+                            'pre_dialysis_completed_at' => $sessionDate->copy()->addMinutes(rand(10, 20)),
+
+                            // During session (filled if phase >= during_session)
+                            'dialysis_parameters_verified' => in_array($randomPhase, ['during_session', 'post_dialysis', 'completed']) ? true : false,
+                            'heparin_double_checked' => in_array($randomPhase, ['during_session', 'post_dialysis', 'completed']) ? true : false,
+                            'antisepsis_performed' => in_array($randomPhase, ['during_session', 'post_dialysis', 'completed']) ? true : false,
+                            'vascular_access_monitored' => in_array($randomPhase, ['during_session', 'post_dialysis', 'completed']) ? true : false,
+                            'vital_signs_monitored_during' => in_array($randomPhase, ['during_session', 'post_dialysis', 'completed']) ? true : false,
+                            'patient_comfort_assessed' => in_array($randomPhase, ['during_session', 'post_dialysis', 'completed']) ? true : false,
+                            'fluid_balance_monitored' => in_array($randomPhase, ['during_session', 'post_dialysis', 'completed']) ? true : false,
+                            'alarms_responded' => in_array($randomPhase, ['during_session', 'post_dialysis', 'completed']) ? true : false,
+
+                            'during_session_started_at' => in_array($randomPhase, ['during_session', 'post_dialysis', 'completed']) ? $sessionDate->copy()->addMinutes(rand(20, 30)) : null,
+                            'during_session_completed_at' => in_array($randomPhase, ['during_session', 'post_dialysis', 'completed']) ? $sessionDate->copy()->addHours(rand(3, 4)) : null,
+
+                            // Post-dialysis (filled only if phase >= post_dialysis)
+                            'session_completed_safely' => in_array($randomPhase, ['post_dialysis', 'completed']) ? true : false,
+                            'vascular_access_secured' => in_array($randomPhase, ['post_dialysis', 'completed']) ? true : false,
+                            'patient_vital_signs_stable' => in_array($randomPhase, ['post_dialysis', 'completed']) ? true : false,
+                            'complications_assessed' => in_array($randomPhase, ['post_dialysis', 'completed']) ? true : false,
+                            'equipment_cleaned' => in_array($randomPhase, ['post_dialysis', 'completed']) ? true : false,
+
+                            'post_dialysis_started_at' => in_array($randomPhase, ['post_dialysis', 'completed']) ? $sessionDate->copy()->addHours(rand(3, 4)) : null,
+                            'post_dialysis_completed_at' => in_array($randomPhase, ['post_dialysis', 'completed']) ? $sessionDate->copy()->addHours(rand(4, 5)) : null,
+
+                            'is_interrupted' => false,
+                            'observations' => $faker->boolean(20) ? $faker->sentence() : null,
+                            'created_at' => $sessionDate,
+                            'updated_at' => $sessionDate,
+                            ]);
+                            $checklistsCreated++;
+                        } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
+                            // Skip duplicate entries silently
+                            continue;
+                        }
+                    }
+                }
             }
 
-            $checklistsPerDay = rand(5, 15);
-            $checklistsCreated = 0;
+            // Create cleaning controls for the last 30 days
+            // Cleaning controls are independent of patient status
+            $cleaningControlsCreated = 0;
+            $cleaningTypes = ['daily_cleaning', 'weekly_cleaning', 'monthly_cleaning', 'special_cleaning'];
 
             for ($day = 0; $day < 30; $day++) {
                 $date = Carbon::now()->subDays($day);
 
-                for ($c = 0; $c < $checklistsPerDay; $c++) {
+                // Daily cleanings - 2-4 per day
+                $dailyCleanings = rand(2, 4);
+                for ($c = 0; $c < $dailyCleanings; $c++) {
                     try {
-                        // Random shift based on time
-                        $hour = rand(6, 22);
-                        $shift = $hour >= 6 && $hour < 12 ? 'Matutino' : ($hour >= 12 && $hour < 18 ? 'Vespertino' : 'Noturno');
+                        $hour = rand(6, 20);
+                        $minute = rand(0, 59);
+                        $shift = $hour >= 6 && $hour < 12 ? 'morning' : ($hour >= 12 && $hour < 18 ? 'afternoon' : 'night');
+                        $cleaningDateTime = $date->copy()->setHour($hour)->setMinute($minute);
 
-                        $sessionDate = $date->copy()->setHour($hour)->setMinute(rand(0, 59))->setSecond(rand(0, 59));
-
-                        // Random phase
-                        $phases = ['pre_dialysis', 'during_session', 'post_dialysis', 'completed'];
-                        $phaseWeights = [10, 20, 20, 50]; // More completed checklists
-                        $randomPhase = $this->weightedRandom($phases, $phaseWeights);
-
-                        $checklist = SafetyChecklist::create([
-                        'patient_id' => $faker->randomElement($activePatients)->id,
-                        'machine_id' => $faker->randomElement($machines)->id,
-                        'unit_id' => $unit->id,
-                        'user_id' => $defaultUser->id,
-                        'session_date' => $sessionDate,
-                        'shift' => $shift,
-                        'current_phase' => $randomPhase,
-
-                        // Pre-dialysis checks (always filled if phase >= pre_dialise)
-                        'machine_disinfected' => true,
-                        'capillary_lines_identified' => true,
-                        'reagent_test_performed' => true,
-                        'pressure_sensors_verified' => true,
-                        'air_bubble_detector_verified' => true,
-                        'patient_identification_confirmed' => true,
-                        'vascular_access_evaluated' => true,
-                        'av_fistula_arm_washed' => true,
-                        'patient_weighed' => true,
-                        'vital_signs_checked' => true,
-                        'medications_reviewed' => true,
-                        'dialyzer_membrane_checked' => true,
-                        'equipment_functioning_verified' => true,
-
-                        'pre_dialysis_started_at' => $sessionDate,
-                        'pre_dialysis_completed_at' => $sessionDate->copy()->addMinutes(rand(10, 20)),
-
-                        // During session (filled if phase >= during_session)
-                        'dialysis_parameters_verified' => in_array($randomPhase, ['during_session', 'post_dialysis', 'completed']) ? true : false,
-                        'heparin_double_checked' => in_array($randomPhase, ['during_session', 'post_dialysis', 'completed']) ? true : false,
-                        'antisepsis_performed' => in_array($randomPhase, ['during_session', 'post_dialysis', 'completed']) ? true : false,
-                        'vascular_access_monitored' => in_array($randomPhase, ['during_session', 'post_dialysis', 'completed']) ? true : false,
-                        'vital_signs_monitored_during' => in_array($randomPhase, ['during_session', 'post_dialysis', 'completed']) ? true : false,
-                        'patient_comfort_assessed' => in_array($randomPhase, ['during_session', 'post_dialysis', 'completed']) ? true : false,
-                        'fluid_balance_monitored' => in_array($randomPhase, ['during_session', 'post_dialysis', 'completed']) ? true : false,
-                        'alarms_responded' => in_array($randomPhase, ['during_session', 'post_dialysis', 'completed']) ? true : false,
-
-                        'during_session_started_at' => in_array($randomPhase, ['during_session', 'post_dialysis', 'completed']) ? $sessionDate->copy()->addMinutes(rand(20, 30)) : null,
-                        'during_session_completed_at' => in_array($randomPhase, ['during_session', 'post_dialysis', 'completed']) ? $sessionDate->copy()->addHours(rand(3, 4)) : null,
-
-                        // Post-dialysis (filled only if phase >= post_dialysis)
-                        'session_completed_safely' => in_array($randomPhase, ['post_dialysis', 'completed']) ? true : false,
-                        'vascular_access_secured' => in_array($randomPhase, ['post_dialysis', 'completed']) ? true : false,
-                        'patient_vital_signs_stable' => in_array($randomPhase, ['post_dialysis', 'completed']) ? true : false,
-                        'complications_assessed' => in_array($randomPhase, ['post_dialysis', 'completed']) ? true : false,
-                        'equipment_cleaned' => in_array($randomPhase, ['post_dialysis', 'completed']) ? true : false,
-
-                        'post_dialysis_started_at' => in_array($randomPhase, ['post_dialysis', 'completed']) ? $sessionDate->copy()->addHours(rand(3, 4)) : null,
-                        'post_dialysis_completed_at' => in_array($randomPhase, ['post_dialysis', 'completed']) ? $sessionDate->copy()->addHours(rand(4, 5)) : null,
-
-                        'is_interrupted' => false,
-                        'observations' => $faker->boolean(20) ? $faker->sentence() : null,
-                        'created_at' => $sessionDate,
-                        'updated_at' => $sessionDate,
+                        CleaningControl::create([
+                            'machine_id' => $faker->randomElement($machines)->id,
+                            'unit_id' => $unit->id,
+                            'user_id' => $defaultUser->id,
+                            'cleaning_date' => $cleaningDateTime->format('Y-m-d'),
+                            'cleaning_time' => $cleaningDateTime->format('H:i:s'),
+                            'shift' => $shift,
+                            'daily_cleaning' => true,
+                            'weekly_cleaning' => false,
+                            'monthly_cleaning' => false,
+                            'special_cleaning' => false,
+                            'cleaning_products_used' => $faker->randomElement([
+                                'Álcool 70%, Detergente neutro',
+                                'Hipoclorito de sódio, Água sanitária',
+                                'Desinfetante hospitalar, Álcool isopropílico'
+                            ]),
+                            'cleaning_procedure' => $faker->randomElement([
+                                'Limpeza externa completa, desinfecção de superfícies',
+                                'Higienização interna e externa, troca de filtros',
+                                'Desinfecção completa, limpeza do sistema hidráulico'
+                            ]),
+                            'hd_machine_cleaning' => $faker->boolean(90), // 90% conformity
+                            'osmosis_cleaning' => $faker->boolean(85),
+                            'serum_support_cleaning' => $faker->boolean(88),
+                            'chemical_disinfection' => $faker->boolean(80),
+                            'observations' => $faker->boolean(30) ? $faker->sentence() : null,
+                            'created_at' => $cleaningDateTime,
+                            'updated_at' => $cleaningDateTime,
                         ]);
-                        $checklistsCreated++;
-                    } catch (\Illuminate\Database\UniqueConstraintViolationException $e) {
-                        // Skip duplicate entries silently
+                        $cleaningControlsCreated++;
+                    } catch (\Exception $e) {
+                        $this->command->error("    Error creating daily cleaning: " . $e->getMessage());
+                        continue;
+                    }
+                }
+
+                // Weekly cleaning - once per week
+                if ($day % 7 === 0) {
+                    try {
+                        $weeklyTime = $date->copy()->setHour(8)->setMinute(0);
+                        CleaningControl::create([
+                            'machine_id' => $faker->randomElement($machines)->id,
+                            'unit_id' => $unit->id,
+                            'user_id' => $defaultUser->id,
+                            'cleaning_date' => $weeklyTime->format('Y-m-d'),
+                            'cleaning_time' => $weeklyTime->format('H:i:s'),
+                            'shift' => 'morning',
+                            'daily_cleaning' => false,
+                            'weekly_cleaning' => true,
+                            'monthly_cleaning' => false,
+                            'special_cleaning' => false,
+                            'cleaning_products_used' => 'Desinfetante hospitalar, Detergente enzimático',
+                            'cleaning_procedure' => 'Limpeza profunda semanal, verificação completa do sistema',
+                            'hd_machine_cleaning' => true,
+                            'osmosis_cleaning' => true,
+                            'serum_support_cleaning' => true,
+                            'chemical_disinfection' => $faker->boolean(90),
+                            'observations' => $faker->boolean(40) ? $faker->sentence() : null,
+                            'created_at' => $weeklyTime,
+                            'updated_at' => $weeklyTime,
+                        ]);
+                        $cleaningControlsCreated++;
+                    } catch (\Exception $e) {
+                        $this->command->error("    Error creating weekly cleaning: " . $e->getMessage());
+                        continue;
+                    }
+                }
+
+                // Monthly cleaning - once per month
+                if ($day === 0 || $day === 30) {
+                    try {
+                        $monthlyTime = $date->copy()->setHour(7)->setMinute(0);
+                        CleaningControl::create([
+                            'machine_id' => $faker->randomElement($machines)->id,
+                            'unit_id' => $unit->id,
+                            'user_id' => $defaultUser->id,
+                            'cleaning_date' => $monthlyTime->format('Y-m-d'),
+                            'cleaning_time' => $monthlyTime->format('H:i:s'),
+                            'shift' => 'morning',
+                            'daily_cleaning' => false,
+                            'weekly_cleaning' => false,
+                            'monthly_cleaning' => true,
+                            'special_cleaning' => false,
+                            'cleaning_products_used' => 'Kit completo de desinfecção, Produtos especializados',
+                            'cleaning_procedure' => 'Manutenção preventiva mensal, limpeza completa de todos os componentes',
+                            'hd_machine_cleaning' => true,
+                            'osmosis_cleaning' => true,
+                            'serum_support_cleaning' => true,
+                            'chemical_disinfection' => true,
+                            'observations' => 'Manutenção preventiva mensal realizada',
+                            'created_at' => $monthlyTime,
+                            'updated_at' => $monthlyTime,
+                        ]);
+                        $cleaningControlsCreated++;
+                    } catch (\Exception $e) {
+                        $this->command->error("    Error creating monthly cleaning: " . $e->getMessage());
                         continue;
                     }
                 }
@@ -211,6 +330,7 @@ class DemoDataSeeder extends Seeder
             $this->command->info("  - Machines: {$machineCount}");
             $this->command->info("  - Patients: {$patientCount}");
             $this->command->info("  - Checklists created: {$checklistsCreated}");
+            $this->command->info("  - Cleaning controls created: {$cleaningControlsCreated}");
         }
 
         $this->command->info('Demo data created successfully!');
@@ -219,6 +339,7 @@ class DemoDataSeeder extends Seeder
         $totalMachines = Machine::count();
         $totalPatients = Patient::count();
         $totalChecklists = SafetyChecklist::count();
+        $totalCleaningControls = CleaningControl::count();
 
         // Patient status distribution
         $statusDistribution = [
@@ -239,6 +360,7 @@ class DemoDataSeeder extends Seeder
             $this->command->info("  - {$status}: {$count} ({$percentage}%)");
         }
         $this->command->info("\nTotal Checklists: {$totalChecklists}");
+        $this->command->info("Total Cleaning Controls: {$totalCleaningControls}");
     }
 
     /**

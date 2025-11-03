@@ -24,6 +24,10 @@ class CleaningControl extends Model
         'internal_cleaning_done',
         'filter_replacement',
         'system_disinfection',
+        'hd_machine_cleaning',
+        'osmosis_cleaning',
+        'serum_support_cleaning',
+        'chemical_disinfection',
         'observations',
         'responsible_signature',
     ];
@@ -39,6 +43,10 @@ class CleaningControl extends Model
         'internal_cleaning_done' => 'boolean',
         'filter_replacement' => 'boolean',
         'system_disinfection' => 'boolean',
+        'hd_machine_cleaning' => 'boolean',
+        'osmosis_cleaning' => 'boolean',
+        'serum_support_cleaning' => 'boolean',
+        'chemical_disinfection' => 'boolean',
     ];
 
     public function machine(): BelongsTo

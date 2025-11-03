@@ -35,40 +35,171 @@ class CleaningControlResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Select::make('machine_id')
-                    ->relationship('machine', 'name')
-                    ->required(),
-                Forms\Components\Select::make('user_id')
-                    ->relationship('user', 'name')
-                    ->required(),
-                Forms\Components\DatePicker::make('cleaning_date')
-                    ->required(),
-                Forms\Components\TextInput::make('shift')
-                    ->required(),
-                Forms\Components\TextInput::make('cleaning_time')
-                    ->required(),
-                Forms\Components\Toggle::make('daily_cleaning')
-                    ->required(),
-                Forms\Components\Toggle::make('weekly_cleaning')
-                    ->required(),
-                Forms\Components\Toggle::make('monthly_cleaning')
-                    ->required(),
-                Forms\Components\Toggle::make('special_cleaning')
-                    ->required(),
-                Forms\Components\TextInput::make('cleaning_products_used'),
-                Forms\Components\Textarea::make('cleaning_procedure')
-                    ->columnSpanFull(),
-                Forms\Components\Toggle::make('external_cleaning_done')
-                    ->required(),
-                Forms\Components\Toggle::make('internal_cleaning_done')
-                    ->required(),
-                Forms\Components\Toggle::make('filter_replacement')
-                    ->required(),
-                Forms\Components\Toggle::make('system_disinfection')
-                    ->required(),
-                Forms\Components\Textarea::make('observations')
-                    ->columnSpanFull(),
-                Forms\Components\TextInput::make('responsible_signature'),
+                // Informações Gerais
+                Forms\Components\Section::make('Informações Gerais')
+                    ->schema([
+                        Forms\Components\Select::make('machine_id')
+                            ->label('Máquina')
+                            ->relationship('machine', 'name')
+                            ->searchable()
+                            ->required(),
+                        Forms\Components\Select::make('user_id')
+                            ->label('Responsável')
+                            ->relationship('user', 'name')
+                            ->searchable()
+                            ->required(),
+                        Forms\Components\DatePicker::make('cleaning_date')
+                            ->label('Data da Limpeza')
+                            ->required()
+                            ->native(false)
+                            ->displayFormat('d/m/Y'),
+                        Forms\Components\Select::make('shift')
+                            ->label('Turno')
+                            ->options([
+                                'manha' => 'Manhã',
+                                'tarde' => 'Tarde',
+                                'noite' => 'Noite',
+                                'madrugada' => 'Madrugada',
+                            ])
+                            ->required(),
+                        Forms\Components\TimePicker::make('cleaning_time')
+                            ->label('Horário da Limpeza')
+                            ->required()
+                            ->native(false)
+                            ->seconds(false),
+                        Forms\Components\TextInput::make('responsible_signature')
+                            ->label('Assinatura do Responsável')
+                            ->maxLength(255),
+                    ])
+                    ->columns(2),
+
+                // Tipo de Limpeza
+                Forms\Components\Section::make('Tipo de Limpeza')
+                    ->schema([
+                        Forms\Components\Select::make('daily_cleaning')
+                            ->label('Limpeza Diária')
+                            ->options([
+                                true => 'Conforme',
+                                false => 'Não Conforme',
+                                null => 'Não se Aplica',
+                            ])
+                            ->native(false),
+                        Forms\Components\Select::make('weekly_cleaning')
+                            ->label('Limpeza Semanal')
+                            ->options([
+                                true => 'Conforme',
+                                false => 'Não Conforme',
+                                null => 'Não se Aplica',
+                            ])
+                            ->native(false),
+                        Forms\Components\Select::make('monthly_cleaning')
+                            ->label('Limpeza Mensal')
+                            ->options([
+                                true => 'Conforme',
+                                false => 'Não Conforme',
+                                null => 'Não se Aplica',
+                            ])
+                            ->native(false),
+                        Forms\Components\Select::make('special_cleaning')
+                            ->label('Limpeza Especial')
+                            ->options([
+                                true => 'Conforme',
+                                false => 'Não Conforme',
+                                null => 'Não se Aplica',
+                            ])
+                            ->native(false),
+                    ])
+                    ->columns(2)
+                    ->collapsible(),
+
+                // Itens de Limpeza
+                Forms\Components\Section::make('Itens de Limpeza')
+                    ->schema([
+                        Forms\Components\Select::make('hd_machine_cleaning')
+                            ->label('Limpeza da Máquina de HD')
+                            ->options([
+                                true => 'Conforme',
+                                false => 'Não Conforme',
+                                null => 'Não se Aplica',
+                            ])
+                            ->native(false),
+                        Forms\Components\Select::make('osmosis_cleaning')
+                            ->label('Limpeza da Osmose')
+                            ->options([
+                                true => 'Conforme',
+                                false => 'Não Conforme',
+                                null => 'Não se Aplica',
+                            ])
+                            ->native(false),
+                        Forms\Components\Select::make('serum_support_cleaning')
+                            ->label('Limpeza do Suporte de Soro')
+                            ->options([
+                                true => 'Conforme',
+                                false => 'Não Conforme',
+                                null => 'Não se Aplica',
+                            ])
+                            ->native(false),
+                        Forms\Components\Select::make('external_cleaning_done')
+                            ->label('Limpeza Externa Realizada')
+                            ->options([
+                                true => 'Conforme',
+                                false => 'Não Conforme',
+                                null => 'Não se Aplica',
+                            ])
+                            ->native(false),
+                        Forms\Components\Select::make('internal_cleaning_done')
+                            ->label('Limpeza Interna Realizada')
+                            ->options([
+                                true => 'Conforme',
+                                false => 'Não Conforme',
+                                null => 'Não se Aplica',
+                            ])
+                            ->native(false),
+                        Forms\Components\Select::make('filter_replacement')
+                            ->label('Troca de Filtro')
+                            ->options([
+                                true => 'Conforme',
+                                false => 'Não Conforme',
+                                null => 'Não se Aplica',
+                            ])
+                            ->native(false),
+                        Forms\Components\Select::make('system_disinfection')
+                            ->label('Desinfecção do Sistema')
+                            ->options([
+                                true => 'Conforme',
+                                false => 'Não Conforme',
+                                null => 'Não se Aplica',
+                            ])
+                            ->native(false),
+                        Forms\Components\Select::make('chemical_disinfection')
+                            ->label('Desinfecção Química')
+                            ->options([
+                                true => 'Conforme',
+                                false => 'Não Conforme',
+                                null => 'Não se Aplica',
+                            ])
+                            ->native(false),
+                    ])
+                    ->columns(2)
+                    ->collapsible(),
+
+                // Produtos e Procedimentos
+                Forms\Components\Section::make('Produtos e Procedimentos')
+                    ->schema([
+                        Forms\Components\TextInput::make('cleaning_products_used')
+                            ->label('Produtos de Limpeza Utilizados')
+                            ->maxLength(255)
+                            ->columnSpanFull(),
+                        Forms\Components\Textarea::make('cleaning_procedure')
+                            ->label('Procedimento de Limpeza')
+                            ->rows(3)
+                            ->columnSpanFull(),
+                        Forms\Components\Textarea::make('observations')
+                            ->label('Observações')
+                            ->rows(3)
+                            ->columnSpanFull(),
+                    ])
+                    ->collapsible(),
             ]);
     }
 
@@ -128,7 +259,19 @@ class CleaningControlResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('unit_id')
+                    ->label('Unidade')
+                    ->relationship('machine.unit', 'name')
+                    ->searchable()
+                    ->preload(),
+                Tables\Filters\SelectFilter::make('shift')
+                    ->label('Turno')
+                    ->options([
+                        'manha' => 'Manhã',
+                        'tarde' => 'Tarde',
+                        'noite' => 'Noite',
+                        'madrugada' => 'Madrugada',
+                    ]),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

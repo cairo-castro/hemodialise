@@ -71,7 +71,12 @@ function handleLoginSuccess(userData) {
   align-items: center;
   justify-content: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: rgb(249 250 251);
+}
+
+/* Dark mode support */
+:global(.dark) .auth-container {
+  background-color: rgb(3 7 18);
 }
 
 .main-container {

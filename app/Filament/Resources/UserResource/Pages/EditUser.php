@@ -30,6 +30,15 @@ class EditUser extends EditRecord
         // Remove is_global (não é um campo do banco)
         unset($data['is_global']);
 
+        // Se new_password foi preenchido, atualizar senha
+        if (isset($data['new_password']) && filled($data['new_password'])) {
+            $data['password'] = $data['new_password'];
+        }
+
+        // Remover campos temporários de senha
+        unset($data['new_password']);
+        unset($data['new_password_confirmation']);
+
         return $data;
     }
 

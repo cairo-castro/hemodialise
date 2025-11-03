@@ -24,6 +24,24 @@ export const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/desktop/cleaning-checklists',
+    name: 'desktop.cleaning-checklists',
+    component: () => import('./views/CleaningChecklistsView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/desktop/reports',
+    name: 'desktop.reports',
+    component: () => import('./views/ReportsView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/desktop/notifications',
+    name: 'desktop.notifications',
+    component: () => import('./views/NotificationsView.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/desktop/profile',
     name: 'desktop.profile',
     component: () => import('./views/ProfileView.vue'),

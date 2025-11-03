@@ -167,6 +167,36 @@
                   </span>
                 </div>
               </div>
+
+              <!-- Status do Paciente -->
+              <div class="space-y-2">
+                <label class="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <CheckCircleIcon class="w-4 h-4 mr-2 text-purple-600 dark:text-purple-400" />
+                  Status do Paciente
+                  <span class="text-red-500 ml-1">*</span>
+                </label>
+                <select
+                  v-model="formData.status"
+                  required
+                  class="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-white"
+                >
+                  <option value="">Selecione o status</option>
+                  <option value="ativo">Ativo</option>
+                  <option value="inativo">Inativo</option>
+                  <option value="transferido">Transferido</option>
+                  <option value="alta">Alta Médica</option>
+                  <option value="obito">Óbito</option>
+                </select>
+                <!-- Status Badge Preview -->
+                <div v-if="formData.status" class="flex items-center">
+                  <span
+                    class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium"
+                    :class="getStatusBadgeClass(formData.status)"
+                  >
+                    {{ getStatusLabel(formData.status) }}
+                  </span>
+                </div>
+              </div>
             </form>
 
             <!-- Footer -->
@@ -225,7 +255,8 @@ const formData = ref({
   full_name: '',
   birth_date: '',
   blood_group: '',
-  rh_factor: ''
+  rh_factor: '',
+  status: 'ativo' // Default status
 });
 
 const saving = ref(false);
@@ -249,7 +280,8 @@ const age = computed(() => {
 
 const canSubmit = computed(() => {
   return formData.value.full_name.trim().length > 0 &&
-         formData.value.birth_date.length > 0;
+         formData.value.birth_date.length > 0 &&
+         formData.value.status.length > 0;
 });
 
 // Watch for patient prop changes (for editing)
@@ -259,7 +291,8 @@ watch(() => props.patient, (newPatient) => {
       full_name: newPatient.full_name || '',
       birth_date: newPatient.birth_date || '',
       blood_group: newPatient.blood_group || '',
-      rh_factor: newPatient.rh_factor || ''
+      rh_factor: newPatient.rh_factor || '',
+      status: newPatient.status || 'ativo'
     };
   }
 }, { immediate: true });
@@ -277,8 +310,32 @@ function resetForm() {
     full_name: '',
     birth_date: '',
     blood_group: '',
-    rh_factor: ''
+    rh_factor: '',
+    status: 'ativo'
   };
+}
+
+// Helper functions for status display
+function getStatusLabel(status) {
+  const labels = {
+    'ativo': 'Ativo',
+    'inativo': 'Inativo',
+    'transferido': 'Transferido',
+    'alta': 'Alta Médica',
+    'obito': 'Óbito'
+  };
+  return labels[status] || status;
+}
+
+function getStatusBadgeClass(status) {
+  const classes = {
+    'ativo': 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400',
+    'inativo': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400',
+    'transferido': 'bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-400',
+    'alta': 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400',
+    'obito': 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+  };
+  return classes[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400';
 }
 
 async function handleSubmit() {
@@ -292,7 +349,9 @@ async function handleSubmit() {
       full_name: formData.value.full_name.trim(),
       birth_date: formData.value.birth_date,
       blood_group: formData.value.blood_group || null,
-      rh_factor: formData.value.rh_factor || null
+      rh_factor: formData.value.rh_factor || null,
+      status: formData.value.status,
+      active: formData.value.status === 'ativo' // Backward compatibility
     };
 
     // TODO: Replace with actual API call

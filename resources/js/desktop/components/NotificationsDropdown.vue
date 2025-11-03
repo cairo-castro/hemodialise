@@ -272,8 +272,8 @@ async function markAllAsRead() {
 
 function viewAll() {
   isOpen.value = false;
-  // Navigate to notifications page (can be implemented later)
-  console.log('View all notifications');
+  // Navigate to notifications page
+  window.location.href = '/desktop/notifications';
 }
 
 function getNotificationIcon(type) {

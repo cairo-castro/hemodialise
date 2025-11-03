@@ -35,49 +35,155 @@ class ChemicalDisinfectionResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Select::make('machine_id')
-                    ->relationship('machine', 'name')
-                    ->required(),
-                Forms\Components\Select::make('user_id')
-                    ->relationship('user', 'name')
-                    ->required(),
-                Forms\Components\DatePicker::make('disinfection_date')
-                    ->required(),
-                Forms\Components\TextInput::make('shift')
-                    ->required(),
-                Forms\Components\TextInput::make('start_time')
-                    ->required(),
-                Forms\Components\TextInput::make('end_time'),
-                Forms\Components\TextInput::make('chemical_product')
-                    ->required(),
-                Forms\Components\TextInput::make('concentration')
-                    ->required()
-                    ->numeric(),
-                Forms\Components\TextInput::make('concentration_unit')
-                    ->required(),
-                Forms\Components\TextInput::make('contact_time_minutes')
-                    ->required()
-                    ->numeric(),
-                Forms\Components\TextInput::make('initial_temperature')
-                    ->numeric(),
-                Forms\Components\TextInput::make('final_temperature')
-                    ->numeric(),
-                Forms\Components\Toggle::make('circulation_verified')
-                    ->required(),
-                Forms\Components\Toggle::make('contact_time_completed')
-                    ->required(),
-                Forms\Components\Toggle::make('rinse_performed')
-                    ->required(),
-                Forms\Components\Toggle::make('system_tested')
-                    ->required(),
-                Forms\Components\TextInput::make('batch_number'),
-                Forms\Components\DatePicker::make('expiry_date'),
-                Forms\Components\Toggle::make('effectiveness_verified')
-                    ->required(),
-                Forms\Components\Textarea::make('observations')
-                    ->columnSpanFull(),
-                Forms\Components\TextInput::make('responsible_signature')
-                    ->required(),
+                // Informações Gerais
+                Forms\Components\Section::make('Informações Gerais')
+                    ->schema([
+                        Forms\Components\Select::make('machine_id')
+                            ->label('Máquina')
+                            ->relationship('machine', 'name')
+                            ->searchable()
+                            ->required(),
+                        Forms\Components\Select::make('user_id')
+                            ->label('Responsável')
+                            ->relationship('user', 'name')
+                            ->searchable()
+                            ->required(),
+                        Forms\Components\DatePicker::make('disinfection_date')
+                            ->label('Data da Desinfecção')
+                            ->required()
+                            ->native(false)
+                            ->displayFormat('d/m/Y'),
+                        Forms\Components\Select::make('shift')
+                            ->label('Turno')
+                            ->options([
+                                'manha' => 'Manhã',
+                                'tarde' => 'Tarde',
+                                'noite' => 'Noite',
+                                'madrugada' => 'Madrugada',
+                            ])
+                            ->required(),
+                        Forms\Components\TimePicker::make('start_time')
+                            ->label('Hora de Início')
+                            ->required()
+                            ->native(false)
+                            ->seconds(false),
+                        Forms\Components\TimePicker::make('end_time')
+                            ->label('Hora de Término')
+                            ->native(false)
+                            ->seconds(false),
+                    ])
+                    ->columns(2),
+
+                // Produto Químico
+                Forms\Components\Section::make('Produto Químico')
+                    ->schema([
+                        Forms\Components\TextInput::make('chemical_product')
+                            ->label('Produto Químico')
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('batch_number')
+                            ->label('Número do Lote')
+                            ->maxLength(255),
+                        Forms\Components\DatePicker::make('expiry_date')
+                            ->label('Data de Validade')
+                            ->native(false)
+                            ->displayFormat('d/m/Y'),
+                        Forms\Components\TextInput::make('concentration')
+                            ->label('Concentração')
+                            ->required()
+                            ->numeric()
+                            ->step(0.01),
+                        Forms\Components\TextInput::make('concentration_unit')
+                            ->label('Unidade de Concentração')
+                            ->required()
+                            ->maxLength(50)
+                            ->placeholder('%, ppm, mg/L, etc.'),
+                        Forms\Components\TextInput::make('contact_time_minutes')
+                            ->label('Tempo de Contato (minutos)')
+                            ->required()
+                            ->numeric()
+                            ->minValue(0),
+                    ])
+                    ->columns(2)
+                    ->collapsible(),
+
+                // Parâmetros de Temperatura
+                Forms\Components\Section::make('Temperatura')
+                    ->schema([
+                        Forms\Components\TextInput::make('initial_temperature')
+                            ->label('Temperatura Inicial (°C)')
+                            ->numeric()
+                            ->step(0.1)
+                            ->suffix('°C'),
+                        Forms\Components\TextInput::make('final_temperature')
+                            ->label('Temperatura Final (°C)')
+                            ->numeric()
+                            ->step(0.1)
+                            ->suffix('°C'),
+                    ])
+                    ->columns(2)
+                    ->collapsible(),
+
+                // Verificações de Procedimento
+                Forms\Components\Section::make('Verificações de Procedimento')
+                    ->schema([
+                        Forms\Components\Select::make('circulation_verified')
+                            ->label('Circulação Verificada')
+                            ->options([
+                                true => 'Conforme',
+                                false => 'Não Conforme',
+                                null => 'Não se Aplica',
+                            ])
+                            ->native(false),
+                        Forms\Components\Select::make('contact_time_completed')
+                            ->label('Tempo de Contato Completo')
+                            ->options([
+                                true => 'Conforme',
+                                false => 'Não Conforme',
+                                null => 'Não se Aplica',
+                            ])
+                            ->native(false),
+                        Forms\Components\Select::make('rinse_performed')
+                            ->label('Enxágue Realizado')
+                            ->options([
+                                true => 'Conforme',
+                                false => 'Não Conforme',
+                                null => 'Não se Aplica',
+                            ])
+                            ->native(false),
+                        Forms\Components\Select::make('system_tested')
+                            ->label('Sistema Testado')
+                            ->options([
+                                true => 'Conforme',
+                                false => 'Não Conforme',
+                                null => 'Não se Aplica',
+                            ])
+                            ->native(false),
+                        Forms\Components\Select::make('effectiveness_verified')
+                            ->label('Eficácia Verificada')
+                            ->options([
+                                true => 'Conforme',
+                                false => 'Não Conforme',
+                                null => 'Não se Aplica',
+                            ])
+                            ->native(false),
+                    ])
+                    ->columns(2)
+                    ->collapsible(),
+
+                // Observações e Assinatura
+                Forms\Components\Section::make('Observações e Assinatura')
+                    ->schema([
+                        Forms\Components\Textarea::make('observations')
+                            ->label('Observações')
+                            ->rows(3)
+                            ->columnSpanFull(),
+                        Forms\Components\TextInput::make('responsible_signature')
+                            ->label('Assinatura do Responsável')
+                            ->required()
+                            ->maxLength(255),
+                    ])
+                    ->collapsible(),
             ]);
     }
 
@@ -144,7 +250,19 @@ class ChemicalDisinfectionResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('unit_id')
+                    ->label('Unidade')
+                    ->relationship('machine.unit', 'name')
+                    ->searchable()
+                    ->preload(),
+                Tables\Filters\SelectFilter::make('shift')
+                    ->label('Turno')
+                    ->options([
+                        'manha' => 'Manhã',
+                        'tarde' => 'Tarde',
+                        'noite' => 'Noite',
+                        'madrugada' => 'Madrugada',
+                    ]),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

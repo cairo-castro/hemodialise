@@ -31,6 +31,9 @@ Route::prefix('desktop')->name('desktop.')->group(function () {
     Route::get('/', [DesktopController::class, 'index'])->name('index');
     Route::get('/preline', [DesktopController::class, 'preline'])->name('preline');
     Route::get('/simple', [DesktopController::class, 'simple'])->name('simple');
+
+    // Catch-all route for Vue Router (SPA)
+    Route::get('/{any}', [DesktopController::class, 'index'])->where('any', '.*')->name('spa');
 });
 
 

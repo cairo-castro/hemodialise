@@ -90,7 +90,23 @@ class MachineResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('unit_id')
+                    ->label('Unidade')
+                    ->relationship('unit', 'name')
+                    ->searchable()
+                    ->preload(),
+                Tables\Filters\SelectFilter::make('status')
+                    ->label('Status')
+                    ->options([
+                        'disponivel' => 'Disponível',
+                        'em_uso' => 'Em Uso',
+                        'manutencao' => 'Manutenção',
+                    ]),
+                Tables\Filters\TernaryFilter::make('active')
+                    ->label('Ativo')
+                    ->placeholder('Todos')
+                    ->trueLabel('Somente ativos')
+                    ->falseLabel('Somente inativos'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

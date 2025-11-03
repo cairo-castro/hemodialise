@@ -113,57 +113,16 @@
           <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Sessões por Turno</h3>
           <span class="text-xs text-gray-500 dark:text-gray-400">Últimos 7 dias</span>
         </div>
-        <div v-if="sessionsByShiftData" class="h-64">
-          <div class="h-full flex items-end justify-between space-x-2">
-            <div
-              v-for="(label, index) in sessionsByShiftData.labels"
-              :key="index"
-              class="flex-1 flex flex-col items-center space-y-1"
-            >
-              <div class="w-full flex flex-col items-center space-y-1 flex-1 justify-end">
-                <!-- Matutino -->
-                <div
-                  v-if="sessionsByShiftData.datasets[0].data[index] > 0"
-                  class="w-full bg-blue-500 rounded-t transition-all hover:bg-blue-600"
-                  :style="{ height: `${getBarHeight(sessionsByShiftData.datasets[0].data[index])}%` }"
-                  :title="`Matutino: ${sessionsByShiftData.datasets[0].data[index]}`"
-                ></div>
-                <!-- Vespertino -->
-                <div
-                  v-if="sessionsByShiftData.datasets[1].data[index] > 0"
-                  class="w-full bg-green-500 transition-all hover:bg-green-600"
-                  :style="{ height: `${getBarHeight(sessionsByShiftData.datasets[1].data[index])}%` }"
-                  :title="`Vespertino: ${sessionsByShiftData.datasets[1].data[index]}`"
-                ></div>
-                <!-- Noturno -->
-                <div
-                  v-if="sessionsByShiftData.datasets[2].data[index] > 0"
-                  class="w-full bg-purple-500 rounded-b transition-all hover:bg-purple-600"
-                  :style="{ height: `${getBarHeight(sessionsByShiftData.datasets[2].data[index])}%` }"
-                  :title="`Noturno: ${sessionsByShiftData.datasets[2].data[index]}`"
-                ></div>
-              </div>
-              <p class="text-xs text-gray-600 dark:text-gray-400 font-medium">{{ label }}</p>
-            </div>
-          </div>
+        <div v-if="sessionsByShiftData">
+          <apexchart
+            type="bar"
+            height="300"
+            :options="chartOptions"
+            :series="chartSeries"
+          ></apexchart>
         </div>
         <div v-else class="h-64 flex items-center justify-center">
           <p class="text-gray-500 dark:text-gray-400">Carregando...</p>
-        </div>
-        <!-- Legend -->
-        <div v-if="sessionsByShiftData" class="flex items-center justify-center space-x-4 mt-4 pt-4 border-t border-gray-200 dark:border-gray-800">
-          <div class="flex items-center space-x-2">
-            <div class="w-3 h-3 bg-blue-500 rounded"></div>
-            <span class="text-sm text-gray-600 dark:text-gray-400">Matutino</span>
-          </div>
-          <div class="flex items-center space-x-2">
-            <div class="w-3 h-3 bg-green-500 rounded"></div>
-            <span class="text-sm text-gray-600 dark:text-gray-400">Vespertino</span>
-          </div>
-          <div class="flex items-center space-x-2">
-            <div class="w-3 h-3 bg-purple-500 rounded"></div>
-            <span class="text-sm text-gray-600 dark:text-gray-400">Noturno</span>
-          </div>
         </div>
       </div>
 
@@ -309,7 +268,9 @@ import {
   ExclamationTriangleIcon,
 } from '@heroicons/vue/24/outline';
 import { usePolling } from '../composables/usePolling';
+import VueApexCharts from 'vue3-apexcharts';
 
+const apexchart = VueApexCharts;
 const router = useRouter();
 
 const loading = ref(true);
@@ -346,6 +307,108 @@ const metrics = ref([
 
 const sessionsByShiftData = ref(null);
 const recentActivity = ref([]);
+
+// ApexCharts configuration
+const chartSeries = computed(() => {
+  if (!sessionsByShiftData.value) return [];
+  return sessionsByShiftData.value.datasets.map(dataset => ({
+    name: dataset.label,
+    data: dataset.data
+  }));
+});
+
+const chartOptions = computed(() => ({
+  chart: {
+    type: 'bar',
+    stacked: false,
+    toolbar: {
+      show: false
+    },
+    animations: {
+      enabled: true,
+      easing: 'easeinout',
+      speed: 800,
+      animateGradually: {
+        enabled: true,
+        delay: 150
+      },
+      dynamicAnimation: {
+        enabled: true,
+        speed: 350
+      }
+    }
+  },
+  plotOptions: {
+    bar: {
+      horizontal: false,
+      columnWidth: '60%',
+      borderRadius: 4,
+    },
+  },
+  dataLabels: {
+    enabled: false
+  },
+  stroke: {
+    show: true,
+    width: 2,
+    colors: ['transparent']
+  },
+  xaxis: {
+    categories: sessionsByShiftData.value?.labels || [],
+    labels: {
+      style: {
+        colors: document.documentElement.classList.contains('dark') ? '#9CA3AF' : '#6B7280',
+        fontSize: '12px',
+        fontFamily: 'inherit'
+      }
+    }
+  },
+  yaxis: {
+    title: {
+      text: 'Sessões',
+      style: {
+        color: document.documentElement.classList.contains('dark') ? '#9CA3AF' : '#6B7280',
+        fontSize: '12px',
+        fontFamily: 'inherit'
+      }
+    },
+    labels: {
+      style: {
+        colors: document.documentElement.classList.contains('dark') ? '#9CA3AF' : '#6B7280',
+        fontSize: '12px',
+        fontFamily: 'inherit'
+      }
+    }
+  },
+  colors: ['#3B82F6', '#10B981', '#A855F7'],
+  legend: {
+    position: 'bottom',
+    horizontalAlign: 'center',
+    labels: {
+      colors: document.documentElement.classList.contains('dark') ? '#9CA3AF' : '#6B7280'
+    },
+    markers: {
+      width: 12,
+      height: 12,
+      radius: 2
+    }
+  },
+  fill: {
+    opacity: 1
+  },
+  tooltip: {
+    theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
+    y: {
+      formatter: function (val) {
+        return val + ' sessões'
+      }
+    }
+  },
+  grid: {
+    borderColor: document.documentElement.classList.contains('dark') ? '#374151' : '#E5E7EB',
+    strokeDashArray: 3
+  }
+}));
 const tableRecords = ref([
   {
     id: 1234,

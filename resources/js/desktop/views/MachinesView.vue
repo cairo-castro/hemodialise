@@ -144,7 +144,7 @@
             Editar
           </button>
           <button
-            @click="confirmDelete(machine)"
+            @click="openDeleteConfirm(machine)"
             class="px-3 py-1.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors font-medium"
           >
             Excluir
@@ -160,6 +160,17 @@
       @close="closeMachineModal"
       @saved="handleMachineSaved"
     />
+
+    <!-- Delete Confirmation Modal -->
+    <ConfirmDeleteModal
+      :is-open="showDeleteConfirm"
+      title="Confirmar Exclusão da Máquina"
+      message="Tem certeza que deseja excluir esta máquina? Todos os registros de limpeza e manutenção associados serão mantidos."
+      :item-name="machineToDelete?.name"
+      @close="showDeleteConfirm = false"
+      @confirm="handleDeleteConfirm"
+      ref="deleteModalRef"
+    />
   </div>
 </template>
 
@@ -173,9 +184,13 @@ import {
   ShieldExclamationIcon,
 } from '@heroicons/vue/24/solid';
 import MachineFormModal from '../components/MachineFormModal.vue';
+import ConfirmDeleteModal from '../components/ConfirmDeleteModal.vue';
 
 const showMachineModal = ref(false);
 const editingMachine = ref(null);
+const showDeleteConfirm = ref(false);
+const machineToDelete = ref(null);
+const deleteModalRef = ref(null);
 const searchQuery = ref('');
 const statusFilter = ref('');
 const activeFilter = ref('');
@@ -308,24 +323,54 @@ function handleMachineSaved(machineData) {
     if (index !== -1) {
       machines.value[index] = { ...machines.value[index], ...machineData };
     }
-    alert('Máquina atualizada com sucesso!');
+    showSuccessToast('Máquina atualizada com sucesso!');
   } else {
     // Add new machine
     machines.value.push(machineData);
-    alert('Máquina cadastrada com sucesso!');
+    showSuccessToast('Máquina cadastrada com sucesso!');
   }
 
   closeMachineModal();
 }
 
-function confirmDelete(machine) {
-  if (confirm(`Deseja realmente excluir a máquina ${machine.name}?`)) {
-    const index = machines.value.findIndex(m => m.id === machine.id);
-    if (index !== -1) {
-      machines.value.splice(index, 1);
-      alert('Máquina excluída com sucesso!');
-    }
+function openDeleteConfirm(machine) {
+  machineToDelete.value = machine;
+  showDeleteConfirm.value = true;
+}
+
+function handleDeleteConfirm() {
+  const index = machines.value.findIndex(m => m.id === machineToDelete.value.id);
+  if (index !== -1) {
+    machines.value.splice(index, 1);
+
+    // Reset the delete modal state
+    deleteModalRef.value?.resetDeletingState();
+
+    // Close the delete confirmation modal
+    showDeleteConfirm.value = false;
+
+    // Show success toast
+    showSuccessToast('Máquina excluída com sucesso!');
+
+    // Clear the machine to delete
+    machineToDelete.value = null;
   }
+}
+
+function showSuccessToast(message) {
+  const toast = document.createElement('div');
+  toast.className = 'fixed top-4 right-4 z-[100] px-6 py-4 bg-green-600 text-white rounded-lg shadow-lg flex items-center gap-3 animate-slide-in-right';
+  toast.innerHTML = `
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+    </svg>
+    <span class="font-medium">${message}</span>
+  `;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.animation = 'slide-out-right 0.3s ease-out forwards';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
 }
 </script>
 

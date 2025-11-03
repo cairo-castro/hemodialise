@@ -151,6 +151,76 @@ class ChecklistController extends Controller
         return response()->json($checklist->load(['machine', 'patient', 'user']));
     }
 
+    public function update(Request $request, SafetyChecklist $checklist)
+    {
+        // Only allow updates if checklist is not completed
+        if ($checklist->current_phase === 'completed') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Não é possível editar um checklist concluído.'
+            ], 422);
+        }
+
+        $data = $request->validate([
+            'observations' => 'nullable|string',
+            // Pre-dialysis items
+            'machine_disinfected' => 'nullable|boolean',
+            'capillary_lines_identified' => 'nullable|boolean',
+            'reagent_test_performed' => 'nullable|boolean',
+            'pressure_sensors_verified' => 'nullable|boolean',
+            'air_bubble_detector_verified' => 'nullable|boolean',
+            'patient_identification_confirmed' => 'nullable|boolean',
+            'vascular_access_evaluated' => 'nullable|boolean',
+            'av_fistula_arm_washed' => 'nullable|boolean',
+            'patient_weighed' => 'nullable|boolean',
+            'vital_signs_checked' => 'nullable|boolean',
+            'medications_reviewed' => 'nullable|boolean',
+            'dialyzer_membrane_checked' => 'nullable|boolean',
+            'equipment_functioning_verified' => 'nullable|boolean',
+            // During session items
+            'dialysis_parameters_verified' => 'nullable|boolean',
+            'heparin_double_checked' => 'nullable|boolean',
+            'antisepsis_performed' => 'nullable|boolean',
+            'vascular_access_monitored' => 'nullable|boolean',
+            'vital_signs_monitored_during' => 'nullable|boolean',
+            'patient_comfort_assessed' => 'nullable|boolean',
+            'fluid_balance_monitored' => 'nullable|boolean',
+            'alarms_responded' => 'nullable|boolean',
+            // Post-dialysis items
+            'session_completed_safely' => 'nullable|boolean',
+            'vascular_access_secured' => 'nullable|boolean',
+            'patient_vital_signs_stable' => 'nullable|boolean',
+            'complications_assessed' => 'nullable|boolean',
+            'equipment_cleaned' => 'nullable|boolean',
+        ]);
+
+        $checklist->update($data);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Checklist atualizado com sucesso.',
+            'checklist' => $checklist->fresh()->load(['machine', 'patient', 'user'])
+        ]);
+    }
+
+    public function destroy(SafetyChecklist $checklist)
+    {
+        // Only allow soft delete if checklist is not completed
+        if ($checklist->current_phase === 'completed') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Não é possível excluir um checklist concluído.'
+            ], 422);
+        }
+
+        $checklist->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Checklist excluído com sucesso.'
+        ]);
+    }
+
     public function active(Request $request)
     {
         // Include both active and paused checklists (all in-progress checklists)
@@ -237,6 +307,49 @@ class ChecklistController extends Controller
             'success' => true,
             'message' => 'Checklist retomado com sucesso.',
             'checklist' => $checklist->fresh()->load(['machine', 'patient']),
+        ]);
+    }
+
+    public function stats(Request $request)
+    {
+        $scopedUnitId = $request->get('scoped_unit_id');
+        $today = now()->toDateString();
+
+        $query = SafetyChecklist::query();
+
+        if ($scopedUnitId) {
+            $query->where('unit_id', $scopedUnitId);
+        }
+
+        // Total today (created today)
+        $totalToday = (clone $query)->whereDate('created_at', $today)->count();
+
+        // In progress (any checklist not completed or interrupted, regardless of creation date)
+        $inProgress = (clone $query)
+            ->whereNotIn('current_phase', ['completed', 'interrupted'])
+            ->where('is_interrupted', false)
+            ->count();
+
+        // Completed today (completed today or created today and already completed)
+        $completed = (clone $query)
+            ->where('current_phase', 'completed')
+            ->whereDate('created_at', $today)
+            ->count();
+
+        // Interrupted (any interrupted checklist, regardless of date)
+        $interrupted = (clone $query)
+            ->where('is_interrupted', true)
+            ->whereDate('created_at', '>=', now()->subDays(7)->toDateString())
+            ->count();
+
+        return response()->json([
+            'success' => true,
+            'stats' => [
+                'total_today' => $totalToday,
+                'in_progress' => $inProgress,
+                'completed' => $completed,
+                'interrupted' => $interrupted,
+            ]
         ]);
     }
 }
