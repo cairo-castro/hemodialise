@@ -98,8 +98,8 @@ class PatientResource extends Resource
                 Tables\Columns\TextColumn::make('status')
                     ->label('Status')
                     ->badge()
-                    ->formatStateUsing(fn (string $state): string => PatientStatus::from($state)->label())
-                    ->color(fn (string $state): string => PatientStatus::from($state)->color())
+                    ->formatStateUsing(fn (PatientStatus $state): string => $state->label())
+                    ->color(fn (PatientStatus $state): string => $state->color())
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Criado em')
