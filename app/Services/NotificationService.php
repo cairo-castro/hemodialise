@@ -104,11 +104,9 @@ class NotificationService
     public static function notifyCleaningCompleted($cleaning, $completedBy)
     {
         $machine = $cleaning->machine;
-        $typeLabel = [
-            'daily' => 'Limpeza diária',
-            'weekly' => 'Limpeza semanal',
-            'monthly' => 'Limpeza mensal',
-        ][$cleaning->cleaning_type] ?? 'Limpeza';
+
+        // Get cleaning type from model attribute
+        $typeLabel = $cleaning->cleaning_type;
 
         $title = $typeLabel . ' concluída';
         $message = sprintf(
@@ -126,7 +124,7 @@ class NotificationService
             data: [
                 'cleaning_id' => $cleaning->id,
                 'machine_id' => $machine->id ?? null,
-                'cleaning_type' => $cleaning->cleaning_type,
+                'cleaning_type' => $typeLabel,
             ],
             actionUrl: "/admin/cleaning-controls/{$cleaning->id}"
         );

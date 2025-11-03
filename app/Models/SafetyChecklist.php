@@ -318,6 +318,11 @@ class SafetyChecklist extends Model
         static::created(function ($checklist) {
             // Marcar máquina como reservada quando checklist é criado
             $checklist->machine->markAsReserved();
+
+            // Notificar criação de checklist
+            if ($creator = auth()->user()) {
+                \App\Services\NotificationService::notifyChecklistCreated($checklist, $creator);
+            }
         });
 
         static::updated(function ($checklist) {
@@ -329,9 +334,18 @@ class SafetyChecklist extends Model
                         break;
                     case 'completed':
                         $checklist->machine->markAsAvailable();
+                        // Notificar conclusão
+                        if ($completedBy = auth()->user()) {
+                            \App\Services\NotificationService::notifyChecklistCompleted($checklist, $completedBy);
+                        }
                         break;
                     case 'interrupted':
                         $checklist->machine->markAsAvailable();
+                        // Notificar interrupção
+                        if ($interruptedBy = auth()->user()) {
+                            $reason = $checklist->interruption_reason ?? 'Motivo não especificado';
+                            \App\Services\NotificationService::notifyChecklistInterrupted($checklist, $reason, $interruptedBy);
+                        }
                         break;
                 }
             }

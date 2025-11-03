@@ -144,4 +144,31 @@ class Patient extends Model
     {
         return $this->status?->color() ?? 'secondary';
     }
+
+    protected static function booted()
+    {
+        static::created(function ($patient) {
+            // Notificar novo paciente cadastrado
+            if ($creator = auth()->user()) {
+                \App\Services\NotificationService::notifyPatientCreated($patient, $creator);
+            }
+        });
+
+        static::updated(function ($patient) {
+            // Notificar mudança de status
+            if ($patient->isDirty('status')) {
+                $oldStatus = $patient->getOriginal('status');
+                $newStatus = $patient->status;
+
+                if ($changedBy = auth()->user()) {
+                    \App\Services\NotificationService::notifyPatientStatusChanged(
+                        $patient,
+                        $oldStatus,
+                        $newStatus,
+                        $changedBy
+                    );
+                }
+            }
+        });
+    }
 }

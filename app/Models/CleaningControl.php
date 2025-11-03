@@ -75,4 +75,14 @@ class CleaningControl extends Model
         if ($this->daily_cleaning) return 'Limpeza Diária';
         return 'Não especificado';
     }
+
+    protected static function booted()
+    {
+        static::created(function ($cleaning) {
+            // Notificar limpeza concluída
+            if ($creator = auth()->user()) {
+                \App\Services\NotificationService::notifyCleaningCompleted($cleaning, $creator);
+            }
+        });
+    }
 }

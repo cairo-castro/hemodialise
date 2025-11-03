@@ -2,16 +2,6 @@
 
 namespace App\Providers;
 
-use App\Models\ChemicalDisinfection;
-use App\Models\CleaningChecklist;
-use App\Models\CleaningControl;
-use App\Models\SafetyChecklist;
-use App\Models\Patient;
-use App\Observers\ChemicalDisinfectionObserver;
-use App\Observers\CleaningChecklistObserver;
-use App\Observers\CleaningControlObserver;
-use App\Observers\SafetyChecklistObserver;
-use App\Observers\PatientObserver;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
@@ -41,9 +31,7 @@ class AppServiceProvider extends ServiceProvider
             URL::forceScheme('https');
         }
 
-        // Register observers for automatic notifications
-        SafetyChecklist::observe(SafetyChecklistObserver::class);
-        Patient::observe(PatientObserver::class);
-        CleaningControl::observe(CleaningControlObserver::class);
+        // Notification events are now handled directly in model booted() methods
+        // for better performance (no observer overhead)
     }
 }
