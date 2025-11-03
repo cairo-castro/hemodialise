@@ -34,7 +34,7 @@ class NotificationService
                 'machine_id' => $machine->id ?? null,
                 'patient_id' => $patient->id ?? null,
             ],
-            actionUrl: "/admin/safety-checklists/{$checklist->id}",
+            actionUrl: "/admin/safety-checklists",
             excludeUserId: $creator->id // Don't notify the creator
         );
     }
@@ -65,7 +65,7 @@ class NotificationService
                 'machine_id' => $machine->id ?? null,
                 'patient_id' => $patient->id ?? null,
             ],
-            actionUrl: "/admin/safety-checklists/{$checklist->id}"
+            actionUrl: "/admin/safety-checklists"
         );
     }
 
@@ -94,7 +94,7 @@ class NotificationService
                 'machine_id' => $machine->id ?? null,
                 'reason' => $reason,
             ],
-            actionUrl: "/admin/safety-checklists/{$checklist->id}"
+            actionUrl: "/admin/safety-checklists"
         );
     }
 
@@ -126,7 +126,7 @@ class NotificationService
                 'machine_id' => $machine->id ?? null,
                 'cleaning_type' => $typeLabel,
             ],
-            actionUrl: "/admin/cleaning-controls/{$cleaning->id}"
+            actionUrl: "/admin/cleaning-controls"
         );
     }
 
@@ -150,7 +150,7 @@ class NotificationService
             data: [
                 'patient_id' => $patient->id,
             ],
-            actionUrl: "/admin/patients/{$patient->id}",
+            actionUrl: "/admin/patients",
             excludeUserId: $creator->id
         );
     }
@@ -181,7 +181,7 @@ class NotificationService
                 'old_status' => $oldStatus->value,
                 'new_status' => $newStatus->value,
             ],
-            actionUrl: "/admin/patients/{$patient->id}"
+            actionUrl: "/admin/patients"
         );
     }
 
@@ -211,7 +211,7 @@ class NotificationService
                 'old_status' => $oldStatus,
                 'new_status' => $newStatus,
             ],
-            actionUrl: "/admin/machines/{$machine->id}"
+            actionUrl: "/admin/machines"
         );
     }
 
@@ -237,7 +237,7 @@ class NotificationService
                 'machine_id' => $machine->id,
                 'problem' => $problem,
             ],
-            actionUrl: "/admin/machines/{$machine->id}"
+            actionUrl: "/admin/machines"
         );
     }
 
@@ -264,7 +264,7 @@ class NotificationService
                 'disinfection_id' => $disinfection->id,
                 'machine_id' => $machine->id ?? null,
             ],
-            actionUrl: "/admin/chemical-disinfections/{$disinfection->id}"
+            actionUrl: "/admin/chemical-disinfections"
         );
     }
 
