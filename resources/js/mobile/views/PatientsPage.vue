@@ -327,269 +327,202 @@
         </ion-content>
       </ion-modal>
 
-      <!-- Patient Details Modal -->
+      <!-- Patient Details Modal - COMPACT EDITABLE -->
       <ion-modal :is-open="showDetailsModal" @will-dismiss="showDetailsModal = false">
         <ion-header>
           <ion-toolbar color="primary">
-            <ion-title>Detalhes do Paciente</ion-title>
+            <ion-title>
+              <div class="modal-title-dash">
+                <ion-icon :icon="personOutline"></ion-icon>
+                <span>Editar Paciente</span>
+              </div>
+            </ion-title>
             <ion-buttons slot="end">
               <ion-button @click="showDetailsModal = false">
-                <ion-icon :icon="closeOutline"></ion-icon>
+                <ion-icon :icon="closeOutline" slot="icon-only"></ion-icon>
               </ion-button>
             </ion-buttons>
           </ion-toolbar>
         </ion-header>
 
-        <ion-content class="ion-padding" v-if="selectedPatientDetails">
-          <div class="patient-details-modal">
-            <!-- Patient Info Card -->
-            <ion-card class="details-card">
-              <ion-card-content>
-                <div class="details-header">
-                  <div class="details-avatar">
-                    <ion-icon :icon="personOutline"></ion-icon>
-                  </div>
-                  <div class="details-title">
-                    <h2>{{ selectedPatientDetails.full_name }}</h2>
-                    <ion-badge :color="getStatusColor(selectedPatientDetails.status)">
-                      {{ selectedPatientDetails.status_label || 'Ativo' }}
-                    </ion-badge>
-                  </div>
+        <ion-content class="modal-content-dash" v-if="selectedPatientDetails">
+          <form @submit.prevent="updatePatient" class="form-dash">
+            <!-- Header Info -->
+            <div class="edit-header-card">
+              <div class="patient-avatar-large">
+                <ion-icon :icon="personOutline"></ion-icon>
+              </div>
+              <h2>Editar Informações</h2>
+              <p>Atualize os dados do paciente</p>
+            </div>
+
+            <!-- Editable Input Cards -->
+            <div class="input-cards-dash">
+              <!-- Nome Completo -->
+              <div class="input-card-dash">
+                <div class="card-icon-dash primary">
+                  <ion-icon :icon="personOutline"></ion-icon>
                 </div>
-
-                <div class="details-grid">
-                  <div class="detail-item">
-                    <ion-icon :icon="calendarOutline"></ion-icon>
-                    <div>
-                      <span class="detail-label">Data de Nascimento</span>
-                      <span class="detail-value">{{ formatDate(selectedPatientDetails.birth_date) }}</span>
-                    </div>
-                  </div>
-
-                  <div class="detail-item">
-                    <ion-icon :icon="informationCircleOutline"></ion-icon>
-                    <div>
-                      <span class="detail-label">Idade</span>
-                      <span class="detail-value">{{ selectedPatientDetails.age }} anos</span>
-                    </div>
-                  </div>
-
-                  <div class="detail-item" v-if="selectedPatientDetails.blood_type">
-                    <ion-icon :icon="waterOutline"></ion-icon>
-                    <div>
-                      <span class="detail-label">Tipo Sanguíneo</span>
-                      <span class="detail-value">{{ selectedPatientDetails.blood_type }}</span>
-                    </div>
-                  </div>
-
-                  <div class="detail-item">
-                    <ion-icon :icon="clipboardOutline"></ion-icon>
-                    <div>
-                      <span class="detail-label">Checklists Realizados</span>
-                      <span class="detail-value">{{ selectedPatientDetails.checklists_count }}</span>
-                    </div>
-                  </div>
+                <div class="card-content-dash">
+                  <label>Nome Completo</label>
+                  <ion-input
+                    v-model="selectedPatientDetails.full_name"
+                    type="text"
+                    required
+                    placeholder="Nome completo do paciente"
+                    class="input-dash"
+                  ></ion-input>
                 </div>
+              </div>
 
-                <div class="detail-section" v-if="selectedPatientDetails.allergies">
-                  <h4><ion-icon :icon="alertCircleOutline"></ion-icon> Alergias</h4>
-                  <p>{{ selectedPatientDetails.allergies }}</p>
+              <!-- Data de Nascimento -->
+              <div class="input-card-dash">
+                <div class="card-icon-dash secondary">
+                  <ion-icon :icon="calendarOutline"></ion-icon>
                 </div>
-
-                <div class="detail-section" v-if="selectedPatientDetails.observations">
-                  <h4><ion-icon :icon="medkitOutline"></ion-icon> Observações</h4>
-                  <p>{{ selectedPatientDetails.observations }}</p>
+                <div class="card-content-dash">
+                  <label>Data de Nascimento</label>
+                  <ion-input
+                    v-model="selectedPatientDetails.birth_date"
+                    type="date"
+                    required
+                    class="input-dash"
+                  ></ion-input>
+                  <span class="detail-hint" v-if="selectedPatientDetails.age">{{ selectedPatientDetails.age }} anos</span>
                 </div>
-              </ion-card-content>
-            </ion-card>
+              </div>
 
-            <!-- Status Management -->
-            <ion-card class="status-management-card">
-              <ion-card-content>
-                <h4 class="status-title">
+              <!-- Tipo Sanguíneo -->
+              <div class="input-card-dash">
+                <div class="card-icon-dash tertiary">
+                  <ion-icon :icon="waterOutline"></ion-icon>
+                </div>
+                <div class="card-content-dash">
+                  <label>Tipo Sanguíneo <span class="optional">(opcional)</span></label>
+                  <ion-select
+                    v-model="selectedPatientDetails.blood_type"
+                    placeholder="Selecione o tipo"
+                    interface="action-sheet"
+                    class="select-dash"
+                  >
+                    <ion-select-option value="">Não informado</ion-select-option>
+                    <ion-select-option value="A+">A+</ion-select-option>
+                    <ion-select-option value="A-">A-</ion-select-option>
+                    <ion-select-option value="B+">B+</ion-select-option>
+                    <ion-select-option value="B-">B-</ion-select-option>
+                    <ion-select-option value="AB+">AB+</ion-select-option>
+                    <ion-select-option value="AB-">AB-</ion-select-option>
+                    <ion-select-option value="O+">O+</ion-select-option>
+                    <ion-select-option value="O-">O-</ion-select-option>
+                  </ion-select>
+                </div>
+              </div>
+
+              <!-- Status - DROPDOWN COMPACTO -->
+              <div class="input-card-dash status-card">
+                <div class="card-icon-dash" :class="getStatusIconClass(selectedStatus)">
+                  <ion-icon :icon="getStatusIcon(selectedStatus)"></ion-icon>
+                </div>
+                <div class="card-content-dash">
+                  <label>Status do Paciente</label>
+                  <ion-select
+                    v-model="selectedStatus"
+                    placeholder="Selecione o status"
+                    interface="action-sheet"
+                    class="select-dash"
+                    :disabled="isTerminalStatus(selectedPatientDetails.status)"
+                  >
+                    <ion-select-option value="ativo">✅ Ativo - Pode realizar sessões</ion-select-option>
+                    <ion-select-option value="inativo">⏸️ Inativo - Temporariamente suspenso</ion-select-option>
+                    <ion-select-option value="transferido">🔄 Transferido - Outra unidade</ion-select-option>
+                    <ion-select-option value="alta">⬆️ Alta Médica - Permanente (irreversível)</ion-select-option>
+                    <ion-select-option value="obito">❌ Óbito - Falecimento (irreversível)</ion-select-option>
+                  </ion-select>
+                  <span class="detail-hint" v-if="selectedStatus !== selectedPatientDetails.status && (selectedStatus === 'alta' || selectedStatus === 'obito')">
+                    ⚠️ Status terminal não pode ser revertido
+                  </span>
+                  <span class="detail-hint terminal-hint" v-if="isTerminalStatus(selectedPatientDetails.status)">
+                    🔒 Status terminal bloqueado para edição
+                  </span>
+                </div>
+              </div>
+
+              <!-- Prontuário Médico -->
+              <div class="input-card-dash">
+                <div class="card-icon-dash quaternary">
+                  <ion-icon :icon="clipboardOutline"></ion-icon>
+                </div>
+                <div class="card-content-dash">
+                  <label>Prontuário Médico <span class="optional">(opcional)</span></label>
+                  <ion-input
+                    v-model="selectedPatientDetails.medical_record"
+                    type="text"
+                    placeholder="Número do prontuário"
+                    class="input-dash"
+                  ></ion-input>
+                </div>
+              </div>
+
+              <!-- Alergias -->
+              <div class="input-card-dash">
+                <div class="card-icon-dash danger">
                   <ion-icon :icon="alertCircleOutline"></ion-icon>
-                  Gerenciar Status do Paciente
-                </h4>
-                <p class="status-description">
-                  Selecione o novo status do paciente. O status determina se ele pode ter novas sessões.
-                </p>
-
-                <!-- Terminal Warning (shown if current status is terminal) -->
-                <div v-if="isTerminalStatus(selectedPatientDetails.status)" class="terminal-alert">
-                  <ion-icon :icon="warningOutline"></ion-icon>
-                  <div>
-                    <strong>Status Terminal</strong>
-                    <p>Este paciente possui status terminal ({{ selectedPatientDetails.status_label }}) e não pode ser alterado.</p>
-                  </div>
                 </div>
-
-                <!-- Status Options Grid -->
-                <div v-else class="status-options-grid">
-                  <!-- Ativo -->
-                  <div
-                    class="status-option"
-                    :class="{
-                      'selected': selectedStatus === 'ativo',
-                      'current': selectedPatientDetails.status === 'ativo'
-                    }"
-                    @click="selectStatusOption('ativo')"
-                  >
-                    <div class="status-option-icon success">
-                      <ion-icon :icon="checkmarkCircleOutline"></ion-icon>
-                    </div>
-                    <div class="status-option-content">
-                      <h5>Ativo</h5>
-                      <p>Pode realizar sessões</p>
-                    </div>
-                    <ion-badge
-                      v-if="selectedPatientDetails.status === 'ativo'"
-                      color="success"
-                      class="current-badge"
-                    >
-                      Atual
-                    </ion-badge>
-                    <div v-if="selectedStatus === 'ativo'" class="selection-indicator">
-                      <ion-icon :icon="checkmarkCircleOutline"></ion-icon>
-                    </div>
-                  </div>
-
-                  <!-- Inativo -->
-                  <div
-                    class="status-option"
-                    :class="{
-                      'selected': selectedStatus === 'inativo',
-                      'current': selectedPatientDetails.status === 'inativo'
-                    }"
-                    @click="selectStatusOption('inativo')"
-                  >
-                    <div class="status-option-icon warning">
-                      <ion-icon :icon="pauseCircleOutline"></ion-icon>
-                    </div>
-                    <div class="status-option-content">
-                      <h5>Inativo</h5>
-                      <p>Temporariamente suspenso</p>
-                    </div>
-                    <ion-badge
-                      v-if="selectedPatientDetails.status === 'inativo'"
-                      color="warning"
-                      class="current-badge"
-                    >
-                      Atual
-                    </ion-badge>
-                    <div v-if="selectedStatus === 'inativo'" class="selection-indicator">
-                      <ion-icon :icon="checkmarkCircleOutline"></ion-icon>
-                    </div>
-                  </div>
-
-                  <!-- Transferido -->
-                  <div
-                    class="status-option"
-                    :class="{
-                      'selected': selectedStatus === 'transferido',
-                      'current': selectedPatientDetails.status === 'transferido'
-                    }"
-                    @click="selectStatusOption('transferido')"
-                  >
-                    <div class="status-option-icon primary">
-                      <ion-icon :icon="swapHorizontalOutline"></ion-icon>
-                    </div>
-                    <div class="status-option-content">
-                      <h5>Transferido</h5>
-                      <p>Transferido para outra unidade</p>
-                    </div>
-                    <ion-badge
-                      v-if="selectedPatientDetails.status === 'transferido'"
-                      color="primary"
-                      class="current-badge"
-                    >
-                      Atual
-                    </ion-badge>
-                    <div v-if="selectedStatus === 'transferido'" class="selection-indicator">
-                      <ion-icon :icon="checkmarkCircleOutline"></ion-icon>
-                    </div>
-                  </div>
-
-                  <!-- Alta -->
-                  <div
-                    class="status-option"
-                    :class="{
-                      'selected': selectedStatus === 'alta',
-                      'current': selectedPatientDetails.status === 'alta'
-                    }"
-                    @click="selectStatusOption('alta')"
-                  >
-                    <div class="status-option-icon medium">
-                      <ion-icon :icon="arrowUpCircleOutline"></ion-icon>
-                    </div>
-                    <div class="status-option-content">
-                      <h5>Alta Médica</h5>
-                      <p>Alta permanente (irreversível)</p>
-                    </div>
-                    <ion-badge
-                      v-if="selectedPatientDetails.status === 'alta'"
-                      color="medium"
-                      class="current-badge"
-                    >
-                      Atual
-                    </ion-badge>
-                    <div v-if="selectedStatus === 'alta'" class="selection-indicator">
-                      <ion-icon :icon="checkmarkCircleOutline"></ion-icon>
-                    </div>
-                  </div>
-
-                  <!-- Óbito -->
-                  <div
-                    class="status-option"
-                    :class="{
-                      'selected': selectedStatus === 'obito',
-                      'current': selectedPatientDetails.status === 'obito'
-                    }"
-                    @click="selectStatusOption('obito')"
-                  >
-                    <div class="status-option-icon danger">
-                      <ion-icon :icon="closeCircleOutline"></ion-icon>
-                    </div>
-                    <div class="status-option-content">
-                      <h5>Óbito</h5>
-                      <p>Falecimento (irreversível)</p>
-                    </div>
-                    <ion-badge
-                      v-if="selectedPatientDetails.status === 'obito'"
-                      color="danger"
-                      class="current-badge"
-                    >
-                      Atual
-                    </ion-badge>
-                    <div v-if="selectedStatus === 'obito'" class="selection-indicator">
-                      <ion-icon :icon="checkmarkCircleOutline"></ion-icon>
-                    </div>
-                  </div>
+                <div class="card-content-dash">
+                  <label>Alergias <span class="optional">(opcional)</span></label>
+                  <ion-textarea
+                    v-model="selectedPatientDetails.allergies"
+                    rows="3"
+                    placeholder="Descreva alergias conhecidas"
+                    class="textarea-dash"
+                  ></ion-textarea>
                 </div>
+              </div>
 
-                <!-- Terminal Status Warning (shown when selecting alta or obito) -->
-                <div v-if="!isTerminalStatus(selectedPatientDetails.status) && (selectedStatus === 'alta' || selectedStatus === 'obito')" class="terminal-warning">
-                  <ion-icon :icon="warningOutline"></ion-icon>
-                  <p><strong>Atenção:</strong> Status terminal não pode ser revertido após confirmação.</p>
+              <!-- Observações -->
+              <div class="input-card-dash">
+                <div class="card-icon-dash medium">
+                  <ion-icon :icon="medkitOutline"></ion-icon>
                 </div>
+                <div class="card-content-dash">
+                  <label>Observações Médicas <span class="optional">(opcional)</span></label>
+                  <ion-textarea
+                    v-model="selectedPatientDetails.observations"
+                    rows="4"
+                    placeholder="Observações gerais sobre o paciente"
+                    class="textarea-dash"
+                  ></ion-textarea>
+                </div>
+              </div>
 
-                <!-- Action Button -->
-                <div class="status-actions">
-                  <ion-button
-                    expand="block"
-                    color="primary"
-                    @click="updatePatientStatus"
-                    :disabled="isTogglingStatus || !selectedStatus || selectedStatus === selectedPatientDetails.status || isTerminalStatus(selectedPatientDetails.status)"
-                  >
-                    <ion-icon :icon="checkmarkCircleOutline" slot="start"></ion-icon>
-                    {{ isTogglingStatus ? 'Atualizando...' : 'Confirmar Alteração de Status' }}
-                  </ion-button>
-                  <p class="help-text" v-if="selectedStatus && selectedStatus !== selectedPatientDetails.status">
-                    Mudando de "{{ getStatusLabel(selectedPatientDetails.status) }}" para "{{ getStatusLabel(selectedStatus) }}"
-                  </p>
-                </div>
-              </ion-card-content>
-            </ion-card>
-          </div>
+              <!-- Info Card: Checklists -->
+              <div class="info-card-compact">
+                <ion-icon :icon="clipboardOutline"></ion-icon>
+                <span><strong>{{ selectedPatientDetails.checklists_count }}</strong> checklists realizados</span>
+              </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="buttons-dash">
+              <button
+                type="button"
+                class="btn-cancel-dash"
+                @click="showDetailsModal = false"
+              >
+                <ion-icon :icon="closeOutline"></ion-icon>
+                Cancelar
+              </button>
+
+              <button
+                type="submit"
+                class="btn-submit-dash"
+                :disabled="isSavingPatient"
+              >
+                <ion-icon :icon="saveOutline"></ion-icon>
+                {{ isSavingPatient ? 'Salvando...' : 'Salvar Alterações' }}
+              </button>
+            </div>
+          </form>
         </ion-content>
       </ion-modal>
     </ion-content>
@@ -665,6 +598,7 @@ const selectedPatientDetails = ref<any>(null);
 const selectedStatus = ref<string>('');
 const isSearching = ref(false);
 const isTogglingStatus = ref(false);
+const isSavingPatient = ref(false);
 const activeStatusFilter = ref<string | null>(null);
 let searchTimeout: NodeJS.Timeout | null = null;
 
@@ -899,6 +833,70 @@ const togglePatientStatus = async () => {
   }
 };
 
+const updatePatient = async () => {
+  if (!selectedPatientDetails.value) return;
+
+  try {
+    isSavingPatient.value = true;
+
+    const response = await fetch(`/api/patients/${selectedPatientDetails.value.id}`, {
+      method: 'PUT',
+      credentials: 'include',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: JSON.stringify({
+        full_name: selectedPatientDetails.value.full_name,
+        birth_date: selectedPatientDetails.value.birth_date,
+        blood_type: selectedPatientDetails.value.blood_type || null,
+        medical_record: selectedPatientDetails.value.medical_record || null,
+        allergies: selectedPatientDetails.value.allergies || null,
+        observations: selectedPatientDetails.value.observations || null,
+        status: selectedStatus.value
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      // Atualiza na lista
+      const patientIndex = patients.value.findIndex(p => p.id === selectedPatientDetails.value.id);
+      if (patientIndex !== -1) {
+        patients.value[patientIndex] = {
+          ...patients.value[patientIndex],
+          ...data.patient
+        };
+      }
+
+      // Fecha o modal
+      showDetailsModal.value = false;
+
+      const toast = await toastController.create({
+        message: 'Paciente atualizado com sucesso!',
+        duration: 2000,
+        color: 'success',
+        position: 'top'
+      });
+      await toast.present();
+    } else {
+      throw new Error(data.message || 'Erro ao atualizar paciente');
+    }
+  } catch (error: any) {
+    console.error('Error updating patient:', error);
+    const toast = await toastController.create({
+      message: error.message || 'Erro ao atualizar paciente',
+      duration: 3000,
+      color: 'danger',
+      position: 'top'
+    });
+    await toast.present();
+  } finally {
+    isSavingPatient.value = false;
+  }
+};
+
 const updatePatientStatus = async () => {
   if (!selectedPatientDetails.value || !selectedStatus.value) return;
 
@@ -995,6 +993,30 @@ const getStatusLabel = (status: string): string => {
     'obito': 'Óbito'
   };
   return labelMap[status] || status;
+};
+
+// Helper function to get status icon
+const getStatusIcon = (status: string) => {
+  const iconMap: Record<string, any> = {
+    'ativo': checkmarkCircleOutline,
+    'inativo': pauseCircleOutline,
+    'transferido': swapHorizontalOutline,
+    'alta': arrowUpCircleOutline,
+    'obito': closeCircleOutline
+  };
+  return iconMap[status] || checkmarkCircleOutline;
+};
+
+// Helper function to get status icon class
+const getStatusIconClass = (status: string): string => {
+  const classMap: Record<string, string> = {
+    'ativo': 'success',
+    'inativo': 'warning',
+    'transferido': 'info',
+    'alta': 'medium',
+    'obito': 'danger'
+  };
+  return classMap[status] || 'success';
 };
 
 const createPatient = async () => {
@@ -1816,6 +1838,135 @@ onMounted(() => {
   .buttons-dash {
     grid-template-columns: 1fr;
   }
+}
+
+/* ===== EDIT MODAL STYLES ===== */
+
+/* Edit Header Card */
+.edit-header-card {
+  background: var(--ion-card-background);
+  padding: 24px 20px;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.patient-avatar-large {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-primary-shade) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+}
+
+.patient-avatar-large ion-icon {
+  font-size: 3rem;
+  color: white;
+}
+
+.edit-header-card h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ion-text-color);
+  margin: 0 0 8px 0;
+}
+
+.edit-header-card p {
+  font-size: 0.9rem;
+  color: var(--ion-color-step-600);
+  margin: 0;
+}
+
+/* Detail Hint */
+.detail-hint {
+  display: block;
+  font-size: 0.813rem;
+  color: var(--ion-color-step-500);
+  margin-top: 6px;
+  font-style: italic;
+}
+
+.terminal-hint {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+/* Textarea Styles */
+.textarea-dash {
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: 8px;
+  --padding-bottom: 8px;
+  font-size: 0.938rem;
+  color: var(--ion-text-color);
+  min-height: 80px;
+}
+
+.textarea-dash::part(native) {
+  padding: 0 !important;
+}
+
+/* Status Card Specific */
+.status-card {
+  border: 2px solid var(--ion-color-primary);
+  background: rgba(59, 130, 246, 0.03);
+}
+
+/* Additional Icon Classes */
+.card-icon-dash.quaternary {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+}
+
+.card-icon-dash.info {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+}
+
+.card-icon-dash.success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.card-icon-dash.warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.card-icon-dash.danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.card-icon-dash.medium {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+}
+
+/* Info Card Compact */
+.info-card-compact {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+  border-radius: 12px;
+  border: 2px solid var(--ion-color-step-150);
+}
+
+.info-card-compact ion-icon {
+  font-size: 2rem;
+  color: var(--ion-color-primary);
+}
+
+.info-card-compact span {
+  font-size: 0.938rem;
+  color: var(--ion-color-step-700);
+}
+
+.info-card-compact strong {
+  font-size: 1.25rem;
+  color: var(--ion-color-primary);
+  font-weight: 700;
 }
 
 /* Patient Details Modal Styles */
