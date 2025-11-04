@@ -14,26 +14,11 @@
 
         <!-- Welcome Card -->
         <div class="welcome-card-dash">
+          <div class="patient-avatar-large">
+            <ion-icon :icon="personAddOutline"></ion-icon>
+          </div>
           <h2>Cadastrar Novo Paciente</h2>
-          <p>Preencha as informações básicas</p>
-        </div>
-
-        <!-- Progress Steps -->
-        <div class="progress-dash">
-          <div class="progress-item" :class="{ done: newPatient.full_name }">
-            <div class="progress-dot"></div>
-            <span>Nome</span>
-          </div>
-          <div class="progress-line" :class="{ active: newPatient.birth_date }"></div>
-          <div class="progress-item" :class="{ done: newPatient.birth_date }">
-            <div class="progress-dot"></div>
-            <span>Data</span>
-          </div>
-          <div class="progress-line" :class="{ active: newPatient.blood_group || newPatient.rh_factor }"></div>
-          <div class="progress-item" :class="{ done: newPatient.blood_group && newPatient.rh_factor }">
-            <div class="progress-dot"></div>
-            <span>Sangue</span>
-          </div>
+          <p>Preencha todas as informações necessárias</p>
         </div>
 
         <!-- Input Cards -->
@@ -80,35 +65,69 @@
             <div class="card-content-dash">
               <label>Tipo Sanguíneo <span class="optional">(opcional)</span></label>
               <ion-select
-                v-model="newPatient.blood_group"
-                placeholder="Selecione o tipo"
+                v-model="newPatient.blood_type"
+                placeholder="Selecione o tipo sanguíneo"
                 interface="action-sheet"
                 class="select-dash"
               >
-                <ion-select-option value="A">A</ion-select-option>
-                <ion-select-option value="B">B</ion-select-option>
-                <ion-select-option value="AB">AB</ion-select-option>
-                <ion-select-option value="O">O</ion-select-option>
+                <ion-select-option value="">Não informado</ion-select-option>
+                <ion-select-option value="A+">A+</ion-select-option>
+                <ion-select-option value="A-">A-</ion-select-option>
+                <ion-select-option value="B+">B+</ion-select-option>
+                <ion-select-option value="B-">B-</ion-select-option>
+                <ion-select-option value="AB+">AB+</ion-select-option>
+                <ion-select-option value="AB-">AB-</ion-select-option>
+                <ion-select-option value="O+">O+</ion-select-option>
+                <ion-select-option value="O-">O-</ion-select-option>
               </ion-select>
             </div>
           </div>
 
-          <!-- Fator RH -->
+          <!-- Prontuário Médico -->
           <div class="input-card-dash">
-            <div class="card-icon-dash success">
-              <ion-icon :icon="addCircleOutline"></ion-icon>
+            <div class="card-icon-dash quaternary">
+              <ion-icon :icon="clipboardOutline"></ion-icon>
             </div>
             <div class="card-content-dash">
-              <label>Fator RH <span class="optional">(opcional)</span></label>
-              <ion-select
-                v-model="newPatient.rh_factor"
-                placeholder="Selecione o fator"
-                interface="action-sheet"
-                class="select-dash"
-              >
-                <ion-select-option value="+">Positivo (+)</ion-select-option>
-                <ion-select-option value="-">Negativo (-)</ion-select-option>
-              </ion-select>
+              <label>Prontuário Médico <span class="optional">(opcional)</span></label>
+              <ion-input
+                v-model="newPatient.medical_record"
+                type="text"
+                placeholder="Número do prontuário"
+                class="input-dash"
+              ></ion-input>
+            </div>
+          </div>
+
+          <!-- Alergias -->
+          <div class="input-card-dash">
+            <div class="card-icon-dash danger">
+              <ion-icon :icon="alertCircleOutline"></ion-icon>
+            </div>
+            <div class="card-content-dash">
+              <label>Alergias <span class="optional">(opcional)</span></label>
+              <ion-textarea
+                v-model="newPatient.allergies"
+                rows="3"
+                placeholder="Descreva alergias conhecidas"
+                class="textarea-dash"
+              ></ion-textarea>
+            </div>
+          </div>
+
+          <!-- Observações -->
+          <div class="input-card-dash">
+            <div class="card-icon-dash medium">
+              <ion-icon :icon="medkitOutline"></ion-icon>
+            </div>
+            <div class="card-content-dash">
+              <label>Observações Médicas <span class="optional">(opcional)</span></label>
+              <ion-textarea
+                v-model="newPatient.observations"
+                rows="4"
+                placeholder="Observações gerais sobre o paciente"
+                class="textarea-dash"
+              ></ion-textarea>
             </div>
           </div>
 
@@ -152,6 +171,7 @@ import {
   IonButtons,
   IonBackButton,
   IonInput,
+  IonTextarea,
   IonSelect,
   IonSelectOption,
   IonIcon,
@@ -164,7 +184,9 @@ import {
   personOutline,
   calendarOutline,
   waterOutline,
-  addCircleOutline,
+  clipboardOutline,
+  alertCircleOutline,
+  medkitOutline,
   closeOutline,
   checkmarkCircleOutline
 } from 'ionicons/icons';
@@ -180,8 +202,8 @@ const createPatientUseCase = container.getCreatePatientUseCase();
 const newPatient = ref<CreatePatientData>({
   full_name: '',
   birth_date: '',
-  blood_group: '',
-  rh_factor: '',
+  blood_type: '',
+  medical_record: '',
   allergies: '',
   observations: ''
 });
@@ -314,11 +336,28 @@ onMounted(() => {
 /* Welcome Card */
 .welcome-card-dash {
   background: var(--ion-card-background);
-  padding: 20px;
+  padding: 24px 20px;
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   margin-bottom: 20px;
   text-align: center;
+}
+
+.patient-avatar-large {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--ion-color-primary) 0%, var(--ion-color-primary-shade) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.3);
+}
+
+.patient-avatar-large ion-icon {
+  font-size: 3rem;
+  color: white;
 }
 
 .welcome-card-dash h2 {
@@ -445,6 +484,18 @@ onMounted(() => {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
 }
 
+.card-icon-dash.quaternary {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+}
+
+.card-icon-dash.danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.card-icon-dash.medium {
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+}
+
 .card-content-dash {
   flex: 1;
   display: flex;
@@ -477,6 +528,21 @@ onMounted(() => {
 
 .input-dash::part(native),
 .select-dash::part(container) {
+  padding: 0 !important;
+}
+
+/* Textarea Styles */
+.textarea-dash {
+  --padding-start: 0;
+  --padding-end: 0;
+  --padding-top: 8px;
+  --padding-bottom: 8px;
+  font-size: 0.938rem;
+  color: var(--ion-text-color);
+  min-height: 80px;
+}
+
+.textarea-dash::part(native) {
   padding: 0 !important;
 }
 

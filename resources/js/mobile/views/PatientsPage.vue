@@ -194,7 +194,7 @@
         </div>
       </div>
 
-      <!-- Create Patient Modal - SIMPLIFICADO DASHBOARD STYLE -->
+      <!-- Create Patient Modal - COMPLETE FORM -->
       <ion-modal :is-open="showCreateModal" @will-dismiss="showCreateModal = false">
         <ion-header>
           <ion-toolbar color="primary">
@@ -217,26 +217,11 @@
 
             <!-- Welcome Card -->
             <div class="welcome-card-dash">
+              <div class="patient-avatar-large">
+                <ion-icon :icon="personAddOutline"></ion-icon>
+              </div>
               <h2>Cadastrar Novo Paciente</h2>
-              <p>Preencha as informações básicas</p>
-            </div>
-
-            <!-- Progress Steps -->
-            <div class="progress-dash">
-              <div class="progress-item" :class="{ done: newPatient.full_name }">
-                <div class="progress-dot"></div>
-                <span>Nome</span>
-              </div>
-              <div class="progress-line" :class="{ active: newPatient.birth_date }"></div>
-              <div class="progress-item" :class="{ done: newPatient.birth_date }">
-                <div class="progress-dot"></div>
-                <span>Data</span>
-              </div>
-              <div class="progress-line" :class="{ active: newPatient.blood_type }"></div>
-              <div class="progress-item" :class="{ done: newPatient.blood_type }">
-                <div class="progress-dot"></div>
-                <span>Fator RH</span>
-              </div>
+              <p>Preencha todas as informações necessárias</p>
             </div>
 
             <!-- Input Cards -->
@@ -275,19 +260,20 @@
                 </div>
               </div>
 
-              <!-- Fator RH -->
+              <!-- Tipo Sanguíneo -->
               <div class="input-card-dash">
                 <div class="card-icon-dash tertiary">
                   <ion-icon :icon="waterOutline"></ion-icon>
                 </div>
                 <div class="card-content-dash">
-                  <label>Fator RH <span class="optional">(opcional)</span></label>
+                  <label>Tipo Sanguíneo <span class="optional">(opcional)</span></label>
                   <ion-select
                     v-model="newPatient.blood_type"
                     placeholder="Selecione o tipo sanguíneo"
                     interface="action-sheet"
                     class="select-dash"
                   >
+                    <ion-select-option value="">Não informado</ion-select-option>
                     <ion-select-option value="A+">A+</ion-select-option>
                     <ion-select-option value="A-">A-</ion-select-option>
                     <ion-select-option value="B+">B+</ion-select-option>
@@ -297,6 +283,54 @@
                     <ion-select-option value="O+">O+</ion-select-option>
                     <ion-select-option value="O-">O-</ion-select-option>
                   </ion-select>
+                </div>
+              </div>
+
+              <!-- Prontuário Médico -->
+              <div class="input-card-dash">
+                <div class="card-icon-dash quaternary">
+                  <ion-icon :icon="clipboardOutline"></ion-icon>
+                </div>
+                <div class="card-content-dash">
+                  <label>Prontuário Médico <span class="optional">(opcional)</span></label>
+                  <ion-input
+                    v-model="newPatient.medical_record"
+                    type="text"
+                    placeholder="Número do prontuário"
+                    class="input-dash"
+                  ></ion-input>
+                </div>
+              </div>
+
+              <!-- Alergias -->
+              <div class="input-card-dash">
+                <div class="card-icon-dash danger">
+                  <ion-icon :icon="alertCircleOutline"></ion-icon>
+                </div>
+                <div class="card-content-dash">
+                  <label>Alergias <span class="optional">(opcional)</span></label>
+                  <ion-textarea
+                    v-model="newPatient.allergies"
+                    rows="3"
+                    placeholder="Descreva alergias conhecidas"
+                    class="textarea-dash"
+                  ></ion-textarea>
+                </div>
+              </div>
+
+              <!-- Observações -->
+              <div class="input-card-dash">
+                <div class="card-icon-dash medium">
+                  <ion-icon :icon="medkitOutline"></ion-icon>
+                </div>
+                <div class="card-content-dash">
+                  <label>Observações Médicas <span class="optional">(opcional)</span></label>
+                  <ion-textarea
+                    v-model="newPatient.observations"
+                    rows="4"
+                    placeholder="Observações gerais sobre o paciente"
+                    class="textarea-dash"
+                  ></ion-textarea>
                 </div>
               </div>
 
@@ -319,7 +353,7 @@
                 :disabled="!canCreatePatient"
               >
                 <ion-icon :icon="checkmarkCircleOutline"></ion-icon>
-                Cadastrar
+                Cadastrar Paciente
               </button>
             </div>
 
@@ -606,6 +640,7 @@ const newPatient = ref<CreatePatientData>({
   full_name: '',
   birth_date: '',
   blood_type: '',
+  medical_record: '',
   allergies: '',
   observations: ''
 });
@@ -1037,6 +1072,7 @@ const createPatient = async () => {
       full_name: '',
       birth_date: '',
       blood_type: '',
+      medical_record: '',
       allergies: '',
       observations: ''
     };
