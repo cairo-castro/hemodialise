@@ -244,11 +244,10 @@ class ChecklistController extends Controller
 
     public function recent(Request $request)
     {
-        // Get recent checklists (last 24 hours) with limit parameter
+        // Get recent checklists with limit parameter (no time restriction)
         $limit = $request->input('limit', 10);
 
         $query = SafetyChecklist::with(['machine', 'patient', 'user'])
-            ->where('created_at', '>=', now()->subDay())
             ->orderBy('created_at', 'desc')
             ->limit($limit);
 
@@ -260,7 +259,7 @@ class ChecklistController extends Controller
 
         return response()->json([
             'success' => true,
-            'checklists' => $recentChecklists,
+            'data' => $recentChecklists,
             'total' => $recentChecklists->count(),
         ]);
     }

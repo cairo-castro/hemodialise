@@ -99,7 +99,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import { SparklesIcon, CheckCircleIcon, BeakerIcon } from '@heroicons/vue/24/outline';
 import VueApexCharts from 'vue3-apexcharts';
 import { useExcelExport } from '../../composables/useExcelExport';
@@ -111,17 +111,80 @@ const props = defineProps({
   dateRange: { type: Object, required: true }
 });
 
+// Stats from API
 const stats = ref({
-  total: 892,
-  conformityRate: 96.2,
-  daily: 654,
-  chemical: 238
+  total: 0,
+  conformityRate: 0,
+  daily: 0,
+  chemical: 0
+});
+
+const isLoading = ref(false);
+
+// Load data from API
+async function loadReportData() {
+  if (!props.dateRange.start || !props.dateRange.end) return;
+
+  isLoading.value = true;
+  try {
+    const response = await fetch(`/api/reports/cleaning?start_date=${props.dateRange.start}&end_date=${props.dateRange.end}`, {
+      credentials: 'include',
+      headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Erro ao carregar relatório');
+    }
+
+    const result = await response.json();
+
+    if (result.success) {
+      stats.value = result.data.stats;
+
+      // Update cleaning type chart
+      if (result.data.cleaningByType) {
+        cleaningTypeSeries.value = [{
+          name: 'Quantidade',
+          data: result.data.cleaningByType.data
+        }];
+        cleaningTypeCategories.value = result.data.cleaningByType.categories;
+      }
+
+      // Update item conformity chart
+      if (result.data.itemConformity) {
+        itemConformitySeries.value = [{
+          name: 'Conformidade',
+          data: result.data.itemConformity.data
+        }];
+        itemConformityCategories.value = result.data.itemConformity.categories;
+      }
+    }
+  } catch (error) {
+    console.error('Erro ao carregar relatório:', error);
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+// Watch for date range changes
+watch(() => props.dateRange, () => {
+  loadReportData();
+}, { deep: true });
+
+// Load on mount
+onMounted(() => {
+  loadReportData();
 });
 
 const cleaningTypeSeries = ref([{
   name: 'Quantidade',
-  data: [654, 128, 82, 28]
+  data: []
 }]);
+
+const cleaningTypeCategories = ref(['Diária', 'Semanal', 'Mensal', 'Especial']);
 
 const cleaningTypeOptions = computed(() => ({
   chart: { type: 'bar', toolbar: { show: false } },
@@ -130,7 +193,7 @@ const cleaningTypeOptions = computed(() => ({
   },
   colors: ['#8B5CF6'],
   xaxis: {
-    categories: ['Diária', 'Semanal', 'Mensal', 'Especial'],
+    categories: cleaningTypeCategories.value,
     labels: {
       style: {
         colors: document.documentElement.classList.contains('dark') ? '#9CA3AF' : '#6B7280'
@@ -151,16 +214,18 @@ const cleaningTypeOptions = computed(() => ({
 
 const itemConformitySeries = ref([{
   name: 'Conformidade',
-  data: [95, 97, 94, 98]
+  data: []
 }]);
+
+const itemConformityCategories = ref(['Máquina HD', 'Osmose', 'Suporte Soro', 'Desinfecção']);
 
 const itemConformityOptions = computed(() => ({
   chart: { type: 'radar', toolbar: { show: false } },
   xaxis: {
-    categories: ['Máquina HD', 'Osmose', 'Suporte Soro', 'Desinfecção']
+    categories: itemConformityCategories.value
   },
   colors: ['#10B981'],
-  yaxis: { min: 85, max: 100 }
+  yaxis: { min: 0, max: 100 }
 }));
 
 async function exportReport() {
@@ -177,16 +242,16 @@ async function exportReport() {
       },
       {
         sheetName: 'Por Tipo',
-        data: cleaningTypeOptions.value.xaxis.categories.map((type, index) => ({
+        data: cleaningTypeCategories.value.map((type, index) => ({
           'Tipo de Limpeza': type,
-          'Quantidade': cleaningTypeSeries.value[0].data[index]
+          'Quantidade': cleaningTypeSeries.value[0].data[index] || 0
         }))
       },
       {
         sheetName: 'Conformidade por Item',
-        data: itemConformityOptions.value.xaxis.categories.map((item, index) => ({
+        data: itemConformityCategories.value.map((item, index) => ({
           'Item': item,
-          'Taxa de Conformidade (%)': itemConformitySeries.value[0].data[index]
+          'Taxa de Conformidade (%)': itemConformitySeries.value[0].data[index] || 0
         }))
       }
     ];

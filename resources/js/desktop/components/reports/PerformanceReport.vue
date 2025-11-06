@@ -42,7 +42,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import VueApexCharts from 'vue3-apexcharts';
 import { useExcelExport } from '../../composables/useExcelExport';
 
@@ -50,18 +50,86 @@ const apexchart = VueApexCharts;
 const { exportWithCharts } = useExcelExport();
 const props = defineProps({ dateRange: { type: Object, required: true } });
 
+const isLoading = ref(false);
+
+// Load data from API
+async function loadReportData() {
+  if (!props.dateRange.start || !props.dateRange.end) return;
+
+  isLoading.value = true;
+  try {
+    const response = await fetch(`/api/reports/performance?start_date=${props.dateRange.start}&end_date=${props.dateRange.end}`, {
+      credentials: 'include',
+      headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Erro ao carregar relatório');
+    }
+
+    const result = await response.json();
+
+    if (result.success) {
+      // Update weekly performance chart
+      if (result.data.weeklyPerformance) {
+        performanceSeries.value = [
+          { name: 'Checklists', data: result.data.weeklyPerformance.checklists },
+          { name: 'Limpezas', data: result.data.weeklyPerformance.cleanings },
+          { name: 'Taxa Conformidade', data: result.data.weeklyPerformance.conformityRate }
+        ];
+        performanceCategories.value = result.data.weeklyPerformance.categories;
+      }
+
+      // Update monthly comparison chart
+      if (result.data.monthlyComparison) {
+        monthlySeries.value = [
+          { name: 'Período Atual', data: result.data.monthlyComparison.current },
+          { name: 'Período Anterior', data: result.data.monthlyComparison.previous }
+        ];
+        monthlyCategories.value = result.data.monthlyComparison.categories;
+      }
+
+      // Update session status chart
+      if (result.data.sessionStatus) {
+        sessionStatusSeries.value = result.data.sessionStatus.series;
+        sessionStatusLabels.value = result.data.sessionStatus.labels;
+        sessionStatusTotal.value = result.data.sessionStatus.total;
+      }
+    }
+  } catch (error) {
+    console.error('Erro ao carregar relatório:', error);
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+// Watch for date range changes
+watch(() => props.dateRange, () => {
+  loadReportData();
+}, { deep: true });
+
+// Load on mount
+onMounted(() => {
+  loadReportData();
+});
+
 const performanceSeries = ref([
-  { name: 'Checklists', data: [145, 152, 148, 156, 162, 159, 165] },
-  { name: 'Limpezas', data: [98, 102, 105, 108, 103, 110, 112] },
-  { name: 'Taxa Conformidade', data: [92, 93, 94, 93, 95, 94, 96] }
+  { name: 'Checklists', data: [] },
+  { name: 'Limpezas', data: [] },
+  { name: 'Taxa Conformidade', data: [] }
 ]);
+
+const performanceCategories = ref([]);
 
 const performanceOptions = computed(() => ({
   chart: { type: 'line', toolbar: { show: false } },
   stroke: { curve: 'smooth', width: 3 },
   colors: ['#3B82F6', '#8B5CF6', '#10B981'],
   xaxis: {
-    categories: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5', 'Sem 6', 'Sem 7'],
+    categories: performanceCategories.value,
     labels: { style: { colors: document.documentElement.classList.contains('dark') ? '#9CA3AF' : '#6B7280' } }
   },
   yaxis: { labels: { style: { colors: document.documentElement.classList.contains('dark') ? '#9CA3AF' : '#6B7280' } } },
@@ -70,16 +138,18 @@ const performanceOptions = computed(() => ({
 }));
 
 const monthlySeries = ref([
-  { name: 'Mês Atual', data: [165, 112, 156] },
-  { name: 'Mês Anterior', data: [152, 105, 148] }
+  { name: 'Período Atual', data: [] },
+  { name: 'Período Anterior', data: [] }
 ]);
+
+const monthlyCategories = ref(['Checklists', 'Limpezas', 'Procedimentos']);
 
 const monthlyOptions = computed(() => ({
   chart: { type: 'bar', toolbar: { show: false } },
   plotOptions: { bar: { borderRadius: 4, columnWidth: '60%' } },
   colors: ['#3B82F6', '#9CA3AF'],
   xaxis: {
-    categories: ['Checklists', 'Limpezas', 'Procedimentos'],
+    categories: monthlyCategories.value,
     labels: { style: { colors: document.documentElement.classList.contains('dark') ? '#9CA3AF' : '#6B7280' } }
   },
   yaxis: { labels: { style: { colors: document.documentElement.classList.contains('dark') ? '#9CA3AF' : '#6B7280' } } },
@@ -87,10 +157,13 @@ const monthlyOptions = computed(() => ({
   legend: { position: 'top', labels: { colors: document.documentElement.classList.contains('dark') ? '#9CA3AF' : '#6B7280' } }
 }));
 
-const sessionStatusSeries = ref([1175, 72]);
+const sessionStatusSeries = ref([]);
+const sessionStatusLabels = ref(['Concluído', 'Interrompido']);
+const sessionStatusTotal = ref(0);
+
 const sessionStatusOptions = computed(() => ({
   chart: { type: 'donut' },
-  labels: ['Concluído', 'Interrompido'],
+  labels: sessionStatusLabels.value,
   colors: ['#10B981', '#EF4444'],
   legend: {
     position: 'bottom',
@@ -104,7 +177,7 @@ const sessionStatusOptions = computed(() => ({
           total: {
             show: true,
             label: 'Total de Sessões',
-            formatter: () => '1,247'
+            formatter: () => sessionStatusTotal.value.toLocaleString('pt-BR')
           }
         }
       }
@@ -117,28 +190,30 @@ async function exportReport() {
     const sheets = [
       {
         sheetName: 'Performance Semanal',
-        data: performanceOptions.value.xaxis.categories.map((week, index) => ({
+        data: performanceCategories.value.map((week, index) => ({
           'Período': week,
-          'Checklists': performanceSeries.value[0].data[index],
-          'Limpezas': performanceSeries.value[1].data[index],
-          'Taxa Conformidade (%)': performanceSeries.value[2].data[index]
+          'Checklists': performanceSeries.value[0].data[index] || 0,
+          'Limpezas': performanceSeries.value[1].data[index] || 0,
+          'Taxa Conformidade (%)': performanceSeries.value[2].data[index] || 0
         }))
       },
       {
         sheetName: 'Comparativo Mensal',
-        data: monthlyOptions.value.xaxis.categories.map((category, index) => ({
+        data: monthlyCategories.value.map((category, index) => ({
           'Categoria': category,
-          'Mês Atual': monthlySeries.value[0].data[index],
-          'Mês Anterior': monthlySeries.value[1].data[index],
-          'Variação': monthlySeries.value[0].data[index] - monthlySeries.value[1].data[index]
+          'Período Atual': monthlySeries.value[0].data[index] || 0,
+          'Período Anterior': monthlySeries.value[1].data[index] || 0,
+          'Variação': (monthlySeries.value[0].data[index] || 0) - (monthlySeries.value[1].data[index] || 0)
         }))
       },
       {
         sheetName: 'Status das Sessões',
-        data: sessionStatusOptions.value.labels.map((label, index) => ({
+        data: sessionStatusLabels.value.map((label, index) => ({
           'Status': label,
-          'Quantidade': sessionStatusSeries.value[index],
-          'Percentual': `${((sessionStatusSeries.value[index] / sessionStatusSeries.value.reduce((a, b) => a + b, 0)) * 100).toFixed(1)}%`
+          'Quantidade': sessionStatusSeries.value[index] || 0,
+          'Percentual': sessionStatusTotal.value > 0
+            ? `${(((sessionStatusSeries.value[index] || 0) / sessionStatusTotal.value) * 100).toFixed(1)}%`
+            : '0%'
         }))
       }
     ];

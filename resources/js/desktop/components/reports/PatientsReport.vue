@@ -5,7 +5,7 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm text-gray-500 dark:text-gray-400">Total de Pacientes</p>
-            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">578</p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ stats.total }}</p>
           </div>
           <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900/20 rounded-lg flex items-center justify-center">
             <UsersIcon class="w-6 h-6 text-blue-600 dark:text-blue-400" />
@@ -17,7 +17,7 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm text-gray-500 dark:text-gray-400">Pacientes Ativos</p>
-            <p class="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">423</p>
+            <p class="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">{{ stats.active }}</p>
           </div>
           <div class="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center">
             <CheckCircleIcon class="w-6 h-6 text-green-600 dark:text-green-400" />
@@ -29,7 +29,7 @@
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm text-gray-500 dark:text-gray-400">Média de Idade</p>
-            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">54.3</p>
+            <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">{{ stats.averageAge }}</p>
           </div>
           <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900/20 rounded-lg flex items-center justify-center">
             <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -75,7 +75,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { UsersIcon, CheckCircleIcon } from '@heroicons/vue/24/outline';
 import VueApexCharts from 'vue3-apexcharts';
 import { useExcelExport } from '../../composables/useExcelExport';
@@ -84,26 +84,81 @@ const apexchart = VueApexCharts;
 const { exportWithCharts } = useExcelExport();
 const props = defineProps({ dateRange: { type: Object, required: true } });
 
+// Stats from API
 const stats = ref({
-  total: 578,
-  active: 423,
-  averageAge: 54.3
+  total: 0,
+  active: 0,
+  averageAge: 0
 });
 
-const statusSeries = ref([423, 86, 46, 23]);
+const isLoading = ref(false);
+
+// Load data from API
+async function loadReportData() {
+  isLoading.value = true;
+  try {
+    const response = await fetch('/api/reports/patients', {
+      credentials: 'include',
+      headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Erro ao carregar relatório');
+    }
+
+    const result = await response.json();
+
+    if (result.success) {
+      stats.value = result.data.stats;
+
+      // Update status distribution chart
+      if (result.data.statusDistribution) {
+        statusSeries.value = result.data.statusDistribution.series;
+        statusLabels.value = result.data.statusDistribution.labels;
+      }
+
+      // Update age distribution chart
+      if (result.data.ageDistribution) {
+        ageSeries.value = [{
+          name: 'Pacientes',
+          data: result.data.ageDistribution.data
+        }];
+        ageCategories.value = result.data.ageDistribution.categories;
+      }
+    }
+  } catch (error) {
+    console.error('Erro ao carregar relatório:', error);
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+// Load on mount
+onMounted(() => {
+  loadReportData();
+});
+
+const statusSeries = ref([]);
+const statusLabels = ref(['Ativo', 'Inativo', 'Alta', 'Óbito']);
+
 const statusOptions = computed(() => ({
-  labels: ['Ativo', 'Inativo', 'Alta', 'Óbito'],
+  labels: statusLabels.value,
   colors: ['#10B981', '#F59E0B', '#8B5CF6', '#EF4444'],
   legend: { position: 'bottom', labels: { colors: document.documentElement.classList.contains('dark') ? '#9CA3AF' : '#6B7280' } }
 }));
 
-const ageSeries = ref([{ name: 'Pacientes', data: [32, 89, 156, 178, 123] }]);
+const ageSeries = ref([{ name: 'Pacientes', data: [] }]);
+const ageCategories = ref(['18-30', '31-45', '46-60', '61-75', '76+']);
+
 const ageOptions = computed(() => ({
   chart: { type: 'bar', toolbar: { show: false } },
   plotOptions: { bar: { borderRadius: 4 } },
   colors: ['#3B82F6'],
   xaxis: {
-    categories: ['18-30', '31-45', '46-60', '61-75', '76+'],
+    categories: ageCategories.value,
     labels: { style: { colors: document.documentElement.classList.contains('dark') ? '#9CA3AF' : '#6B7280' } }
   },
   yaxis: { labels: { style: { colors: document.documentElement.classList.contains('dark') ? '#9CA3AF' : '#6B7280' } } },
@@ -123,17 +178,19 @@ async function exportReport() {
       },
       {
         sheetName: 'Por Status',
-        data: statusOptions.value.labels.map((status, index) => ({
+        data: statusLabels.value.map((status, index) => ({
           'Status': status,
-          'Quantidade': statusSeries.value[index],
-          'Percentual': `${((statusSeries.value[index] / statusSeries.value.reduce((a, b) => a + b, 0)) * 100).toFixed(1)}%`
+          'Quantidade': statusSeries.value[index] || 0,
+          'Percentual': statusSeries.value.reduce((a, b) => a + b, 0) > 0
+            ? `${((statusSeries.value[index] || 0) / statusSeries.value.reduce((a, b) => a + b, 0) * 100).toFixed(1)}%`
+            : '0%'
         }))
       },
       {
         sheetName: 'Por Faixa Etária',
-        data: ageOptions.value.xaxis.categories.map((age, index) => ({
+        data: ageCategories.value.map((age, index) => ({
           'Faixa Etária': age,
-          'Quantidade': ageSeries.value[0].data[index]
+          'Quantidade': ageSeries.value[0].data[index] || 0
         }))
       }
     ];

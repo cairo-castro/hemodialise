@@ -116,10 +116,10 @@
               <div class="flex items-start justify-between gap-4">
                 <div class="flex-1">
                   <p class="text-sm font-medium text-gray-900 dark:text-white">
-                    {{ notification.data.title }}
+                    {{ notification.title }}
                   </p>
                   <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    {{ notification.data.message }}
+                    {{ notification.message }}
                   </p>
                   <p class="text-xs text-gray-500 dark:text-gray-500 mt-2">
                     {{ formatDate(notification.created_at) }}
@@ -174,9 +174,17 @@ async function loadNotifications() {
   try {
     loading.value = true;
     const response = await axios.get('/api/notifications');
-    notifications.value = response.data;
+
+    // Handle response structure - API returns { success, data, unread_count, pagination }
+    if (response.data.success && Array.isArray(response.data.data)) {
+      notifications.value = response.data.data;
+    } else {
+      console.error('Invalid response format:', response.data);
+      notifications.value = [];
+    }
   } catch (error) {
     console.error('Error loading notifications:', error);
+    notifications.value = [];
   } finally {
     loading.value = false;
   }
@@ -188,18 +196,22 @@ async function handleNotificationClick(notification) {
     await markAsRead(notification.id);
   }
 
-  // Navigate based on notification type
-  const data = notification.data;
+  // Navigate based on action_url or data
+  if (notification.action_url) {
+    window.location.href = notification.action_url;
+  } else if (notification.data) {
+    const data = notification.data;
 
-  if (data.checklist_id) {
-    // Emit event to open checklist modal
-    emit('open-checklist', data.checklist_id);
-  } else if (data.machine_id) {
-    // Emit event to open machine modal
-    emit('open-machine', data.machine_id);
-  } else if (data.url) {
-    // Navigate to URL if provided
-    window.location.href = data.url;
+    if (data.checklist_id) {
+      // Emit event to open checklist modal
+      emit('open-checklist', data.checklist_id);
+    } else if (data.machine_id) {
+      // Emit event to open machine modal
+      emit('open-machine', data.machine_id);
+    } else if (data.url) {
+      // Navigate to URL if provided
+      window.location.href = data.url;
+    }
   }
 }
 

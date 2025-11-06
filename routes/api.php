@@ -82,7 +82,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/poll', [NotificationController::class, 'poll']);
         Route::get('/unread-count', [NotificationController::class, 'unreadCount']);
         Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead']);
-        Route::post('/{id}/mark-read', [NotificationController::class, 'markAsRead']);
+        Route::post('/{id}/read', [NotificationController::class, 'markAsRead']);
         Route::delete('/{id}', [NotificationController::class, 'destroy']);
     });
 
@@ -93,6 +93,14 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::middleware(['role:tecnico,gestor,coordenador,supervisor,admin', 'unit.scope'])->group(function () {
+        // Report routes
+        Route::prefix('reports')->group(function () {
+            Route::get('/checklists', [App\Http\Controllers\Api\ReportController::class, 'checklists']);
+            Route::get('/cleaning', [App\Http\Controllers\Api\ReportController::class, 'cleaning']);
+            Route::get('/patients', [App\Http\Controllers\Api\ReportController::class, 'patients']);
+            Route::get('/performance', [App\Http\Controllers\Api\ReportController::class, 'performance']);
+        });
+
         // Rotas específicas devem vir ANTES do apiResource para evitar conflitos
         Route::get('/checklists/stats', [ChecklistController::class, 'stats']);
         Route::get('/checklists/active', [ChecklistController::class, 'active']);

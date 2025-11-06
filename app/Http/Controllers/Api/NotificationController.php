@@ -56,7 +56,7 @@ class NotificationController extends Controller
 
         return response()->json([
             'success' => true,
-            'notifications' => $notifications->items(),
+            'data' => $notifications->items(),
             'unread_count' => $unreadCount,
             'pagination' => [
                 'current_page' => $notifications->currentPage(),

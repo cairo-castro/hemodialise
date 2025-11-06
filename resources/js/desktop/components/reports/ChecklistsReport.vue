@@ -123,7 +123,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
 import {
   ClipboardDocumentCheckIcon,
   CheckCircleIcon,
@@ -143,18 +143,79 @@ const props = defineProps({
   }
 });
 
-// Demo stats
+// Stats from API
 const stats = ref({
-  total: 1247,
-  conformityRate: 94.3,
-  completed: 1175,
-  interrupted: 72
+  total: 0,
+  conformityRate: 0,
+  completed: 0,
+  interrupted: 0,
+  inProgress: 0
+});
+
+const isLoading = ref(false);
+
+// Load data from API
+async function loadReportData() {
+  if (!props.dateRange.start || !props.dateRange.end) return;
+
+  isLoading.value = true;
+  try {
+    const response = await fetch(`/api/reports/checklists?start_date=${props.dateRange.start}&end_date=${props.dateRange.end}`, {
+      credentials: 'include',
+      headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Erro ao carregar relatório');
+    }
+
+    const result = await response.json();
+
+    if (result.success) {
+      stats.value = result.data.stats;
+      shiftStats.value = result.data.shiftStats || [];
+
+      // Update conformity trend chart
+      if (result.data.conformityTrend) {
+        conformityTrendSeries.value = [{
+          name: 'Taxa de Conformidade',
+          data: result.data.conformityTrend.data
+        }];
+        conformityTrendCategories.value = result.data.conformityTrend.categories;
+      }
+
+      // Update phase distribution chart
+      if (result.data.phaseDistribution) {
+        phaseDistributionSeries.value = result.data.phaseDistribution.series;
+        phaseDistributionLabels.value = result.data.phaseDistribution.labels;
+      }
+    }
+  } catch (error) {
+    console.error('Erro ao carregar relatório:', error);
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+// Watch for date range changes
+watch(() => props.dateRange, () => {
+  loadReportData();
+}, { deep: true });
+
+// Load on mount
+onMounted(() => {
+  loadReportData();
 });
 
 const conformityTrendSeries = ref([{
   name: 'Taxa de Conformidade',
-  data: [92, 93.5, 94, 93.8, 94.5, 94.3, 95]
+  data: []
 }]);
+
+const conformityTrendCategories = ref([]);
 
 const conformityTrendOptions = computed(() => ({
   chart: {
@@ -167,7 +228,7 @@ const conformityTrendOptions = computed(() => ({
   },
   colors: ['#10B981'],
   xaxis: {
-    categories: ['Sem 1', 'Sem 2', 'Sem 3', 'Sem 4', 'Sem 5', 'Sem 6', 'Sem 7'],
+    categories: conformityTrendCategories.value,
     labels: {
       style: {
         colors: document.documentElement.classList.contains('dark') ? '#9CA3AF' : '#6B7280'
@@ -175,7 +236,7 @@ const conformityTrendOptions = computed(() => ({
     }
   },
   yaxis: {
-    min: 85,
+    min: 0,
     max: 100,
     labels: {
       formatter: (val) => val.toFixed(1) + '%',
@@ -189,13 +250,14 @@ const conformityTrendOptions = computed(() => ({
   }
 }));
 
-const phaseDistributionSeries = ref([45, 35, 15, 5]);
+const phaseDistributionSeries = ref([]);
+const phaseDistributionLabels = ref(['Pré-Diálise', 'Durante Sessão', 'Pós-Diálise', 'Interrompido']);
 
 const phaseDistributionOptions = computed(() => ({
   chart: {
     type: 'donut'
   },
-  labels: ['Pré-Diálise', 'Durante Sessão', 'Pós-Diálise', 'Interrompido'],
+  labels: phaseDistributionLabels.value,
   colors: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'],
   legend: {
     position: 'bottom',
@@ -205,11 +267,7 @@ const phaseDistributionOptions = computed(() => ({
   }
 }));
 
-const shiftStats = ref([
-  { name: 'Matutino', total: 487, conforming: 462, rate: 94.9 },
-  { name: 'Vespertino', total: 521, conforming: 489, rate: 93.9 },
-  { name: 'Noturno', total: 239, conforming: 224, rate: 93.7 }
-]);
+const shiftStats = ref([]);
 
 async function exportReport() {
   try {
@@ -247,17 +305,19 @@ async function exportReport() {
       },
       {
         sheetName: 'Tendência Semanal',
-        data: conformityTrendOptions.value.xaxis.categories.map((week, index) => ({
+        data: conformityTrendCategories.value.map((week, index) => ({
           'Período': week,
           'Taxa de Conformidade (%)': conformityTrendSeries.value[0].data[index]
         }))
       },
       {
         sheetName: 'Por Fase',
-        data: phaseDistributionOptions.value.labels.map((label, index) => ({
+        data: phaseDistributionLabels.value.map((label, index) => ({
           'Fase': label,
-          'Quantidade': phaseDistributionSeries.value[index],
-          'Percentual': `${((phaseDistributionSeries.value[index] / phaseDistributionSeries.value.reduce((a, b) => a + b, 0)) * 100).toFixed(1)}%`
+          'Quantidade': phaseDistributionSeries.value[index] || 0,
+          'Percentual': phaseDistributionSeries.value.reduce((a, b) => a + b, 0) > 0
+            ? `${((phaseDistributionSeries.value[index] || 0) / phaseDistributionSeries.value.reduce((a, b) => a + b, 0) * 100).toFixed(1)}%`
+            : '0%'
         }))
       }
     ];

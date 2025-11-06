@@ -176,11 +176,14 @@ class DashboardController extends Controller
                 END as shift'),
                 DB::raw('COUNT(*) as count')
             )
-            ->groupBy(DB::raw('DATE(created_at)'), DB::raw('CASE
-                WHEN HOUR(created_at) BETWEEN 6 AND 11 THEN "Matutino"
-                WHEN HOUR(created_at) BETWEEN 12 AND 17 THEN "Vespertino"
-                ELSE "Noturno"
-            END'))
+            ->groupBy(
+                DB::raw('DATE(created_at)'),
+                DB::raw('CASE
+                    WHEN HOUR(created_at) BETWEEN 6 AND 11 THEN "Matutino"
+                    WHEN HOUR(created_at) BETWEEN 12 AND 17 THEN "Vespertino"
+                    ELSE "Noturno"
+                END')
+            )
             ->orderBy('date')
             ->get();
 
