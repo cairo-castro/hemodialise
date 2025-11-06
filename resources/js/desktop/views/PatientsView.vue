@@ -309,30 +309,41 @@ const bloodTypeColumnFilter = ref('');
 const statusFilter = ref('');
 const activeFilterDropdown = ref(null);
 
-// Mock patients data (will be replaced with API call)
-const patients = ref([
-  {
-    id: 1,
-    full_name: 'Maria Silva Santos',
-    birth_date: '1965-03-15',
-    blood_group: 'A',
-    rh_factor: '+'
-  },
-  {
-    id: 2,
-    full_name: 'João Pedro Oliveira',
-    birth_date: '1972-08-22',
-    blood_group: 'O',
-    rh_factor: '+'
-  },
-  {
-    id: 3,
-    full_name: 'Ana Carolina Souza',
-    birth_date: '1980-11-05',
-    blood_group: 'B',
-    rh_factor: '-'
-  },
-]);
+// Patients data from API
+const patients = ref([]);
+const isLoading = ref(false);
+
+// Load patients from API
+async function loadPatients() {
+  isLoading.value = true;
+  try {
+    const response = await fetch('/api/patients?per_page=100&include_inactive=true', {
+      credentials: 'include',
+      headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Erro ao carregar pacientes');
+    }
+
+    const data = await response.json();
+
+    if (data.success) {
+      patients.value = data.patients || [];
+    } else {
+      console.error('Erro ao carregar pacientes:', data.message);
+      showErrorToast(data.message || 'Erro ao carregar pacientes');
+    }
+  } catch (error) {
+    console.error('Erro ao carregar pacientes:', error);
+    showErrorToast('Erro ao carregar pacientes. Verifique sua conexão.');
+  } finally {
+    isLoading.value = false;
+  }
+}
 
 // Computed
 const activePatients = computed(() => {
@@ -359,12 +370,8 @@ const filteredPatients = computed(() => {
   }
 
   if (bloodTypeColumnFilter.value) {
-    const [group, factor] = bloodTypeColumnFilter.value.includes('+')
-      ? [bloodTypeColumnFilter.value.replace('+', ''), '+']
-      : [bloodTypeColumnFilter.value.replace('-', ''), '-'];
-
     filtered = filtered.filter(p =>
-      p.blood_group === group && p.rh_factor === factor
+      p.blood_type === bloodTypeColumnFilter.value
     );
   }
 
@@ -389,6 +396,7 @@ function handleClickOutside(event) {
 
 onMounted(() => {
   document.addEventListener('click', handleClickOutside);
+  loadPatients(); // Load patients from API
 });
 
 onUnmounted(() => {
@@ -476,21 +484,15 @@ function closePatientModal() {
   editingPatient.value = null;
 }
 
-function handlePatientSaved(patientData) {
+async function handlePatientSaved(patientData) {
   if (editingPatient.value) {
-    // Update existing patient
-    const index = patients.value.findIndex(p => p.id === editingPatient.value.id);
-    if (index !== -1) {
-      patients.value[index] = { ...patients.value[index], ...patientData };
-    }
     showSuccessToast('Paciente atualizado com sucesso!');
   } else {
-    // Add new patient
-    patients.value.push(patientData);
     showSuccessToast('Paciente cadastrado com sucesso!');
   }
 
   closePatientModal();
+  await loadPatients(); // Reload patients from API
 }
 
 function openDeleteConfirm(patient) {
@@ -498,23 +500,21 @@ function openDeleteConfirm(patient) {
   showDeleteConfirm.value = true;
 }
 
-function handleDeleteConfirm() {
-  const index = patients.value.findIndex(p => p.id === patientToDelete.value.id);
-  if (index !== -1) {
-    patients.value.splice(index, 1);
+async function handleDeleteConfirm() {
+  // Reset the delete modal state
+  deleteModalRef.value?.resetDeletingState();
 
-    // Reset the delete modal state
-    deleteModalRef.value?.resetDeletingState();
+  // Close the delete confirmation modal
+  showDeleteConfirm.value = false;
 
-    // Close the delete confirmation modal
-    showDeleteConfirm.value = false;
+  // Show success toast
+  showSuccessToast('Paciente excluído com sucesso!');
 
-    // Show success toast
-    showSuccessToast('Paciente excluído com sucesso!');
+  // Reload patients from API
+  await loadPatients();
 
-    // Clear the patient to delete
-    patientToDelete.value = null;
-  }
+  // Clear the patient to delete
+  patientToDelete.value = null;
 }
 
 function showSuccessToast(message) {
@@ -523,6 +523,22 @@ function showSuccessToast(message) {
   toast.innerHTML = `
     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+    </svg>
+    <span class="font-medium">${message}</span>
+  `;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.animation = 'slide-out-right 0.3s ease-out forwards';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+function showErrorToast(message) {
+  const toast = document.createElement('div');
+  toast.className = 'fixed top-4 right-4 z-[100] px-6 py-4 bg-red-600 text-white rounded-lg shadow-lg flex items-center gap-3 animate-slide-in-right';
+  toast.innerHTML = `
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
     </svg>
     <span class="font-medium">${message}</span>
   `;

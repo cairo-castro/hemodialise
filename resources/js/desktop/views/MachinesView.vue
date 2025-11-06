@@ -111,8 +111,8 @@
           </div>
           <div
             class="w-3 h-3 rounded-full"
-            :class="machine.active ? 'bg-green-500' : 'bg-gray-400'"
-            :title="machine.active ? 'Ativa' : 'Inativa'"
+            :class="machine.is_active ? 'bg-green-500' : 'bg-gray-400'"
+            :title="machine.is_active ? 'Ativa' : 'Inativa'"
           ></div>
         </div>
 
@@ -175,7 +175,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { CpuChipIcon } from '@heroicons/vue/24/outline';
 import {
   CheckCircleIcon,
@@ -194,50 +194,47 @@ const deleteModalRef = ref(null);
 const searchQuery = ref('');
 const statusFilter = ref('');
 const activeFilter = ref('');
+const isLoading = ref(false);
 
-// Mock machines data
-const machines = ref([
-  {
-    id: 1,
-    name: 'Máquina 01',
-    identifier: 'HD-001',
-    description: 'Fresenius 2008K - Unidade Principal',
-    status: 'available',
-    active: true
-  },
-  {
-    id: 2,
-    name: 'Máquina 02',
-    identifier: 'HD-002',
-    description: 'Fresenius 4008S - Sala 2',
-    status: 'occupied',
-    active: true
-  },
-  {
-    id: 3,
-    name: 'Máquina 03',
-    identifier: 'HD-003',
-    description: 'Baxter AK96 - Sala 1',
-    status: 'maintenance',
-    active: true
-  },
-  {
-    id: 4,
-    name: 'Máquina 04',
-    identifier: 'HD-004',
-    description: '',
-    status: 'available',
-    active: true
-  },
-  {
-    id: 5,
-    name: 'Máquina 05',
-    identifier: 'HD-005',
-    description: 'Fresenius 2008K - Unidade Secundária',
-    status: 'reserved',
-    active: false
-  },
-]);
+// Machines data from API
+const machines = ref([]);
+
+// Load machines from API
+async function loadMachines() {
+  isLoading.value = true;
+  try {
+    const response = await fetch('/api/machines', {
+      credentials: 'include',
+      headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error('Erro ao carregar máquinas');
+    }
+
+    const data = await response.json();
+
+    if (data.success) {
+      machines.value = data.machines || [];
+    } else {
+      console.error('Erro ao carregar máquinas:', data.message);
+      showErrorToast(data.message || 'Erro ao carregar máquinas');
+    }
+  } catch (error) {
+    console.error('Erro ao carregar máquinas:', error);
+    showErrorToast('Erro ao carregar máquinas. Verifique sua conexão.');
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+// Load machines on mount
+onMounted(() => {
+  loadMachines();
+});
 
 // Computed
 const filteredMachines = computed(() => {
@@ -260,7 +257,7 @@ const filteredMachines = computed(() => {
   // Filter by active
   if (activeFilter.value) {
     const isActive = activeFilter.value === 'active';
-    filtered = filtered.filter(m => m.active === isActive);
+    filtered = filtered.filter(m => m.is_active === isActive);
   }
 
   return filtered;
@@ -316,21 +313,15 @@ function closeMachineModal() {
   editingMachine.value = null;
 }
 
-function handleMachineSaved(machineData) {
+async function handleMachineSaved(machineData) {
   if (editingMachine.value) {
-    // Update existing machine
-    const index = machines.value.findIndex(m => m.id === editingMachine.value.id);
-    if (index !== -1) {
-      machines.value[index] = { ...machines.value[index], ...machineData };
-    }
     showSuccessToast('Máquina atualizada com sucesso!');
   } else {
-    // Add new machine
-    machines.value.push(machineData);
     showSuccessToast('Máquina cadastrada com sucesso!');
   }
 
   closeMachineModal();
+  await loadMachines(); // Reload machines from API
 }
 
 function openDeleteConfirm(machine) {
@@ -338,23 +329,21 @@ function openDeleteConfirm(machine) {
   showDeleteConfirm.value = true;
 }
 
-function handleDeleteConfirm() {
-  const index = machines.value.findIndex(m => m.id === machineToDelete.value.id);
-  if (index !== -1) {
-    machines.value.splice(index, 1);
+async function handleDeleteConfirm() {
+  // Reset the delete modal state
+  deleteModalRef.value?.resetDeletingState();
 
-    // Reset the delete modal state
-    deleteModalRef.value?.resetDeletingState();
+  // Close the delete confirmation modal
+  showDeleteConfirm.value = false;
 
-    // Close the delete confirmation modal
-    showDeleteConfirm.value = false;
+  // Show success toast
+  showSuccessToast('Máquina excluída com sucesso!');
 
-    // Show success toast
-    showSuccessToast('Máquina excluída com sucesso!');
+  // Reload machines from API
+  await loadMachines();
 
-    // Clear the machine to delete
-    machineToDelete.value = null;
-  }
+  // Clear the machine to delete
+  machineToDelete.value = null;
 }
 
 function showSuccessToast(message) {
@@ -363,6 +352,22 @@ function showSuccessToast(message) {
   toast.innerHTML = `
     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+    </svg>
+    <span class="font-medium">${message}</span>
+  `;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.animation = 'slide-out-right 0.3s ease-out forwards';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+function showErrorToast(message) {
+  const toast = document.createElement('div');
+  toast.className = 'fixed top-4 right-4 z-[100] px-6 py-4 bg-red-600 text-white rounded-lg shadow-lg flex items-center gap-3 animate-slide-in-right';
+  toast.innerHTML = `
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
     </svg>
     <span class="font-medium">${message}</span>
   `;

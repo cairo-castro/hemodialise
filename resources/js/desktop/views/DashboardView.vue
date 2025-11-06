@@ -409,48 +409,13 @@ const chartOptions = computed(() => ({
     strokeDashArray: 3
   }
 }));
-const tableRecords = ref([
-  {
-    id: 1234,
-    date: '02/11/2025 08:30',
-    patient: 'Maria Silva Santos',
-    machine: 'Máquina 05',
-    shift: 'Matutino',
-    status: 'Concluído',
-  },
-  {
-    id: 1233,
-    date: '02/11/2025 07:45',
-    patient: 'João Carlos Oliveira',
-    machine: 'Máquina 03',
-    shift: 'Matutino',
-    status: 'Concluído',
-  },
-  {
-    id: 1232,
-    date: '01/11/2025 19:20',
-    patient: 'Ana Paula Costa',
-    machine: 'Máquina 08',
-    shift: 'Noturno',
-    status: 'Concluído',
-  },
-  {
-    id: 1231,
-    date: '01/11/2025 15:15',
-    patient: 'Pedro Henrique Lima',
-    machine: 'Máquina 02',
-    shift: 'Vespertino',
-    status: 'Interrompido',
-  },
-  {
-    id: 1230,
-    date: '01/11/2025 14:30',
-    patient: 'Carla Souza Mendes',
-    machine: 'Máquina 01',
-    shift: 'Vespertino',
-    status: 'Concluído',
-  },
-]);
+const tableRecords = ref([]);
+
+// Setup polling for table records (every 20 seconds)
+const tablePolling = usePolling(loadTableRecords, {
+  interval: 20000,
+  immediate: true,
+});
 
 // Setup polling for stats (every 10 seconds)
 const statsPolling = usePolling(loadStats, {
@@ -482,6 +447,7 @@ const refreshAll = () => {
   statsPolling.refresh();
   sessionsPolling.refresh();
   activityPolling.refresh();
+  tablePolling.refresh();
 };
 
 async function loadStats() {
@@ -541,6 +507,61 @@ async function loadRecentActivity() {
   const { data } = await response.json();
   recentActivity.value = data;
   return data;
+}
+
+async function loadTableRecords() {
+  const response = await fetch('/api/checklists/recent?limit=5', {
+    credentials: 'same-origin',
+    headers: { 'Accept': 'application/json' },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Table records API error: ${response.status}`);
+  }
+
+  const { data } = await response.json();
+
+  // Transform API data to match table format
+  tableRecords.value = (data || []).map(checklist => {
+    const date = new Date(checklist.created_at);
+    const formattedDate = date.toLocaleString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    // Determine shift based on hour
+    const hour = date.getHours();
+    let shift = 'Noturno';
+    if (hour >= 6 && hour < 12) {
+      shift = 'Matutino';
+    } else if (hour >= 12 && hour < 18) {
+      shift = 'Vespertino';
+    }
+
+    // Map status
+    let status = 'Pendente';
+    if (checklist.current_phase === 'completed') {
+      status = 'Concluído';
+    } else if (checklist.current_phase === 'interrupted') {
+      status = 'Interrompido';
+    } else if (checklist.current_phase) {
+      status = 'Em Andamento';
+    }
+
+    return {
+      id: checklist.id,
+      date: formattedDate,
+      patient: checklist.patient?.full_name || 'N/A',
+      machine: checklist.machine?.name || checklist.machine?.identifier || 'N/A',
+      shift: shift,
+      status: status
+    };
+  });
+
+  return tableRecords.value;
 }
 
 function getBarHeight(value) {
