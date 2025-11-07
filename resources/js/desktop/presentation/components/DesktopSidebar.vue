@@ -34,37 +34,44 @@
 
             <!-- Multiple Units Selector -->
             <div v-else class="relative mt-2">
-              <button 
+              <button
                 @click="showUnitSelector = !showUnitSelector"
-                class="w-full flex items-center justify-between px-3 py-2 text-xs bg-white border border-blue-200 rounded-lg hover:border-blue-300 transition-colors"
+                class="w-full flex items-start justify-between px-3 py-2 text-xs bg-white border border-blue-200 rounded-lg hover:border-blue-300 transition-colors group"
               >
-                <div class="flex items-center min-w-0 flex-1">
-                  <svg class="w-3 h-3 text-blue-500 mr-1.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <div class="flex items-start min-w-0 flex-1 pr-2">
+                  <svg class="w-3 h-3 text-blue-500 mr-1.5 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
                   </svg>
-                  <span class="text-gray-700 font-medium truncate">{{ currentUnit?.name }}</span>
+                  <span class="text-gray-700 font-medium leading-snug break-words whitespace-normal">
+                    {{ currentUnit?.name }}
+                  </span>
                 </div>
-                <svg class="w-4 h-4 text-gray-400 ml-2 flex-shrink-0" :class="{ 'transform rotate-180': showUnitSelector }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5 transition-transform" :class="{ 'rotate-180': showUnitSelector }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                 </svg>
               </button>
 
               <!-- Dropdown Menu -->
-              <div 
+              <div
                 v-if="showUnitSelector"
-                class="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto"
+                class="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-xl z-50 max-h-96 overflow-y-auto"
               >
                 <button
                   v-for="unit in availableUnits"
                   :key="unit.id"
                   @click="selectUnit(unit.id)"
-                  class="w-full px-3 py-2 text-left text-xs hover:bg-blue-50 transition-colors flex items-center"
+                  class="w-full px-3 py-2.5 text-left text-xs hover:bg-blue-50 transition-colors flex items-start group"
                   :class="{ 'bg-blue-50 text-blue-700 font-medium': unit.id === selectedUnitId }"
                 >
-                  <svg v-if="unit.id === selectedUnitId" class="w-3 h-3 text-blue-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <svg v-if="unit.id === selectedUnitId" class="w-3.5 h-3.5 text-blue-500 mr-2 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                   </svg>
-                  <span class="flex-1 truncate" :class="{ 'ml-5': unit.id !== selectedUnitId }">{{ unit.name }}</span>
+                  <span
+                    class="flex-1 leading-snug break-words whitespace-normal pr-2"
+                    :class="{ 'ml-5': unit.id !== selectedUnitId }"
+                  >
+                    {{ unit.name }}
+                  </span>
                 </button>
               </div>
             </div>
