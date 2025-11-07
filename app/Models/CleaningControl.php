@@ -87,10 +87,39 @@ class CleaningControl extends Model
     protected static function booted()
     {
         static::created(function ($cleaning) {
+            // Invalidate cache for stats
+            self::invalidateStatsCache($cleaning->unit_id);
+
             // Notificar limpeza concluída
             if ($creator = auth()->user()) {
                 \App\Services\NotificationService::notifyCleaningCompleted($cleaning, $creator);
             }
         });
+
+        static::updated(function ($cleaning) {
+            // Invalidate cache for stats
+            self::invalidateStatsCache($cleaning->unit_id);
+        });
+
+        static::deleted(function ($cleaning) {
+            // Invalidate cache for stats
+            self::invalidateStatsCache($cleaning->unit_id);
+        });
+    }
+
+    /**
+     * Invalidate cached stats for a specific unit and global stats
+     */
+    protected static function invalidateStatsCache(?int $unitId = null): void
+    {
+        $today = now()->toDateString();
+
+        // Invalidate global stats
+        \Cache::forget('cleaning_stats_all_' . $today);
+
+        // Invalidate unit-specific stats
+        if ($unitId) {
+            \Cache::forget('cleaning_stats_' . $unitId . '_' . $today);
+        }
     }
 }
