@@ -137,12 +137,17 @@ async function loadNotifications() {
 
     if (response.ok) {
       const data = await response.json();
-      notifications.value = data.notifications.map(n => ({
-        ...n,
-        created_at: new Date(n.created_at),
-        read: !!n.read_at,
-      }));
-      unreadCount.value = data.unread_count;
+      // Safely handle notifications array
+      if (data.notifications && Array.isArray(data.notifications)) {
+        notifications.value = data.notifications.map(n => ({
+          ...n,
+          created_at: new Date(n.created_at),
+          read: !!n.read_at,
+        }));
+      } else {
+        notifications.value = [];
+      }
+      unreadCount.value = data.unread_count || 0;
       lastCheckTimestamp.value = new Date().toISOString();
     }
   } catch (error) {
@@ -169,7 +174,7 @@ async function pollNotifications() {
       const data = await response.json();
 
       // Add new notifications to the list
-      if (data.notifications && data.notifications.length > 0) {
+      if (data.notifications && Array.isArray(data.notifications) && data.notifications.length > 0) {
         const newNotifications = data.notifications.map(n => ({
           ...n,
           created_at: new Date(n.created_at),
@@ -180,8 +185,8 @@ async function pollNotifications() {
         notifications.value = [...newNotifications, ...notifications.value].slice(0, 20);
       }
 
-      unreadCount.value = data.unread_count;
-      lastCheckTimestamp.value = data.timestamp;
+      unreadCount.value = data.unread_count || 0;
+      lastCheckTimestamp.value = data.timestamp || new Date().toISOString();
     }
   } catch (error) {
     console.error('Error polling notifications:', error);

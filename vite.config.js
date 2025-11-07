@@ -53,11 +53,12 @@ export default defineConfig(({ mode }) => {
             outDir: 'public/mobile-assets',
             emptyOutDir: true,
             sourcemap: false, // Disable source maps to avoid warnings
+            chunkSizeWarningLimit: 1000, // Increase limit to 1MB for large libraries
             rollupOptions: {
                 output: {
                     manualChunks: {
                         'ionic': ['@ionic/vue', '@ionic/vue-router'],
-                        'vendor': ['vue', 'vue-router']
+                        'vendor': ['vue', 'vue-router', 'axios']
                     }
                 }
             }
@@ -106,12 +107,16 @@ export default defineConfig(({ mode }) => {
             outDir: 'public/desktop-assets',
             emptyOutDir: true,
             sourcemap: false,
+            chunkSizeWarningLimit: 1000, // Increase limit to 1MB for large libraries
             rollupOptions: {
                 output: {
                     manualChunks: {
+                        'vue3-apexcharts': ['vue3-apexcharts', 'apexcharts'],
+                        'xlsx': ['xlsx'],
+                        'exceljs.min': ['exceljs'],
                         'heroicons': ['@heroicons/vue'],
                         'headlessui': ['@headlessui/vue'],
-                        'vendor': ['vue', 'vue-router']
+                        'vendor': ['vue', 'vue-router', 'axios']
                     }
                 }
             }
