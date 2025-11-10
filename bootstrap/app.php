@@ -15,15 +15,11 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
+        api: __DIR__.'/../routes/api.php',
+        apiPrefix: 'api',
         commands: __DIR__.'/../routes/console.php',
         channels: __DIR__.'/../routes/channels.php',
         health: '/up',
-        then: function () {
-            // Apply web middleware to API routes for session-based authentication
-            Route::middleware('web')
-                ->prefix('api')
-                ->group(base_path('routes/api.php'));
-        }
     )
     ->withMiddleware(function (Middleware $middleware): void {
         // Trust all proxies (Traefik, load balancers, etc.)
@@ -34,15 +30,14 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
-            'jwt.auth' => \App\Http\Middleware\JwtAuthMiddleware::class,
             'unit.scope' => \App\Http\Middleware\UnitScopeMiddleware::class,
         ]);
 
         // Use custom CSRF token verification middleware
+        // Note: Sanctum SPA authentication REQUIRES CSRF protection on API routes
         $middleware->validateCsrfTokens(except: [
             '/logout', // Permitir logout GET sem CSRF
             'admin-bridge', // Bridge para conversão JWT->Session
-            'api/*', // Excluir APIs do CSRF
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

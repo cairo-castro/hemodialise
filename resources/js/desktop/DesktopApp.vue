@@ -19,6 +19,7 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import LoginView from './views/LoginView.vue';
 import DesktopLayout from './components/DesktopLayout.vue';
+import api from './utils/api';
 
 const router = useRouter();
 const isAuthenticated = ref(false);
@@ -31,15 +32,8 @@ onMounted(async () => {
 
 async function checkAuth() {
   try {
-    // Check if user is authenticated via Laravel session
-    const response = await fetch('/api/me', {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-      credentials: 'same-origin'
-    });
+    // Check if user is authenticated via Laravel session with Sanctum
+    const response = await api.get('/api/me');
 
     if (response.ok) {
       const data = await response.json();

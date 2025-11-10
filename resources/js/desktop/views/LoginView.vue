@@ -127,6 +127,7 @@
 
 <script setup>
 import { ref, reactive } from 'vue';
+import api from '../utils/api';
 
 const emit = defineEmits(['login-success']);
 
@@ -154,22 +155,10 @@ async function handleSubmit() {
   loading.value = true;
 
   try {
-    // Get CSRF token
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-
-    const response = await fetch('/login', {
-      method: 'POST',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': csrfToken,
-      },
-      credentials: 'same-origin',
-      body: JSON.stringify({
-        email: form.email,
-        password: form.password,
-        remember: form.remember,
-      }),
+    const response = await api.post('/login', {
+      email: form.email,
+      password: form.password,
+      remember: form.remember,
     });
 
     const data = await response.json();
