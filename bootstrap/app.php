@@ -29,8 +29,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // Trust all proxies (Traefik, load balancers, etc.)
         $middleware->trustProxies(at: '*');
 
-        // Add CORS middleware globally
-        $middleware->append(\App\Http\Middleware\CorsMiddleware::class);
+        // Note: CORS middleware removed for Sanctum SPA authentication
+        // Sanctum SPAs should be on the same domain and don't need CORS
+        // If you need CORS, configure it properly with specific origins when credentials are used
 
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
