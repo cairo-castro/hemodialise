@@ -15,11 +15,15 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
-        api: __DIR__.'/../routes/api.php',
-        apiPrefix: 'api',
         commands: __DIR__.'/../routes/console.php',
         channels: __DIR__.'/../routes/channels.php',
         health: '/up',
+        then: function () {
+            // API routes with web middleware for Sanctum SPA authentication
+            Route::middleware('web')
+                ->prefix('api')
+                ->group(base_path('routes/api.php'));
+        }
     )
     ->withMiddleware(function (Middleware $middleware): void {
         // Trust all proxies (Traefik, load balancers, etc.)

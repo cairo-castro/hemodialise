@@ -115,6 +115,7 @@ import {
   XCircleIcon,
   ClipboardDocumentCheckIcon,
 } from '@heroicons/vue/24/outline';
+import api from '../utils/api';
 
 const isOpen = ref(false);
 const dropdownRef = ref(null);
@@ -130,10 +131,7 @@ const POLLING_INTERVAL_MS = 30000; // Poll every 30 seconds
 async function loadNotifications() {
   try {
     isLoading.value = true;
-    const response = await fetch('/api/notifications?per_page=10', {
-      credentials: 'same-origin',
-      headers: { 'Accept': 'application/json' }
-    });
+    const response = await api.get('/api/notifications?per_page=10');
 
     if (response.ok) {
       const data = await response.json();
@@ -165,10 +163,7 @@ async function pollNotifications() {
       params.append('last_check', lastCheckTimestamp.value);
     }
 
-    const response = await fetch(`/api/notifications/poll?${params}`, {
-      credentials: 'same-origin',
-      headers: { 'Accept': 'application/json' }
-    });
+    const response = await api.get(`/api/notifications/poll?${params}`);
 
     if (response.ok) {
       const data = await response.json();
@@ -224,17 +219,7 @@ function toggleDropdown() {
 async function handleNotificationClick(notification) {
   // Mark as read
   try {
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-
-    await fetch(`/api/notifications/${notification.id}/mark-read`, {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': csrfToken,
-      }
-    });
+    await api.post(`/api/notifications/${notification.id}/mark-read`);
 
     // Update local state
     notification.read = true;
@@ -251,17 +236,7 @@ async function handleNotificationClick(notification) {
 
 async function markAllAsRead() {
   try {
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-
-    const response = await fetch('/api/notifications/mark-all-read', {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': csrfToken,
-      }
-    });
+    const response = await api.post('/api/notifications/mark-all-read');
 
     if (response.ok) {
       // Update local state

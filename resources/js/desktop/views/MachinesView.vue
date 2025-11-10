@@ -185,6 +185,7 @@ import {
 } from '@heroicons/vue/24/solid';
 import MachineFormModal from '../components/MachineFormModal.vue';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal.vue';
+import api from '../utils/api';
 
 const showMachineModal = ref(false);
 const editingMachine = ref(null);
@@ -203,13 +204,7 @@ const machines = ref([]);
 async function loadMachines() {
   isLoading.value = true;
   try {
-    const response = await fetch('/api/machines', {
-      credentials: 'include',
-      headers: {
-        'Accept': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
-      }
-    });
+    const response = await api.get('/api/machines');
 
     if (!response.ok) {
       throw new Error('Erro ao carregar máquinas');

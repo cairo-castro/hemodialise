@@ -251,6 +251,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import api from '../utils/api';
 
 const router = useRouter();
 
@@ -309,10 +310,7 @@ onMounted(async () => {
 
 async function loadUserData() {
   try {
-    const response = await fetch('/api/me', {
-      credentials: 'same-origin',
-      headers: { 'Accept': 'application/json' }
-    });
+    const response = await api.get('/api/me');
 
     if (response.ok) {
       const data = await response.json();

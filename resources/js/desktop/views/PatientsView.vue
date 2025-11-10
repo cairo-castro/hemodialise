@@ -297,6 +297,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import PatientFormModal from '../components/PatientFormModal.vue';
 import ConfirmDeleteModal from '../components/ConfirmDeleteModal.vue';
+import api from '../utils/api';
 
 const showPatientModal = ref(false);
 const editingPatient = ref(null);
@@ -317,13 +318,7 @@ const isLoading = ref(false);
 async function loadPatients() {
   isLoading.value = true;
   try {
-    const response = await fetch('/api/patients?per_page=100&include_inactive=true', {
-      credentials: 'include',
-      headers: {
-        'Accept': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
-      }
-    });
+    const response = await api.get('/api/patients?per_page=100&include_inactive=true');
 
     if (!response.ok) {
       throw new Error('Erro ao carregar pacientes');
