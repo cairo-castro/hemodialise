@@ -269,6 +269,7 @@ import {
 } from '@heroicons/vue/24/outline';
 import { usePolling } from '../composables/usePolling';
 import VueApexCharts from 'vue3-apexcharts';
+import api from '../utils/api';
 
 const apexchart = VueApexCharts;
 const router = useRouter();
@@ -451,10 +452,7 @@ const refreshAll = () => {
 };
 
 async function loadStats() {
-  const response = await fetch('/api/dashboard/stats', {
-    credentials: 'same-origin',
-    headers: { 'Accept': 'application/json' },
-  });
+  const response = await api.get('/api/dashboard/stats');
 
   if (!response.ok) {
     throw new Error(`Stats API error: ${response.status}`);
@@ -480,10 +478,7 @@ async function loadStats() {
 }
 
 async function loadSessionsByShift() {
-  const response = await fetch('/api/dashboard/sessions-by-shift', {
-    credentials: 'same-origin',
-    headers: { 'Accept': 'application/json' },
-  });
+  const response = await api.get('/api/dashboard/sessions-by-shift');
 
   if (!response.ok) {
     throw new Error(`Sessions API error: ${response.status}`);
@@ -495,10 +490,7 @@ async function loadSessionsByShift() {
 }
 
 async function loadRecentActivity() {
-  const response = await fetch('/api/dashboard/recent-activity', {
-    credentials: 'same-origin',
-    headers: { 'Accept': 'application/json' },
-  });
+  const response = await api.get('/api/dashboard/recent-activity');
 
   if (!response.ok) {
     throw new Error(`Activity API error: ${response.status}`);
@@ -510,10 +502,7 @@ async function loadRecentActivity() {
 }
 
 async function loadTableRecords() {
-  const response = await fetch('/api/checklists/recent?limit=5', {
-    credentials: 'same-origin',
-    headers: { 'Accept': 'application/json' },
-  });
+  const response = await api.get('/api/checklists/recent?limit=5');
 
   if (!response.ok) {
     throw new Error(`Table records API error: ${response.status}`);

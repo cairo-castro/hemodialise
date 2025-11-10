@@ -224,6 +224,7 @@ import {
 import CommandPalette from './CommandPalette.vue';
 import NotificationsDropdown from './NotificationsDropdown.vue';
 import UserMenuDropdown from './UserMenuDropdown.vue';
+import api from '../utils/api';
 
 const route = useRoute();
 
@@ -300,10 +301,7 @@ onMounted(async () => {
 // Load user data from API
 async function loadUserData() {
   try {
-    const response = await fetch('/api/me', {
-      credentials: 'same-origin',
-      headers: { 'Accept': 'application/json' }
-    });
+    const response = await api.get('/api/me');
 
     if (response.ok) {
       const data = await response.json();
@@ -317,10 +315,7 @@ async function loadUserData() {
 // Load available units
 async function loadAvailableUnits() {
   try {
-    const response = await fetch('/api/user-units', {
-      credentials: 'same-origin',
-      headers: { 'Accept': 'application/json' }
-    });
+    const response = await api.get('/api/user-units');
 
     if (!response.ok) {
       console.warn('Failed to load units:', response.status);
