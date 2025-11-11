@@ -616,6 +616,7 @@ import { Container } from '@mobile/core/di/Container';
 import { Patient, CreatePatientData } from '@mobile/core/domain/entities/Patient';
 import { PatientRepository } from '@mobile/core/domain/repositories/PatientRepository';
 import { useStatsAutoRefresh } from '@mobile/composables/useStatsAutoRefresh';
+import { AuthService } from '@shared/auth';
 
 const container = Container.getInstance();
 
@@ -693,13 +694,9 @@ const loadPatients = async (search: string = '') => {
   try {
     // Carrega TODOS os pacientes (incluindo inativos) para mostrar estatísticas completas
     // Usa parâmetro include_inactive=true na API
-    const response = await fetch(`/api/patients?per_page=100&include_inactive=true${search ? `&search=${encodeURIComponent(search)}` : ''}`, {
-      credentials: 'include',
-      headers: {
-        'Accept': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
-      }
-    });
+    const response = await fetch(`/api/patients?per_page=100&include_inactive=true${search ? `&search=${encodeURIComponent(search)}` : ''}`,
+      AuthService.getFetchConfig()
+    );
 
     if (!response.ok) {
       throw new Error('Erro ao carregar pacientes');
@@ -777,13 +774,9 @@ const selectPatient = async (patient: Patient) => {
     await loading.present();
 
     // Busca detalhes completos do paciente
-    const response = await fetch(`/api/patients/${patient.id}`, {
-      credentials: 'include',
-      headers: {
-        'Accept': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
-      }
-    });
+    const response = await fetch(`/api/patients/${patient.id}`,
+      AuthService.getFetchConfig()
+    );
 
     const data = await response.json();
 
@@ -814,15 +807,9 @@ const togglePatientStatus = async () => {
   try {
     isTogglingStatus.value = true;
 
-    const response = await fetch(`/api/patients/${selectedPatientDetails.value.id}/toggle-active`, {
-      method: 'PATCH',
-      credentials: 'include',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
-      }
-    });
+    const response = await fetch(`/api/patients/${selectedPatientDetails.value.id}/toggle-active`,
+      AuthService.getFetchConfig({ method: 'PATCH' })
+    );
 
     const data = await response.json();
 
@@ -874,24 +861,20 @@ const updatePatient = async () => {
   try {
     isSavingPatient.value = true;
 
-    const response = await fetch(`/api/patients/${selectedPatientDetails.value.id}`, {
-      method: 'PUT',
-      credentials: 'include',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
-      },
-      body: JSON.stringify({
-        full_name: selectedPatientDetails.value.full_name,
-        birth_date: selectedPatientDetails.value.birth_date,
-        blood_type: selectedPatientDetails.value.blood_type || null,
-        medical_record: selectedPatientDetails.value.medical_record || null,
-        allergies: selectedPatientDetails.value.allergies || null,
-        observations: selectedPatientDetails.value.observations || null,
-        status: selectedStatus.value
+    const response = await fetch(`/api/patients/${selectedPatientDetails.value.id}`,
+      AuthService.getFetchConfig({
+        method: 'PUT',
+        body: JSON.stringify({
+          full_name: selectedPatientDetails.value.full_name,
+          birth_date: selectedPatientDetails.value.birth_date,
+          blood_type: selectedPatientDetails.value.blood_type || null,
+          medical_record: selectedPatientDetails.value.medical_record || null,
+          allergies: selectedPatientDetails.value.allergies || null,
+          observations: selectedPatientDetails.value.observations || null,
+          status: selectedStatus.value
+        })
       })
-    });
+    );
 
     const data = await response.json();
 
@@ -938,16 +921,12 @@ const updatePatientStatus = async () => {
   try {
     isTogglingStatus.value = true;
 
-    const response = await fetch(`/api/patients/${selectedPatientDetails.value.id}/status`, {
-      method: 'PATCH',
-      credentials: 'include',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
-      },
-      body: JSON.stringify({ status: selectedStatus.value })
-    });
+    const response = await fetch(`/api/patients/${selectedPatientDetails.value.id}/status`,
+      AuthService.getFetchConfig({
+        method: 'PATCH',
+        body: JSON.stringify({ status: selectedStatus.value })
+      })
+    );
 
     const data = await response.json();
 

@@ -389,6 +389,7 @@ import {
 } from 'ionicons/icons';
 import { Container } from '../core/di/Container';
 import type { CleaningChecklistCreate } from '../core/domain/entities/CleaningChecklist';
+import { AuthService } from '@shared/auth';
 
 const container = Container.getInstance();
 const createCleaningChecklistUseCase = container.getCreateCleaningChecklistUseCase();
@@ -488,12 +489,9 @@ onMounted(async () => {
  */
 const fetchMachineAvailability = async () => {
   try {
-    const response = await fetch('/api/machines/availability', {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-        'Accept': 'application/json',
-      },
-    });
+    const response = await fetch('/api/machines/availability',
+      AuthService.getFetchConfig()
+    );
 
     if (!response.ok) {
       throw new Error('Failed to fetch machine availability');
