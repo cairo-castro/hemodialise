@@ -19,13 +19,10 @@ class DashboardController extends Controller
     public function stats(Request $request)
     {
         $user = $request->user();
-        $unitId = $user->current_unit_id ?? $user->unit_id;
 
-        // If user has no unit assigned, use first available unit or return empty data
-        if (!$unitId) {
-            $firstUnit = \App\Models\Unit::first();
-            $unitId = $firstUnit ? $firstUnit->id : null;
-        }
+        // Get active unit from user (handles global access users)
+        $activeUnit = $user->getActiveUnit();
+        $unitId = $activeUnit ? $activeUnit->id : null;
 
         if (!$unitId) {
             return response()->json([
@@ -127,13 +124,10 @@ class DashboardController extends Controller
     public function sessionsByShift(Request $request)
     {
         $user = $request->user();
-        $unitId = $user->current_unit_id ?? $user->unit_id;
 
-        // If user has no unit assigned, use first available unit or return empty data
-        if (!$unitId) {
-            $firstUnit = \App\Models\Unit::first();
-            $unitId = $firstUnit ? $firstUnit->id : null;
-        }
+        // Get active unit from user (handles global access users)
+        $activeUnit = $user->getActiveUnit();
+        $unitId = $activeUnit ? $activeUnit->id : null;
 
         if (!$unitId) {
             return response()->json([
@@ -236,13 +230,10 @@ class DashboardController extends Controller
     public function recentActivity(Request $request)
     {
         $user = $request->user();
-        $unitId = $user->current_unit_id ?? $user->unit_id;
 
-        // If user has no unit assigned, use first available unit or return empty data
-        if (!$unitId) {
-            $firstUnit = \App\Models\Unit::first();
-            $unitId = $firstUnit ? $firstUnit->id : null;
-        }
+        // Get active unit from user (handles global access users)
+        $activeUnit = $user->getActiveUnit();
+        $unitId = $activeUnit ? $activeUnit->id : null;
 
         if (!$unitId) {
             return response()->json([

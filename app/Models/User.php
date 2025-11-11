@@ -219,7 +219,7 @@ class User extends Authenticatable implements FilamentUser
 
     /**
      * Retorna a unidade ativa para filtragem de dados
-     * Prioridade: current_unit_id > unit_id (principal) > primeira unidade associada
+     * Prioridade: current_unit_id > unit_id (principal) > primeira unidade com dados
      */
     public function getActiveUnit()
     {
@@ -229,6 +229,18 @@ class User extends Authenticatable implements FilamentUser
 
         if ($this->unit_id) {
             return $this->unit;
+        }
+
+        // For users with global access, find first unit with data
+        if ($this->hasGlobalAccess()) {
+            // Try to find a unit with machines (most likely to have activity)
+            $unitWithMachines = Unit::whereHas('machines')->first();
+            if ($unitWithMachines) {
+                return $unitWithMachines;
+            }
+
+            // Fallback to any active unit
+            return Unit::where('active', true)->first();
         }
 
         return $this->units()->first();
