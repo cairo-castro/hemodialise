@@ -67,7 +67,7 @@
           <!-- Badge de atualização automática -->
           <div v-if="statsHasUpdates || isStatsRefreshing" class="stats-update-badge">
             <ion-chip color="success" class="update-chip">
-              <ion-icon :icon="isStatsRefreshing ? 'sync-outline' : 'checkmark-circle-outline'" :class="{ 'spinning': isStatsRefreshing }"></ion-icon>
+              <ion-icon :icon="isStatsRefreshing ? syncOutline : checkmarkCircleOutline" :class="{ 'spinning': isStatsRefreshing }"></ion-icon>
               <ion-label>{{ isStatsRefreshing ? 'Atualizando...' : 'Atualizado' }}</ion-label>
             </ion-chip>
           </div>
@@ -237,7 +237,8 @@ import {
   chevronForwardOutline,
   locationOutline,
   checkmarkCircleOutline,
-  closeOutline
+  closeOutline,
+  syncOutline
 } from 'ionicons/icons';
 
 import { Container } from '@mobile/core/di/Container';
