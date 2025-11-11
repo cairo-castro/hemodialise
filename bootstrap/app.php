@@ -46,33 +46,42 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        // Handle CSRF Token Mismatch (419 error that causes "Page Expired")
+        // Handle CSRF Token Mismatch (419 error) with automatic logout for security
         $exceptions->render(function (TokenMismatchException $e, $request) {
-            // Log the CSRF token mismatch
-            \Log::warning('CSRF Token Mismatch detected', [
+            // Log the session expiration event for security audit
+            \Log::info('[Session Expired] CSRF token mismatch - forcing logout', [
+                'user_id' => auth()->id() ?? 'guest',
+                'email' => auth()->user()->email ?? 'N/A',
                 'path' => $request->getPathInfo(),
                 'method' => $request->getMethod(),
-                'user' => auth()->id() ? auth()->user()->email : 'not authenticated',
+                'ip' => $request->ip(),
                 'referer' => $request->headers->get('referer'),
             ]);
 
-            // If it's an AJAX request, return JSON response
-            if ($request->expectsJson()) {
+            // Force logout to clear any stale session data for security
+            if (auth()->check()) {
+                auth()->logout();
+            }
+
+            // Invalidate the session
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            // Handle API requests (JSON response expected)
+            if ($request->expectsJson() || $request->is('api/*')) {
                 return response()->json([
-                    'message' => 'Sua sessão expirou. Por favor, recarregue a página.',
+                    'success' => false,
+                    'session_expired' => true,
+                    'message' => 'Sua sessão expirou por motivos de segurança. Por favor, faça login novamente.',
                     'redirect' => route('login'),
                 ], 419);
             }
 
-            // For Filament admin panel requests, redirect back with error message
-            if (str_starts_with($request->getPathInfo(), '/admin')) {
-                return redirect()->route('login')
-                    ->with('error', 'Sua sessão expirou. Por favor, faça login novamente.');
-            }
-
-            // For other web requests, redirect to login
-            return redirect()->route('login')
-                ->with('error', 'Sua sessão expirou. Por favor, faça login novamente.');
+            // Handle web requests (HTML response expected)
+            return redirect()
+                ->route('login')
+                ->with('session_expired', true)
+                ->with('message', 'Sua sessão expirou por motivos de segurança. Por favor, faça login novamente.');
         });
 
         $exceptions->render(function (MethodNotAllowedHttpException $e, $request) {

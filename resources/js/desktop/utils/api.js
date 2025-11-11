@@ -52,7 +52,49 @@ export async function apiRequest(url, options = {}) {
     credentials: 'include' // Always include credentials for Sanctum
   };
 
-  return fetch(url, fetchOptions);
+  const response = await fetch(url, fetchOptions);
+
+  // Handle session expiration (419 CSRF Token Mismatch)
+  if (response.status === 419) {
+    await handleSessionExpired();
+    throw new Error('Session expired');
+  }
+
+  // Check if response indicates session expired
+  if (response.ok) {
+    try {
+      const data = await response.clone().json();
+      if (data.session_expired === true) {
+        await handleSessionExpired();
+        throw new Error('Session expired');
+      }
+    } catch (e) {
+      // Not JSON or no session_expired flag, continue normally
+    }
+  }
+
+  return response;
+}
+
+/**
+ * Handle session expiration - logout and redirect to login
+ */
+async function handleSessionExpired() {
+  console.log('[API] Session expired - logging out user');
+
+  // Clear local storage and session storage
+  localStorage.clear();
+  sessionStorage.clear();
+
+  // Trigger custom event for app to handle
+  window.dispatchEvent(new CustomEvent('session-expired', {
+    detail: { message: 'Sua sessão expirou por motivos de segurança. Por favor, faça login novamente.' }
+  }));
+
+  // Redirect to login after a short delay to allow modal to show
+  setTimeout(() => {
+    window.location.href = '/login';
+  }, 100);
 }
 
 /**

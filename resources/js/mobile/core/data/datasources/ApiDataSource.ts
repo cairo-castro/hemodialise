@@ -93,56 +93,26 @@ export class ApiDataSource {
           };
         }
 
-        // CSRF token mismatch - refresh token and retry once
+        // CSRF token mismatch (419) - Session expired, force logout for security
         if (response.status === 419) {
-          console.log('CSRF token mismatch detected (419)');
+          console.log('[ApiDataSource] Session expired (419) - forcing logout');
 
-          // Only retry once to avoid infinite loops
-          if (this.retryCount < this.maxRetries) {
-            this.retryCount++;
-            console.log(`Attempting to refresh CSRF token and retry (attempt ${this.retryCount}/${this.maxRetries})`);
-
-            try {
-              // Fetch fresh CSRF token
-              const csrfResponse = await fetch('/csrf-token', {
-                method: 'GET',
-                credentials: 'include',
-                headers: {
-                  'Accept': 'application/json',
-                  'X-Requested-With': 'XMLHttpRequest'
-                }
-              });
-
-              if (csrfResponse.ok) {
-                const csrfData = await csrfResponse.json();
-                const newToken = csrfData.csrf_token;
-
-                if (newToken) {
-                  // Update the CSRF token in the page
-                  const currentCsrfMeta = document.querySelector('meta[name="csrf-token"]');
-                  if (currentCsrfMeta) {
-                    currentCsrfMeta.setAttribute('content', newToken);
-                    console.log('CSRF token refreshed, retrying request...');
-
-                    // Reset retry count for successful refresh
-                    this.retryCount = 0;
-
-                    // Retry the original request with new token
-                    return this.request<T>(method, endpoint, data, token);
-                  }
-                }
-              }
-            } catch (refreshError) {
-              console.error('Failed to refresh CSRF token:', refreshError);
+          // Check if response indicates session expired
+          let sessionExpired = false;
+          try {
+            if (responseData && responseData.session_expired === true) {
+              sessionExpired = true;
             }
+          } catch (e) {
+            // Response is not JSON or doesn't have session_expired flag
           }
 
-          // If we couldn't refresh or exceeded retry limit, reload the page
-          console.log('Could not refresh CSRF token, reloading page...');
+          // Force logout and redirect to login
           throw {
-            message: 'Token de segurança expirado. Recarregando a página...',
+            message: 'Sua sessão expirou por motivos de segurança. Por favor, faça login novamente.',
             status: 419,
-            shouldReload: true
+            session_expired: true,
+            shouldLogout: true
           };
         }
 
@@ -168,11 +138,17 @@ export class ApiDataSource {
         success: true
       };
     } catch (error) {
-      // Handle reload for CSRF errors
-      if ((error as any).shouldReload) {
-        setTimeout(() => {
-          window.location.reload();
-        }, 1500);
+      // Handle session expired - force logout
+      if ((error as any).shouldLogout) {
+        console.log('[ApiDataSource] Handling session expiration - logging out');
+
+        // Import session handler dynamically
+        import('../../../composables/useSessionHandler').then(({ handleSessionExpiredStatic }) => {
+          handleSessionExpiredStatic((error as any).message);
+        });
+
+        // Don't throw the error further to prevent additional error handling
+        return { data: null, success: false } as ApiResponse<T>;
       }
 
       if (error instanceof Error && error.name === 'TypeError') {
