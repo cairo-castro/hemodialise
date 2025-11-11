@@ -882,32 +882,27 @@ const closeMachineModal = () => {
 // Salvar máquina (criar ou atualizar)
 const saveMachine = async () => {
   if (!isFormValid.value) return;
-  
+
   isSaving.value = true;
-  
+
   try {
-    const url = isEditMode.value 
-      ? `/api/machines/${machineForm.value.id}`
-      : '/api/machines';
-      
-    const method = isEditMode.value ? 'PUT' : 'POST';
-    
-    const response = await fetch(url, {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
-      },
-      credentials: 'include',
-      body: JSON.stringify({
-        name: machineForm.value.name,
-        identifier: machineForm.value.identifier,
-        description: machineForm.value.description,
-        unit_id: machineForm.value.unit_id
-      })
-    });
-    
-    const data = await response.json();
+    const machineData = {
+      name: machineForm.value.name,
+      identifier: machineForm.value.identifier,
+      description: machineForm.value.description,
+      unit_id: machineForm.value.unit_id
+    };
+
+    let data;
+    if (isEditMode.value) {
+      // Update existing machine
+      const result = await machineRepository.update(machineForm.value.id!, machineData);
+      data = { success: true, data: result };
+    } else {
+      // Create new machine
+      const result = await machineRepository.create(machineData);
+      data = { success: true, data: result };
+    }
     
     if (data.success) {
       const toast = await toastController.create({
@@ -962,18 +957,12 @@ const confirmDeleteMachine = async () => {
 // Excluir máquina
 const deleteMachine = async () => {
   if (!machineForm.value.id) return;
-  
+
   isSaving.value = true;
-  
+
   try {
-    const response = await fetch(`/api/machines/${machineForm.value.id}`, {
-      method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-      }
-    });
-    
-    const data = await response.json();
+    await machineRepository.delete(machineForm.value.id);
+    const data = { success: true };
     
     if (data.success) {
       const toast = await toastController.create({

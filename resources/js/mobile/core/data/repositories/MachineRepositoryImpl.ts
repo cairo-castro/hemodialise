@@ -1,4 +1,4 @@
-import { MachineRepository, UpdateStatusParams, ToggleActiveParams } from '../../domain/repositories/MachineRepository';
+import { MachineRepository, UpdateStatusParams, ToggleActiveParams, CreateMachineParams, UpdateMachineParams } from '../../domain/repositories/MachineRepository';
 import { Machine } from '../../domain/entities/Machine';
 import { ApiDataSource } from '../datasources/ApiDataSource';
 import { LocalStorageDataSource } from '../datasources/LocalStorageDataSource';
@@ -51,6 +51,26 @@ export class MachineRepositoryImpl implements MachineRepository {
 
     // Fallback for direct array response
     return (response as any).data || response as any;
+  }
+
+  async create(params: CreateMachineParams): Promise<Machine> {
+    const response = await this.apiDataSource.post<{ machine: Machine }>(
+      API_CONFIG.ENDPOINTS.MACHINES,
+      params
+    );
+    return response.data.machine || response.data as any;
+  }
+
+  async update(id: number, params: UpdateMachineParams): Promise<Machine> {
+    const response = await this.apiDataSource.put<{ machine: Machine }>(
+      `${API_CONFIG.ENDPOINTS.MACHINES}/${id}`,
+      params
+    );
+    return response.data.machine || response.data as any;
+  }
+
+  async delete(id: number): Promise<void> {
+    await this.apiDataSource.delete(`${API_CONFIG.ENDPOINTS.MACHINES}/${id}`);
   }
 
   async updateStatus(id: number, params: UpdateStatusParams): Promise<Machine> {
