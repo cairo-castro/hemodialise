@@ -333,6 +333,102 @@ class PatientController extends Controller
     }
 
     /**
+     * Atualiza os dados de um paciente
+     */
+    public function update(Request $request, $id): JsonResponse
+    {
+        try {
+            $query = Patient::where('id', $id);
+
+            // Aplicar filtro de unidade do middleware
+            $scopedUnitId = $request->get('scoped_unit_id');
+            if ($scopedUnitId !== null) {
+                $query->where('unit_id', $scopedUnitId);
+            }
+
+            $patient = $query->first();
+
+            if (!$patient) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Paciente não encontrado ou não pertence à sua unidade.'
+                ], 404);
+            }
+
+            $validated = $request->validate([
+                'full_name' => 'sometimes|required|string|max:255',
+                'birth_date' => 'sometimes|required|date_format:Y-m-d',
+                'blood_group' => 'nullable|in:A,B,AB,O',
+                'rh_factor' => 'nullable|in:+,-',
+                'medical_record' => 'nullable|string|max:255',
+                'allergies' => 'nullable|string',
+                'observations' => 'nullable|string',
+                'status' => ['nullable', new Enum(PatientStatus::class)],
+            ]);
+
+            // Não permite alterar unit_id por segurança
+            unset($validated['unit_id']);
+
+            // Se o status for alterado, atualiza o campo active para compatibilidade
+            if (isset($validated['status'])) {
+                $newStatus = PatientStatus::from($validated['status']);
+
+                // Não permite reverter status terminal
+                if ($patient->isTerminal() && $newStatus !== $patient->status) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Não é possível alterar o status de um paciente com alta ou óbito registrado.'
+                    ], 422);
+                }
+
+                $validated['active'] = ($newStatus === PatientStatus::ATIVO);
+            }
+
+            $patient->update($validated);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Paciente atualizado com sucesso.',
+                'patient' => [
+                    'id' => $patient->id,
+                    'full_name' => $patient->full_name,
+                    'birth_date' => $patient->birth_date->format('Y-m-d'),
+                    'blood_type' => $patient->blood_type,
+                    'age' => $patient->age,
+                    'allergies' => $patient->allergies,
+                    'observations' => $patient->observations,
+                    'medical_record' => $patient->medical_record,
+                    'status' => $patient->status->value,
+                    'status_label' => $patient->status->label(),
+                    'status_color' => $patient->status->color(),
+                    'can_have_sessions' => $patient->canHaveSessions(),
+                ]
+            ]);
+
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            if (str_contains($e->getMessage(), 'patients_name_birth_unit_unique')) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => [
+                        'patient' => ['Já existe um paciente com este nome e data de nascimento nesta unidade.']
+                    ]
+                ], 422);
+            }
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao atualizar paciente.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Ativa ou desativa um paciente (toggle entre ATIVO e INATIVO)
      * Mantido para compatibilidade com código existente
      */

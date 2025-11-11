@@ -358,7 +358,7 @@ const loadData = async () => {
     });
 
     const activityData = await activityResponse.json();
-    if (activityData.success) {
+    if (activityData.success && activityData.checklists && Array.isArray(activityData.checklists)) {
       recentActivity.value = activityData.checklists.map((c: any) => ({
         id: c.id,
         type: c.completed_at ? 'completed' : (c.paused_at ? 'paused' : 'started'),
@@ -366,6 +366,8 @@ const loadData = async () => {
         machine_name: c.machine?.name || 'Máquina desconhecida',
         created_at: c.completed_at || c.paused_at || c.created_at
       }));
+    } else {
+      recentActivity.value = [];
     }
 
   } catch (error) {

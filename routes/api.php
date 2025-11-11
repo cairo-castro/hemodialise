@@ -118,6 +118,7 @@ Route::middleware('auth')->group(function () {
         Route::post('/patients/search', [PatientController::class, 'search']);
         Route::get('/patients/{id}', [PatientController::class, 'show']);
         Route::post('/patients', [PatientController::class, 'store']);
+        Route::put('/patients/{id}', [PatientController::class, 'update']);
         Route::patch('/patients/{id}/toggle-active', [PatientController::class, 'toggleActive']);
         Route::patch('/patients/{id}/status', [PatientController::class, 'updateStatus']);
 
