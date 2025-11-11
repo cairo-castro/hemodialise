@@ -35,8 +35,23 @@ class UserUnitController extends Controller
     {
         \Log::info('[UserUnitController::switch] START', [
             'user_id' => auth()->id(),
+            'auth_check' => auth()->check(),
+            'session_id' => session()->getId(),
             'unit_id' => $request->input('unit_id'),
+            'csrf_token' => $request->header('X-CSRF-TOKEN'),
+            'xsrf_token' => $request->header('X-XSRF-TOKEN'),
+            'has_session_cookie' => $request->hasCookie(config('session.cookie')),
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
         ]);
+
+        if (!auth()->check()) {
+            \Log::error('[UserUnitController::switch] NOT AUTHENTICATED');
+            return response()->json([
+                'success' => false,
+                'message' => 'Não autenticado.',
+            ], 401);
+        }
 
         $request->validate([
             'unit_id' => 'required|integer|exists:units,id',

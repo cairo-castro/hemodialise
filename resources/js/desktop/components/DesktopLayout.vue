@@ -364,24 +364,18 @@ async function selectUnit(unitId) {
   }
 
   try {
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    console.log('[DesktopLayout] Switching unit:', unitId);
 
-    const response = await fetch('/api/user-units/switch', {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-CSRF-TOKEN': csrfToken,
-      },
-      body: JSON.stringify({ unit_id: unitId })
-    });
+    const response = await api.post('/api/user-units/switch', { unit_id: unitId });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[DesktopLayout] Switch unit failed:', response.status, errorText);
       throw new Error(`Failed to switch unit: ${response.status}`);
     }
 
     const data = await response.json();
+    console.log('[DesktopLayout] Switch unit response:', data);
 
     if (data.success) {
       currentUnit.value = data.current_unit;
@@ -391,7 +385,7 @@ async function selectUnit(unitId) {
       window.location.reload();
     }
   } catch (error) {
-    console.error('Error switching unit:', error);
+    console.error('[DesktopLayout] Error switching unit:', error);
     // Revert selection
     selectedUnitId.value = currentUnit.value?.id;
   }
@@ -432,6 +426,9 @@ function isActive(path) {
 
 async function handleLogout() {
   try {
+    console.log('[DesktopLayout] Logging out...');
+
+    // Use api wrapper for proper CSRF handling
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
     await fetch('/logout', {
@@ -439,13 +436,15 @@ async function handleLogout() {
       headers: {
         'X-CSRF-TOKEN': csrfToken,
         'Accept': 'application/json',
+        'Content-Type': 'application/json',
       },
-      credentials: 'same-origin',
+      credentials: 'include',
     });
 
+    console.log('[DesktopLayout] Logout successful, redirecting...');
     window.location.href = '/desktop';
   } catch (error) {
-    console.error('Logout error:', error);
+    console.error('[DesktopLayout] Logout error:', error);
     window.location.href = '/desktop';
   }
 }
