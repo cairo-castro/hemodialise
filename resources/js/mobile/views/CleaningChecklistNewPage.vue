@@ -136,9 +136,11 @@
                 id="checklist-date"
                 v-model="formData.checklist_date"
                 presentation="date"
+                :min="minDate"
                 :max="maxDate"
               ></ion-datetime>
             </ion-modal>
+            <p class="datetime-hint">Pode registrar até 3 dias atrás</p>
           </div>
         </div>
 
@@ -423,6 +425,13 @@ const shiftMap: Record<string, '1' | '2' | '3' | '4'> = {
 const selectedShift = ref<string>('matutino');
 
 const maxDate = computed(() => new Date().toISOString());
+
+// Min date: 72 hours (3 days) ago for retroactive checklists
+const minDate = computed(() => {
+  const date = new Date();
+  date.setHours(date.getHours() - 72);
+  return date.toISOString();
+});
 
 const isFormValid = computed(() => {
   return formData.value.machine_id > 0 &&
@@ -1110,6 +1119,13 @@ const submitChecklist = async () => {
 .input-label ion-icon {
   font-size: 1.2rem;
   color: var(--ion-color-primary);
+}
+
+.datetime-hint {
+  font-size: 0.85rem;
+  color: var(--ion-color-step-550);
+  margin-top: 4px;
+  margin-left: 4px;
 }
 
 /* Machine Grid */

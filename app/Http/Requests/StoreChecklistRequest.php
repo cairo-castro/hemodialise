@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\Machine;
+use App\Rules\Within72Hours;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\ValidationException;
 
@@ -28,6 +29,8 @@ class StoreChecklistRequest extends FormRequest
             'patient_id' => 'required|exists:patients,id',
             'shift' => 'required|in:matutino,vespertino,noturno,madrugada',
             'observations' => 'nullable|string',
+            'session_date' => ['nullable', 'date', new Within72Hours()],
+            'session_time' => 'nullable|date_format:H:i',
         ];
     }
 
@@ -166,6 +169,8 @@ class StoreChecklistRequest extends FormRequest
             'patient_id.exists' => 'O paciente selecionado não foi encontrado.',
             'shift.required' => 'Selecione o turno da sessão.',
             'shift.in' => 'O turno selecionado é inválido.',
+            'session_date.date' => 'A data da sessão é inválida.',
+            'session_time.date_format' => 'O horário da sessão deve estar no formato HH:MM.',
         ];
     }
 }

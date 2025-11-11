@@ -24,11 +24,15 @@ class ChecklistController extends Controller
     {
         $data = $request->validated();
 
+        // Use provided session_date or default to today
+        $sessionDate = isset($data['session_date']) ? $data['session_date'] : now()->toDateString();
+        $sessionTime = isset($data['session_time']) ? $data['session_time'] : now()->format('H:i');
+
         // Verificar se já existe um checklist para o mesmo paciente, máquina, data e turno
         $existingChecklist = SafetyChecklist::where([
             'patient_id' => $data['patient_id'],
             'machine_id' => $data['machine_id'],
-            'session_date' => now()->toDateString(),
+            'session_date' => $sessionDate,
             'shift' => $data['shift']
         ])->first();
 
@@ -44,10 +48,13 @@ class ChecklistController extends Controller
             ], 200);
         }
 
+        // Combine date and time for pre_dialysis_started_at
+        $startedAt = \Carbon\Carbon::parse($sessionDate . ' ' . $sessionTime);
+
         $data['user_id'] = $request->user()->id;
-        $data['session_date'] = now()->toDateString();
+        $data['session_date'] = $sessionDate;
         $data['current_phase'] = 'pre_dialysis';
-        $data['pre_dialysis_started_at'] = now();
+        $data['pre_dialysis_started_at'] = $startedAt;
 
         // Preenche unit_id explicitamente da máquina (performance: zero overhead)
         $machine = \App\Models\Machine::find($data['machine_id']);

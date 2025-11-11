@@ -176,16 +176,33 @@
                   </div>
                 </div>
 
-                <!-- Session Date -->
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Data da Sessão
-                  </label>
-                  <input
-                    v-model="sessionDate"
-                    type="date"
-                    class="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-white"
-                  />
+                <!-- Session Date and Time -->
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Data da Sessão
+                    </label>
+                    <input
+                      v-model="sessionDate"
+                      type="date"
+                      :min="minDate"
+                      :max="maxDate"
+                      class="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-white"
+                    />
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Até 3 dias atrás
+                    </p>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Horário da Sessão
+                    </label>
+                    <input
+                      v-model="sessionTime"
+                      type="time"
+                      class="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-white"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -316,6 +333,16 @@ const mockPatients = [
 const selectedMachine = ref(null);
 const selectedShift = ref(null);
 const sessionDate = ref(new Date().toISOString().split('T')[0]);
+const sessionTime = ref(new Date().toTimeString().slice(0, 5));
+
+// Calculate min date (72 hours ago) and max date (today)
+const minDate = ref(() => {
+  const date = new Date();
+  date.setHours(date.getHours() - 72);
+  return date.toISOString().split('T')[0];
+});
+
+const maxDate = ref(new Date().toISOString().split('T')[0]);
 
 const machines = ref([
   { id: 1, name: 'Máquina 01', identifier: 'HD-001' },
@@ -457,6 +484,7 @@ async function saveChecklist() {
       machine_id: selectedMachine.value,
       shift: selectedShift.value,
       session_date: sessionDate.value,
+      session_time: sessionTime.value,
       pre_dialysis: checklistData.value.pre_dialysis,
       during_session: checklistData.value.during_session,
       post_dialysis: checklistData.value.post_dialysis,

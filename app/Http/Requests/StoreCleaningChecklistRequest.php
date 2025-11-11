@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\Machine;
+use App\Rules\Within72Hours;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\ValidationException;
 
@@ -25,7 +26,7 @@ class StoreCleaningChecklistRequest extends FormRequest
     {
         return [
             'machine_id' => 'required|exists:machines,id',
-            'checklist_date' => 'required|date',
+            'checklist_date' => ['required', 'date', new Within72Hours()],
             'shift' => 'required|in:1,2,3,4',
             'chemical_disinfection_time' => 'nullable|date_format:H:i',
             'chemical_disinfection_completed' => 'boolean',

@@ -148,9 +148,13 @@
                   <input
                     type="date"
                     v-model="formData.cleaning_date"
+                    :min="minDate"
                     :max="today"
                     class="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary-500 text-gray-900 dark:text-white"
                   />
+                  <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Até 3 dias atrás
+                  </p>
                 </div>
 
                 <div class="space-y-2">
@@ -570,6 +574,13 @@ const loadingMachines = ref(false);
 const isSubmitting = ref(false);
 
 const today = new Date().toISOString().split('T')[0];
+
+// Calculate min date (72 hours ago) for retroactive checklists
+const minDate = (() => {
+  const date = new Date();
+  date.setHours(date.getHours() - 72);
+  return date.toISOString().split('T')[0];
+})();
 
 const formData = ref({
   machine_id: '',

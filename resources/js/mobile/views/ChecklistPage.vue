@@ -204,6 +204,36 @@
                 </button>
               </div>
             </div>
+
+            <div class="form-group">
+              <label class="input-label">
+                <ion-icon :icon="calendarOutline"></ion-icon>
+                Data da Sessão
+              </label>
+              <ion-datetime
+                v-model="checklistForm.session_date"
+                presentation="date"
+                :min="minDate"
+                :max="maxDate"
+                locale="pt-BR"
+                :first-day-of-week="0"
+                class="datetime-picker"
+              ></ion-datetime>
+              <p class="datetime-hint">Pode registrar até 3 dias atrás</p>
+            </div>
+
+            <div class="form-group">
+              <label class="input-label">
+                <ion-icon :icon="timeOutline"></ion-icon>
+                Horário da Sessão
+              </label>
+              <ion-datetime
+                v-model="checklistForm.session_time"
+                presentation="time"
+                locale="pt-BR"
+                class="datetime-picker"
+              ></ion-datetime>
+            </div>
           </div>
 
           <!-- Primary Action -->
@@ -561,6 +591,16 @@ const machineRepository = container.getMachineRepository();
 const contentRef = ref();
 const currentTime = ref('');
 const currentDate = ref('');
+
+// Date validation for retroactive checklists (72 hours / 3 days)
+const minDate = computed(() => {
+  const date = new Date();
+  date.setHours(date.getHours() - 72);
+  return date.toISOString();
+});
+
+const maxDate = computed(() => new Date().toISOString());
+
 const showInterruptModal = ref(false);
 const interruptReason = ref('');
 const currentPhaseCompletion = ref(0);
@@ -585,6 +625,8 @@ const isCheckingAvailability = ref(false);
 const checklistForm = ref({
   machine_id: 0,
   shift: 'matutino' as 'matutino' | 'vespertino' | 'noturno' | 'madrugada',
+  session_date: new Date().toISOString(),
+  session_time: new Date().toISOString(),
   observations: '',
   // Pre-dialysis items (13 campos)
   machine_disinfected: false,
@@ -994,6 +1036,10 @@ const startChecklist = async () => {
   await loading.present();
 
   try {
+    // Format date and time for API
+    const sessionDate = new Date(checklistForm.value.session_date).toISOString().split('T')[0];
+    const sessionTime = new Date(checklistForm.value.session_time).toTimeString().slice(0, 5);
+
     // Create new checklist via API
     const response = await fetch('/api/checklists', {
       method: 'POST',
@@ -1002,6 +1048,8 @@ const startChecklist = async () => {
         patient_id: selectedPatient.value?.id,
         machine_id: checklistForm.value.machine_id,
         shift: checklistForm.value.shift,
+        session_date: sessionDate,
+        session_time: sessionTime,
         observations: checklistForm.value.observations
       })
     });
@@ -2094,6 +2142,21 @@ onUnmounted(() => {
 .input-label ion-icon {
   font-size: 1.2rem;
   color: var(--ion-color-primary);
+}
+
+.datetime-picker {
+  width: 100%;
+  border: 2px solid var(--ion-color-step-150);
+  border-radius: 12px;
+  padding: 8px;
+  background: var(--ion-background-color);
+}
+
+.datetime-hint {
+  font-size: 0.85rem;
+  color: var(--ion-color-step-550);
+  margin-top: 4px;
+  margin-left: 4px;
 }
 
 .select-input {
