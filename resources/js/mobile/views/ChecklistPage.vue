@@ -1203,6 +1203,38 @@ const returnToDashboard = () => {
 const pauseAndReturn = async () => {
   if (!activeChecklist.value) return;
 
+  // Show confirmation alert with options
+  const alert = await alertController.create({
+    header: 'Pausar Checklist',
+    message: 'Deseja pausar o checklist e voltar ao dashboard ou pausar e continuar aqui?',
+    buttons: [
+      {
+        text: 'Cancelar',
+        role: 'cancel'
+      },
+      {
+        text: 'Pausar e Continuar Aqui',
+        handler: async () => {
+          await pauseChecklistOnly();
+          return true;
+        }
+      },
+      {
+        text: 'Pausar e Sair',
+        handler: async () => {
+          await pauseAndNavigateAway();
+          return true;
+        }
+      }
+    ]
+  });
+
+  await alert.present();
+};
+
+const pauseChecklistOnly = async () => {
+  if (!activeChecklist.value) return;
+
   const loading = await loadingController.create({
     message: 'Pausando checklist...',
   });
@@ -1218,19 +1250,66 @@ const pauseAndReturn = async () => {
 
     const data = await response.json();
     if (data.success) {
+      // Mark as paused
+      activeChecklist.value.paused_at = data.checklist.paused_at;
+
       const toast = await toastController.create({
-        message: 'Checklist pausado com sucesso. Você pode retomá-lo a qualquer momento.',
+        message: 'Checklist pausado com sucesso.',
         duration: 3000,
         color: 'success',
         position: 'top'
       });
       await toast.present();
+    } else {
+      throw new Error(data.message || 'Erro ao pausar checklist');
+    }
+  } catch (error) {
+    console.error('Erro ao pausar checklist:', error);
+    const toast = await toastController.create({
+      message: 'Erro ao pausar checklist. Tente novamente.',
+      duration: 3000,
+      color: 'danger',
+      position: 'top'
+    });
+    await toast.present();
+  } finally {
+    await loading.dismiss();
+  }
+};
 
+const pauseAndNavigateAway = async () => {
+  if (!activeChecklist.value) return;
+
+  const loading = await loadingController.create({
+    message: 'Pausando checklist...',
+  });
+  await loading.present();
+
+  try {
+    const response = await fetch(`/api/checklists/${activeChecklist.value.id}/pause`,
+      AuthService.getFetchConfig({
+        method: 'POST',
+        body: JSON.stringify({ reason: 'manual' })
+      })
+    );
+
+    const data = await response.json();
+    if (data.success) {
       // Mark as paused to allow navigation without triggering guard
       activeChecklist.value.paused_at = data.checklist.paused_at;
 
+      const toast = await toastController.create({
+        message: 'Checklist pausado com sucesso.',
+        duration: 2000,
+        color: 'success',
+        position: 'top'
+      });
+      await toast.present();
+
       // Return to dashboard
-      router.replace('/dashboard');
+      setTimeout(() => {
+        router.replace('/dashboard');
+      }, 500);
     } else {
       throw new Error(data.message || 'Erro ao pausar checklist');
     }
@@ -1657,6 +1736,11 @@ const pauseChecklistAutomatically = async () => {
         position: 'top'
       });
       await toast.present();
+
+      // Redirect to dashboard after showing toast
+      setTimeout(() => {
+        router.push('/dashboard');
+      }, 500);
     }
   } catch (error) {
     console.error('Erro ao pausar checklist automaticamente:', error);
