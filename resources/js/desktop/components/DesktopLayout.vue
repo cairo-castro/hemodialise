@@ -27,6 +27,7 @@
             <button
               @click="showUnitSelector = !showUnitSelector"
               class="w-full flex items-center justify-between px-3 py-2 text-xs bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary-300 dark:hover:border-primary-700 transition-colors"
+              :title="currentUnit?.name"
             >
               <div class="flex items-center min-w-0 flex-1">
                 <svg class="w-4 h-4 text-primary-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -42,19 +43,20 @@
             <!-- Dropdown Menu -->
             <div
               v-if="showUnitSelector"
-              class="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto"
+              class="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto"
             >
               <button
                 v-for="unit in availableUnits"
                 :key="unit.id"
                 @click="selectUnit(unit.id)"
-                class="w-full px-3 py-2 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-center"
+                class="w-full px-3 py-2.5 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-start"
                 :class="{ 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-400 font-medium': unit.id === selectedUnitId }"
+                :title="unit.name"
               >
-                <svg v-if="unit.id === selectedUnitId" class="w-3 h-3 text-primary-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <svg v-if="unit.id === selectedUnitId" class="w-3 h-3 text-primary-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
                 </svg>
-                <span class="flex-1 truncate" :class="{ 'ml-5': unit.id !== selectedUnitId }">{{ unit.name }}</span>
+                <span class="flex-1 line-clamp-2 leading-snug" :class="{ 'ml-5': unit.id !== selectedUnitId }">{{ unit.name }}</span>
               </button>
             </div>
           </div>
