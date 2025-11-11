@@ -246,6 +246,7 @@ import { User } from '@mobile/core/domain/entities/User';
 import ActiveChecklistCard from '../components/ActiveChecklistCard.vue';
 import { useDarkMode } from '@mobile/composables/useDarkMode';
 import { useStatsAutoRefresh } from '@mobile/composables/useStatsAutoRefresh';
+import { AuthService } from '@shared/auth';
 
 const router = useRouter();
 const container = Container.getInstance();
