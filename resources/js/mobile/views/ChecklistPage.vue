@@ -1056,13 +1056,9 @@ const advancePhase = async () => {
     await updatePhaseData();
 
     // Advance phase
-    const response = await fetch(`/api/checklists/${activeChecklist.value.id}/advance`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...AuthService.getAuthHeaders()
-      }
-    });
+    const response = await fetch(`/api/checklists/${activeChecklist.value.id}/advance`,
+      AuthService.getFetchConfig({ method: 'POST' })
+    );
 
     const data = await response.json();
 
@@ -1132,14 +1128,12 @@ const updatePhaseData = async () => {
 
     const response = await fetch(`/api/checklists/${activeChecklist.value.id}/phase`, {
       method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-      },
-      body: JSON.stringify({
-        phase_data: phaseData,
-        observations: checklistForm.value.observations,
-        item_observations: itemsWithObservations
+      ...AuthService.getFetchConfig({
+        body: JSON.stringify({
+          phase_data: phaseData,
+          observations: checklistForm.value.observations,
+          item_observations: itemsWithObservations
+        })
       })
     });
 
@@ -1164,13 +1158,14 @@ const interruptChecklist = async () => {
   await loading.present();
 
   try {
-    const response = await fetch(`/api/checklists/${activeChecklist.value.id}/interrupt`, {
-      method: 'POST',
-      headers: AuthService.getAuthHeaders(),
-      body: JSON.stringify({
-        reason: interruptReason.value
+    const response = await fetch(`/api/checklists/${activeChecklist.value.id}/interrupt`,
+      AuthService.getFetchConfig({
+        method: 'POST',
+        body: JSON.stringify({
+          reason: interruptReason.value
+        })
       })
-    });
+    );
 
     const data = await response.json();
 
@@ -1214,17 +1209,12 @@ const pauseAndReturn = async () => {
   await loading.present();
 
   try {
-    const response = await fetch(`/api/checklists/${activeChecklist.value.id}/pause`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-        'X-Requested-With': 'XMLHttpRequest'
-      },
-      body: JSON.stringify({ reason: 'manual' })
-    });
+    const response = await fetch(`/api/checklists/${activeChecklist.value.id}/pause`,
+      AuthService.getFetchConfig({
+        method: 'POST',
+        body: JSON.stringify({ reason: 'manual' })
+      })
+    );
 
     const data = await response.json();
     if (data.success) {
@@ -1280,9 +1270,9 @@ const loadMachines = async () => {
 const fetchMachineAvailability = async () => {
   try {
     isCheckingAvailability.value = true;
-    const response = await fetch('/api/machines/availability', {
-      headers: AuthService.getAuthHeaders()
-    });
+    const response = await fetch('/api/machines/availability',
+      AuthService.getFetchConfig()
+    );
 
     if (response.ok) {
       const data = await response.json();
@@ -1350,12 +1340,9 @@ const loadExistingChecklist = async () => {
   const checklistId = route.params.id;
   if (checklistId && checklistId !== 'new') {
     try {
-      const response = await fetch(`/api/checklists/${checklistId}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-          'Accept': 'application/json'
-        }
-      });
+      const response = await fetch(`/api/checklists/${checklistId}`,
+        AuthService.getFetchConfig()
+      );
 
       if (response.ok) {
         const data = await response.json();
@@ -1403,13 +1390,9 @@ const resumeChecklist = async () => {
   if (!existingChecklistId.value) return;
 
   try {
-    const response = await fetch(`/api/checklists/${existingChecklistId.value}/resume`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-        'Accept': 'application/json'
-      }
-    });
+    const response = await fetch(`/api/checklists/${existingChecklistId.value}/resume`,
+      AuthService.getFetchConfig({ method: 'POST' })
+    );
 
     if (response.ok) {
       console.log('Checklist retomado com sucesso');
@@ -1658,17 +1641,12 @@ const pauseChecklistAutomatically = async () => {
   if (!activeChecklist.value) return;
 
   try {
-    const response = await fetch(`/api/checklists/${activeChecklist.value.id}/pause`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
-        'X-Requested-With': 'XMLHttpRequest'
-      },
-      body: JSON.stringify({ reason: 'auto' })
-    });
+    const response = await fetch(`/api/checklists/${activeChecklist.value.id}/pause`,
+      AuthService.getFetchConfig({
+        method: 'POST',
+        body: JSON.stringify({ reason: 'auto' })
+      })
+    );
 
     const data = await response.json();
     if (data.success) {
