@@ -679,20 +679,31 @@ const pauseChecklist = async (checklist: any) => {
             });
 
             const data = await response.json();
+
+            if (!response.ok) {
+              throw new Error(data.message || 'Erro ao pausar checklist');
+            }
+
             if (data.success) {
               const toast = await toastController.create({
                 message: 'Checklist pausado com sucesso.',
-                duration: 3000,
+                duration: 2000,
                 color: 'success'
               });
               await toast.present();
-              await loadStats(); // Refresh data
-            } else {
-              throw new Error(data.message);
+
+              // Refresh data and navigate back
+              await loadStats();
+
+              // Navigate to dashboard if we're not already there
+              if (router.currentRoute.value.path !== '/mobile/dashboard') {
+                router.push('/mobile/dashboard');
+              }
             }
           } catch (error) {
+            console.error('Error pausing checklist:', error);
             const toast = await toastController.create({
-              message: 'Erro ao pausar checklist.',
+              message: error.message || 'Erro ao pausar checklist.',
               duration: 3000,
               color: 'danger'
             });
@@ -714,20 +725,29 @@ const resumeChecklist = async (checklist: any) => {
     });
 
     const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Erro ao retomar checklist');
+    }
+
     if (data.success) {
       const toast = await toastController.create({
         message: 'Checklist retomado com sucesso.',
-        duration: 3000,
+        duration: 2000,
         color: 'success'
       });
       await toast.present();
-      await loadStats(); // Refresh data
-    } else {
-      throw new Error(data.message);
+
+      // Refresh data
+      await loadStats();
+
+      // Navigate to checklist page to continue
+      router.push(`/mobile/checklist/${checklist.id}`);
     }
   } catch (error) {
+    console.error('Error resuming checklist:', error);
     const toast = await toastController.create({
-      message: 'Erro ao retomar checklist.',
+      message: error.message || 'Erro ao retomar checklist.',
       duration: 3000,
       color: 'danger'
     });
