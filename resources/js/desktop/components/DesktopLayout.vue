@@ -43,21 +43,58 @@
             <!-- Dropdown Menu -->
             <div
               v-if="showUnitSelector"
-              class="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 max-h-64 overflow-y-auto"
+              class="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50 overflow-hidden"
             >
-              <button
-                v-for="unit in availableUnits"
-                :key="unit.id"
-                @click="selectUnit(unit.id)"
-                class="w-full px-3 py-2.5 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-start"
-                :class="{ 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-400 font-medium': unit.id === selectedUnitId }"
-                :title="unit.name"
-              >
-                <svg v-if="unit.id === selectedUnitId" class="w-3 h-3 text-primary-500 mr-2 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
-                </svg>
-                <span class="flex-1 line-clamp-2 leading-snug" :class="{ 'ml-5': unit.id !== selectedUnitId }">{{ unit.name }}</span>
-              </button>
+              <!-- Search Input -->
+              <div class="p-2 border-b border-gray-200 dark:border-gray-700">
+                <div class="relative">
+                  <svg class="absolute left-2.5 top-2 w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                  </svg>
+                  <input
+                    ref="unitSearchInput"
+                    v-model="unitSearchQuery"
+                    type="text"
+                    placeholder="Buscar unidade..."
+                    class="w-full pl-8 pr-3 py-1.5 text-xs bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-600 dark:text-gray-200"
+                    @click.stop
+                  />
+                </div>
+              </div>
+
+              <!-- Units List -->
+              <div class="max-h-64 overflow-y-auto">
+                <button
+                  v-for="unit in filteredUnits"
+                  :key="unit.id"
+                  @click="selectUnit(unit.id)"
+                  class="w-full px-3 py-2.5 text-left text-xs hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors flex items-start gap-2"
+                  :class="{ 'bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-400': unit.id === selectedUnitId }"
+                  :title="unit.name"
+                >
+                  <svg v-if="unit.id === selectedUnitId" class="w-3 h-3 text-primary-500 mr-1 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/>
+                  </svg>
+                  <div class="flex-1 min-w-0" :class="{ 'ml-4': unit.id !== selectedUnitId }">
+                    <div class="font-medium leading-tight break-words">{{ unit.name }}</div>
+                  </div>
+                  <span
+                    v-if="unit.safety_checklists_count !== undefined"
+                    class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 flex-shrink-0"
+                    :title="`${unit.safety_checklists_count} checklists de segurança`"
+                  >
+                    {{ unit.safety_checklists_count }}
+                  </span>
+                </button>
+
+                <!-- No results message -->
+                <div
+                  v-if="filteredUnits.length === 0"
+                  class="px-3 py-6 text-center text-xs text-gray-500 dark:text-gray-400"
+                >
+                  Nenhuma unidade encontrada
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -212,7 +249,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch, nextTick } from 'vue';
 import { useRoute } from 'vue-router';
 import {
   HomeIcon,
@@ -246,6 +283,29 @@ const availableUnits = ref([]);
 const currentUnit = ref(null);
 const selectedUnitId = ref(null);
 const showUnitSelector = ref(false);
+const unitSearchQuery = ref('');
+const unitSearchInput = ref(null);
+
+// Filtered units based on search query
+const filteredUnits = computed(() => {
+  if (!unitSearchQuery.value.trim()) {
+    return availableUnits.value;
+  }
+
+  const query = unitSearchQuery.value.toLowerCase().trim();
+  return availableUnits.value.filter(unit =>
+    unit.name.toLowerCase().includes(query)
+  );
+});
+
+// Watch for unit selector visibility and focus search input
+watch(showUnitSelector, async (isVisible) => {
+  if (isVisible) {
+    unitSearchQuery.value = '';
+    await nextTick();
+    unitSearchInput.value?.focus();
+  }
+});
 
 const navigationItems = [
   { name: 'dashboard', path: '/desktop', label: 'Dashboard', icon: HomeIcon },

@@ -41,4 +41,9 @@ class Unit extends Model
     {
         return $this->hasMany(Machine::class);
     }
+
+    public function safetyChecklists(): HasMany
+    {
+        return $this->hasMany(SafetyChecklist::class);
+    }
 }

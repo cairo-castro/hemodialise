@@ -16,9 +16,16 @@ class UserUnitController extends Controller
         $user = auth()->user();
 
         if ($user->hasGlobalAccess()) {
-            $units = \App\Models\Unit::where('active', true)->get();
+            $units = \App\Models\Unit::where('active', true)
+                ->withCount('safetyChecklists')
+                ->orderBy('name')
+                ->get();
         } else {
-            $units = $user->units()->where('active', true)->get();
+            $units = $user->units()
+                ->where('active', true)
+                ->withCount('safetyChecklists')
+                ->orderBy('name')
+                ->get();
         }
 
         return response()->json([
