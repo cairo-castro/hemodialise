@@ -220,6 +220,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { AuthService } from '@shared/auth';
 import {
   IonPage,
   IonHeader,
@@ -302,13 +303,9 @@ const loadUserProfile = async () => {
   try {
     isLoading.value = true;
 
-    const response = await fetch('/api/me', {
-      credentials: 'include',
-      headers: {
-        'Accept': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
-      }
-    });
+    const response = await fetch('/api/me',
+      AuthService.getFetchConfig()
+    );
 
     const data = await response.json();
 
@@ -341,16 +338,12 @@ const updateBasicInfo = async () => {
   try {
     isUpdatingInfo.value = true;
 
-    const response = await fetch('/api/profile/update', {
-      method: 'PUT',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
-      },
-      body: JSON.stringify(formData.value)
-    });
+    const response = await fetch('/api/profile/update',
+      AuthService.getFetchConfig({
+        method: 'PUT',
+        body: JSON.stringify(formData.value)
+      })
+    );
 
     const data = await response.json();
 
@@ -415,16 +408,12 @@ const updatePassword = async () => {
   try {
     isUpdatingPassword.value = true;
 
-    const response = await fetch('/api/profile/password', {
-      method: 'PUT',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
-      },
-      body: JSON.stringify(passwordData.value)
-    });
+    const response = await fetch('/api/profile/password',
+      AuthService.getFetchConfig({
+        method: 'PUT',
+        body: JSON.stringify(passwordData.value)
+      })
+    );
 
     const data = await response.json();
 
