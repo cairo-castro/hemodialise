@@ -194,6 +194,7 @@ import {
 import { Container } from '@mobile/core/di/Container';
 import { User } from '@mobile/core/domain/entities/User';
 import { useStatsAutoRefresh } from '@mobile/composables/useStatsAutoRefresh';
+import { AuthService } from '@shared/auth';
 
 const router = useRouter();
 const container = Container.getInstance();
@@ -249,11 +250,7 @@ const loadUserData = async () => {
 
 const loadActiveChecklists = async () => {
   try {
-    const response = await fetch('/api/checklists/active', {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-      }
-    });
+    const response = await fetch('/api/checklists/active', AuthService.getFetchConfig());
 
     const data = await response.json();
     if (data.success) {
@@ -266,13 +263,7 @@ const loadActiveChecklists = async () => {
 
 const loadMachines = async () => {
   try {
-    const response = await fetch('/api/machines', {
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      }
-    });
+    const response = await fetch('/api/machines', AuthService.getFetchConfig());
 
     if (!response.ok) {
       console.warn(`Failed to load machines: ${response.status}`);
@@ -346,9 +337,7 @@ const pauseChecklist = async (checklist: Checklist) => {
           try {
             const response = await fetch(`/api/checklists/${checklist.id}/pause`, {
               method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-              }
+              ...AuthService.getFetchConfig()
             });
 
             const data = await response.json();
