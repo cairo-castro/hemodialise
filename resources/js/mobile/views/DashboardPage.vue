@@ -443,13 +443,9 @@ const handleUnitChange = async (unitId: number) => {
 
     const response = await fetch('/api/user-units/switch', {
       method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest'
-      },
-      body: JSON.stringify({ unit_id: unitId })
+      ...AuthService.getFetchConfig({
+        body: JSON.stringify({ unit_id: unitId })
+      })
     });
     
     const data = await response.json();

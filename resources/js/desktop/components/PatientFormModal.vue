@@ -168,10 +168,55 @@
                 </div>
               </div>
 
+              <!-- Prontuário Médico -->
+              <div class="space-y-2">
+                <label class="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <ClipboardIcon class="w-4 h-4 mr-2 text-purple-600 dark:text-purple-400" />
+                  Prontuário Médico
+                  <span class="text-gray-400 text-xs ml-1">(opcional)</span>
+                </label>
+                <input
+                  v-model="formData.medical_record"
+                  type="text"
+                  placeholder="Número do prontuário"
+                  class="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-white placeholder-gray-400"
+                />
+              </div>
+
+              <!-- Alergias -->
+              <div class="space-y-2">
+                <label class="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <ExclamationTriangleIcon class="w-4 h-4 mr-2 text-red-600 dark:text-red-400" />
+                  Alergias
+                  <span class="text-gray-400 text-xs ml-1">(opcional)</span>
+                </label>
+                <textarea
+                  v-model="formData.allergies"
+                  rows="3"
+                  placeholder="Descreva alergias conhecidas"
+                  class="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-white placeholder-gray-400 resize-none"
+                ></textarea>
+              </div>
+
+              <!-- Observações -->
+              <div class="space-y-2">
+                <label class="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300">
+                  <DocumentTextIcon class="w-4 h-4 mr-2 text-gray-600 dark:text-gray-400" />
+                  Observações Médicas
+                  <span class="text-gray-400 text-xs ml-1">(opcional)</span>
+                </label>
+                <textarea
+                  v-model="formData.observations"
+                  rows="4"
+                  placeholder="Observações gerais sobre o paciente"
+                  class="w-full px-4 py-3 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-white placeholder-gray-400 resize-none"
+                ></textarea>
+              </div>
+
               <!-- Status do Paciente -->
               <div class="space-y-2">
                 <label class="flex items-center text-sm font-medium text-gray-700 dark:text-gray-300">
-                  <CheckCircleIcon class="w-4 h-4 mr-2 text-purple-600 dark:text-purple-400" />
+                  <CheckCircleIcon class="w-4 h-4 mr-2 text-green-600 dark:text-green-400" />
                   Status do Paciente
                   <span class="text-red-500 ml-1">*</span>
                 </label>
@@ -236,6 +281,9 @@ import {
   PlusCircleIcon,
   CheckIcon,
   CheckCircleIcon,
+  ClipboardIcon,
+  ExclamationTriangleIcon,
+  DocumentTextIcon,
 } from '@heroicons/vue/24/outline';
 
 const props = defineProps({
@@ -256,6 +304,9 @@ const formData = ref({
   birth_date: '',
   blood_group: '',
   rh_factor: '',
+  medical_record: '',
+  allergies: '',
+  observations: '',
   status: 'ativo' // Default status
 });
 
@@ -292,6 +343,9 @@ watch(() => props.patient, (newPatient) => {
       birth_date: newPatient.birth_date || '',
       blood_group: newPatient.blood_group || '',
       rh_factor: newPatient.rh_factor || '',
+      medical_record: newPatient.medical_record || '',
+      allergies: newPatient.allergies || '',
+      observations: newPatient.observations || '',
       status: newPatient.status || 'ativo'
     };
   }
@@ -311,6 +365,9 @@ function resetForm() {
     birth_date: '',
     blood_group: '',
     rh_factor: '',
+    medical_record: '',
+    allergies: '',
+    observations: '',
     status: 'ativo'
   };
 }
@@ -350,6 +407,9 @@ async function handleSubmit() {
       birth_date: formData.value.birth_date,
       blood_group: formData.value.blood_group || null,
       rh_factor: formData.value.rh_factor || null,
+      medical_record: formData.value.medical_record || null,
+      allergies: formData.value.allergies || null,
+      observations: formData.value.observations || null,
       status: formData.value.status,
       active: formData.value.status === 'ativo' // Backward compatibility
     };

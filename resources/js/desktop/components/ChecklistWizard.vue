@@ -51,7 +51,7 @@
                       <CheckIcon v-if="currentStep > index" class="w-5 h-5" />
                       <span v-else>{{ index + 1 }}</span>
                     </div>
-                    <div v-if="index < steps.length - 1" class="ml-4">
+                    <div class="ml-4">
                       <div class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">{{ step.label }}</div>
                     </div>
                   </div>
@@ -76,7 +76,7 @@
                     <input
                       v-model="patientSearch"
                       type="text"
-                      placeholder="Digite o nome ou CPF do paciente..."
+                      placeholder="Digite o nome do paciente..."
                       class="w-full px-4 py-3 pl-10 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-gray-900 dark:text-white"
                       @input="searchPatients"
                     />
@@ -469,18 +469,62 @@ async function saveChecklist() {
     //   credentials: 'include',
     //   body: JSON.stringify(payload)
     // });
+    //
+    // if (!response.ok) {
+    //   throw new Error('Erro ao salvar checklist');
+    // }
 
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1500));
 
-    emit('saved', payload);
+    // Show success toast
+    showToast('success', 'Checklist salvo com sucesso!');
+
+    emit('checklist-created', payload);
     handleClose();
   } catch (error) {
     console.error('Error saving checklist:', error);
-    alert('Erro ao salvar checklist. Tente novamente.');
+    // Show error toast
+    showToast('error', 'Erro ao salvar checklist. Tente novamente.');
   } finally {
     saving.value = false;
   }
+}
+
+function showToast(type, message) {
+  const toast = document.createElement('div');
+  toast.className = `fixed top-4 right-4 z-[9999] px-6 py-4 rounded-lg shadow-2xl border transform transition-all duration-300 translate-x-0 ${
+    type === 'success'
+      ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-200'
+      : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-800 dark:text-red-200'
+  }`;
+
+  const icon = type === 'success'
+    ? '<svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>'
+    : '<svg class="w-5 h-5 inline-block mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>';
+
+  toast.innerHTML = `
+    <div class="flex items-center">
+      ${icon}
+      <span class="font-medium">${message}</span>
+    </div>
+  `;
+
+  document.body.appendChild(toast);
+
+  // Animate in
+  setTimeout(() => {
+    toast.style.transform = 'translateX(0)';
+  }, 10);
+
+  // Remove after 4 seconds
+  setTimeout(() => {
+    toast.style.transform = 'translateX(400px)';
+    toast.style.opacity = '0';
+    setTimeout(() => {
+      document.body.removeChild(toast);
+    }, 300);
+  }, 4000);
 }
 
 function handleBackdropClick() {

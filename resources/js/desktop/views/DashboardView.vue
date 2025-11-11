@@ -57,7 +57,7 @@
     <!-- Quick Actions -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
       <button
-        @click="navigateTo('/desktop/checklists')"
+        @click="showChecklistWizard = true"
         class="flex items-center p-4 bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-md transition-all group"
       >
         <div class="w-12 h-12 bg-primary-100 dark:bg-primary-900/20 rounded-lg flex items-center justify-center mr-4 group-hover:bg-primary-200 dark:group-hover:bg-primary-900/30 transition-colors">
@@ -73,7 +73,7 @@
       </button>
 
       <button
-        @click="navigateTo('/desktop/patients')"
+        @click="showPatientModal = true"
         class="flex items-center p-4 bg-white dark:bg-gray-950 rounded-xl border border-gray-200 dark:border-gray-800 hover:border-green-300 dark:hover:border-green-700 hover:shadow-md transition-all group"
       >
         <div class="w-12 h-12 bg-green-100 dark:bg-green-900/20 rounded-lg flex items-center justify-center mr-4 group-hover:bg-green-200 dark:group-hover:bg-green-900/30 transition-colors">
@@ -252,6 +252,19 @@
         </table>
       </div>
     </div>
+
+    <!-- Modals -->
+    <ChecklistWizard
+      :is-open="showChecklistWizard"
+      @close="showChecklistWizard = false"
+      @checklist-created="handleChecklistCreated"
+    />
+
+    <PatientFormModal
+      :is-open="showPatientModal"
+      @close="showPatientModal = false"
+      @saved="handlePatientSaved"
+    />
   </div>
 </template>
 
@@ -270,9 +283,15 @@ import {
 import { usePolling } from '../composables/usePolling';
 import VueApexCharts from 'vue3-apexcharts';
 import api from '../utils/api';
+import ChecklistWizard from '../components/ChecklistWizard.vue';
+import PatientFormModal from '../components/PatientFormModal.vue';
 
 const apexchart = VueApexCharts;
 const router = useRouter();
+
+// Modal state
+const showChecklistWizard = ref(false);
+const showPatientModal = ref(false);
 
 const loading = ref(true);
 const metrics = ref([
@@ -613,6 +632,21 @@ function getShiftColor(shift) {
     'Noturno': 'bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400',
   };
   return colors[shift] || 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-400';
+}
+
+// Modal handlers
+function handleChecklistCreated(checklist) {
+  console.log('Checklist created:', checklist);
+  showChecklistWizard.value = false;
+  // Refresh dashboard data
+  refreshAll();
+}
+
+function handlePatientSaved(patient) {
+  console.log('Patient saved:', patient);
+  showPatientModal.value = false;
+  // Refresh dashboard data
+  refreshAll();
 }
 </script>
 

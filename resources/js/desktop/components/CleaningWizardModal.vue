@@ -299,232 +299,213 @@
               <!-- Legend -->
               <div class="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                 <div class="flex items-center gap-2">
-                  <div class="w-3 h-3 rounded-full bg-green-500"></div>
-                  <span class="text-xs text-gray-600 dark:text-gray-400">Conforme</span>
+                  <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                  </svg>
+                  <span class="text-xs font-medium text-gray-700 dark:text-gray-300">C - Conforme</span>
                 </div>
                 <div class="flex items-center gap-2">
-                  <div class="w-3 h-3 rounded-full bg-red-500"></div>
-                  <span class="text-xs text-gray-600 dark:text-gray-400">Não Conforme</span>
+                  <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                  </svg>
+                  <span class="text-xs font-medium text-gray-700 dark:text-gray-300">NC - Não Conforme</span>
                 </div>
                 <div class="flex items-center gap-2">
-                  <div class="w-3 h-3 rounded-full bg-gray-400"></div>
-                  <span class="text-xs text-gray-600 dark:text-gray-400">N/A</span>
+                  <svg class="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
+                  </svg>
+                  <span class="text-xs font-medium text-gray-700 dark:text-gray-300">NA - Não se Aplica</span>
                 </div>
               </div>
 
               <!-- Cleaning Items -->
               <div class="space-y-4">
+                <!-- Máquina de HD -->
                 <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <p class="text-sm font-medium text-gray-900 dark:text-white mb-3">Máquina de HD</p>
-                  <div class="flex gap-3">
+                  <div class="flex items-center gap-2 mb-3">
+                    <svg class="w-5 h-5 text-primary-600 dark:text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/>
+                    </svg>
+                    <p class="text-sm font-semibold text-gray-900 dark:text-white">Máquina de HD</p>
+                  </div>
+                  <div class="grid grid-cols-3 gap-2">
                     <button
                       type="button"
-                      @click="formData.hd_machine_cleaning = true"
+                      @click="formData.hd_machine_cleaning = 'C'"
                       :class="[
-                        'flex-1 px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium',
-                        formData.hd_machine_cleaning === true
+                        'px-3 py-2 rounded-lg border-2 transition-all text-sm font-semibold flex items-center justify-center gap-1',
+                        formData.hd_machine_cleaning === 'C'
                           ? 'border-green-600 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400'
                           : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500'
                       ]"
                     >
-                      Conforme
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                      </svg>
+                      C
                     </button>
                     <button
                       type="button"
-                      @click="formData.hd_machine_cleaning = false"
+                      @click="formData.hd_machine_cleaning = 'NC'"
                       :class="[
-                        'flex-1 px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium',
-                        formData.hd_machine_cleaning === false
+                        'px-3 py-2 rounded-lg border-2 transition-all text-sm font-semibold flex items-center justify-center gap-1',
+                        formData.hd_machine_cleaning === 'NC'
                           ? 'border-red-600 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400'
                           : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500'
                       ]"
                     >
-                      Não Conforme
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                      </svg>
+                      NC
                     </button>
                     <button
                       type="button"
-                      @click="formData.hd_machine_cleaning = null"
+                      @click="formData.hd_machine_cleaning = 'NA'"
                       :class="[
-                        'flex-1 px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium',
-                        formData.hd_machine_cleaning === null
+                        'px-3 py-2 rounded-lg border-2 transition-all text-sm font-semibold flex items-center justify-center gap-1',
+                        formData.hd_machine_cleaning === 'NA'
                           ? 'border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                           : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500'
                       ]"
                     >
-                      N/A
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
+                      </svg>
+                      NA
                     </button>
                   </div>
                 </div>
 
+                <!-- Osmose -->
                 <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <p class="text-sm font-medium text-gray-900 dark:text-white mb-3">Osmose</p>
-                  <div class="flex gap-3">
+                  <div class="flex items-center gap-2 mb-3">
+                    <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+                    </svg>
+                    <p class="text-sm font-semibold text-gray-900 dark:text-white">Osmose</p>
+                  </div>
+                  <div class="grid grid-cols-3 gap-2">
                     <button
                       type="button"
-                      @click="formData.osmosis_cleaning = true"
+                      @click="formData.osmosis_cleaning = 'C'"
                       :class="[
-                        'flex-1 px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium',
-                        formData.osmosis_cleaning === true
+                        'px-3 py-2 rounded-lg border-2 transition-all text-sm font-semibold flex items-center justify-center gap-1',
+                        formData.osmosis_cleaning === 'C'
                           ? 'border-green-600 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400'
                           : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500'
                       ]"
                     >
-                      Conforme
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                      </svg>
+                      C
                     </button>
                     <button
                       type="button"
-                      @click="formData.osmosis_cleaning = false"
+                      @click="formData.osmosis_cleaning = 'NC'"
                       :class="[
-                        'flex-1 px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium',
-                        formData.osmosis_cleaning === false
+                        'px-3 py-2 rounded-lg border-2 transition-all text-sm font-semibold flex items-center justify-center gap-1',
+                        formData.osmosis_cleaning === 'NC'
                           ? 'border-red-600 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400'
                           : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500'
                       ]"
                     >
-                      Não Conforme
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                      </svg>
+                      NC
                     </button>
                     <button
                       type="button"
-                      @click="formData.osmosis_cleaning = null"
+                      @click="formData.osmosis_cleaning = 'NA'"
                       :class="[
-                        'flex-1 px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium',
-                        formData.osmosis_cleaning === null
+                        'px-3 py-2 rounded-lg border-2 transition-all text-sm font-semibold flex items-center justify-center gap-1',
+                        formData.osmosis_cleaning === 'NA'
                           ? 'border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                           : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500'
                       ]"
                     >
-                      N/A
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
+                      </svg>
+                      NA
                     </button>
                   </div>
                 </div>
 
+                <!-- Suporte de Soro -->
                 <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <p class="text-sm font-medium text-gray-900 dark:text-white mb-3">Suporte de Soro</p>
-                  <div class="flex gap-3">
-                    <button
-                      type="button"
-                      @click="formData.serum_support_cleaning = true"
-                      :class="[
-                        'flex-1 px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium',
-                        formData.serum_support_cleaning === true
-                          ? 'border-green-600 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400'
-                          : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500'
-                      ]"
-                    >
-                      Conforme
-                    </button>
-                    <button
-                      type="button"
-                      @click="formData.serum_support_cleaning = false"
-                      :class="[
-                        'flex-1 px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium',
-                        formData.serum_support_cleaning === false
-                          ? 'border-red-600 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400'
-                          : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500'
-                      ]"
-                    >
-                      Não Conforme
-                    </button>
-                    <button
-                      type="button"
-                      @click="formData.serum_support_cleaning = null"
-                      :class="[
-                        'flex-1 px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium',
-                        formData.serum_support_cleaning === null
-                          ? 'border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                          : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500'
-                      ]"
-                    >
-                      N/A
-                    </button>
+                  <div class="flex items-center gap-2 mb-3">
+                    <svg class="w-5 h-5 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/>
+                    </svg>
+                    <p class="text-sm font-semibold text-gray-900 dark:text-white">Suporte de Soro</p>
                   </div>
-                </div>
-
-                <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <p class="text-sm font-medium text-gray-900 dark:text-white mb-3">Desinfecção Química</p>
-                  <div class="flex gap-3">
+                  <div class="grid grid-cols-3 gap-2">
                     <button
                       type="button"
-                      @click="formData.chemical_disinfection = true"
+                      @click="formData.serum_support_cleaning = 'C'"
                       :class="[
-                        'flex-1 px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium',
-                        formData.chemical_disinfection === true
+                        'px-3 py-2 rounded-lg border-2 transition-all text-sm font-semibold flex items-center justify-center gap-1',
+                        formData.serum_support_cleaning === 'C'
                           ? 'border-green-600 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400'
                           : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500'
                       ]"
                     >
-                      Conforme
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                      </svg>
+                      C
                     </button>
                     <button
                       type="button"
-                      @click="formData.chemical_disinfection = false"
+                      @click="formData.serum_support_cleaning = 'NC'"
                       :class="[
-                        'flex-1 px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium',
-                        formData.chemical_disinfection === false
+                        'px-3 py-2 rounded-lg border-2 transition-all text-sm font-semibold flex items-center justify-center gap-1',
+                        formData.serum_support_cleaning === 'NC'
                           ? 'border-red-600 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400'
                           : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500'
                       ]"
                     >
-                      Não Conforme
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                      </svg>
+                      NC
                     </button>
                     <button
                       type="button"
-                      @click="formData.chemical_disinfection = null"
+                      @click="formData.serum_support_cleaning = 'NA'"
                       :class="[
-                        'flex-1 px-4 py-2 rounded-lg border-2 transition-all text-sm font-medium',
-                        formData.chemical_disinfection === null
+                        'px-3 py-2 rounded-lg border-2 transition-all text-sm font-semibold flex items-center justify-center gap-1',
+                        formData.serum_support_cleaning === 'NA'
                           ? 'border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                           : 'border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:border-gray-400 dark:hover:border-gray-500'
                       ]"
                     >
-                      N/A
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
+                      </svg>
+                      NA
                     </button>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Step 4: Produtos, Procedimentos e Observações -->
+            <!-- Step 4: Observations (Optional) -->
             <div v-show="currentStep === 4" class="space-y-6">
-              <h4 class="text-lg font-semibold text-gray-900 dark:text-white">Produtos, Procedimentos e Observações</h4>
-
-              <div class="space-y-4">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Produtos Utilizados
-                  </label>
-                  <textarea
-                    v-model="formData.cleaning_products_used"
-                    rows="3"
-                    placeholder="Liste os produtos utilizados na limpeza..."
-                    class="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary-500 text-gray-900 dark:text-white"
-                  ></textarea>
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Procedimento de Limpeza
-                  </label>
-                  <textarea
-                    v-model="formData.cleaning_procedure"
-                    rows="4"
-                    placeholder="Descreva o procedimento de limpeza realizado..."
-                    class="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary-500 text-gray-900 dark:text-white"
-                  ></textarea>
-                </div>
-
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Observações <span class="text-gray-500">(opcional)</span>
-                  </label>
-                  <textarea
-                    v-model="formData.observations"
-                    rows="3"
-                    placeholder="Adicione observações sobre a limpeza (opcional)..."
-                    class="w-full px-4 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary-500 text-gray-900 dark:text-white"
-                  ></textarea>
-                </div>
+              <div>
+                <h4 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Observações</h4>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Adicione observações sobre a limpeza (opcional)</p>
               </div>
+
+              <textarea
+                v-model="formData.observations"
+                rows="4"
+                placeholder="Adicione observações sobre a limpeza (opcional)..."
+                class="w-full px-4 py-3 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary-500 text-gray-900 dark:text-white placeholder-gray-400 resize-none"
+              ></textarea>
             </div>
           </div>
 
@@ -599,9 +580,9 @@ const formData = ref({
   weekly_cleaning: false,
   monthly_cleaning: false,
   special_cleaning: false,
-  hd_machine_cleaning: null,
-  osmosis_cleaning: null,
-  serum_support_cleaning: null,
+  hd_machine_cleaning: '',
+  osmosis_cleaning: '',
+  serum_support_cleaning: '',
   chemical_disinfection: null,
   cleaning_products_used: '',
   cleaning_procedure: '',
@@ -670,9 +651,9 @@ function resetForm() {
     weekly_cleaning: false,
     monthly_cleaning: false,
     special_cleaning: false,
-    hd_machine_cleaning: null,
-    osmosis_cleaning: null,
-    serum_support_cleaning: null,
+    hd_machine_cleaning: '',
+    osmosis_cleaning: '',
+    serum_support_cleaning: '',
     chemical_disinfection: null,
     cleaning_products_used: '',
     cleaning_procedure: '',
