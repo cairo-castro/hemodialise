@@ -52,19 +52,47 @@ export class AuthService {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
+      'X-Requested-With': 'XMLHttpRequest',
     };
 
     if (token) {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
-    // Add CSRF token for Laravel
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    // Add CSRF token for Laravel Sanctum (from XSRF-TOKEN cookie)
+    const csrfToken = this.getCsrfToken();
     if (csrfToken) {
-      headers['X-CSRF-TOKEN'] = csrfToken;
+      headers['X-XSRF-TOKEN'] = csrfToken;
     }
 
     return headers;
+  }
+
+  /**
+   * Get fetch configuration with auth headers and credentials
+   * Use this for fetch() calls to ensure proper Sanctum authentication
+   */
+  static getFetchConfig(options: RequestInit = {}): RequestInit {
+    return {
+      ...options,
+      headers: {
+        ...this.getAuthHeaders(),
+        ...options.headers
+      },
+      credentials: 'include' // Required for Sanctum cookie-based auth
+    };
+  }
+
+  /**
+   * Get CSRF token from XSRF-TOKEN cookie (set by Sanctum)
+   * The cookie value is URL-encoded, so we need to decode it
+   */
+  private static getCsrfToken(): string | null {
+    const cookieMatch = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
+    if (cookieMatch) {
+      return decodeURIComponent(cookieMatch[1]);
+    }
+    return null;
   }
 
   static async logout(): Promise<void> {
