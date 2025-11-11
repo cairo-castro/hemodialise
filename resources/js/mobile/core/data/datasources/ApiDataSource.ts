@@ -24,6 +24,18 @@ export class ApiDataSource {
     this.authRepository = authRepository;
   }
 
+  /**
+   * Get CSRF token from XSRF-TOKEN cookie (set by Sanctum)
+   * The cookie value is URL-encoded, so we need to decode it
+   */
+  private getCsrfToken(): string | null {
+    const cookieMatch = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
+    if (cookieMatch) {
+      return decodeURIComponent(cookieMatch[1]);
+    }
+    return null;
+  }
+
   async get<T>(endpoint: string, token?: string): Promise<ApiResponse<T>> {
     return this.request<T>('GET', endpoint, undefined, token);
   }
@@ -57,10 +69,10 @@ export class ApiDataSource {
       'X-Requested-With': 'XMLHttpRequest',
     };
 
-    // Get CSRF token from meta tag
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    // Get CSRF token from XSRF-TOKEN cookie (Sanctum)
+    const csrfToken = this.getCsrfToken();
     if (csrfToken) {
-      headers['X-CSRF-TOKEN'] = csrfToken;
+      headers['X-XSRF-TOKEN'] = csrfToken;
     }
 
     if (token) {

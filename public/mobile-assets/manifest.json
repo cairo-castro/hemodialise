@@ -7,12 +7,12 @@
     "file": "assets/_plugin-vue_export-helper-legacy-lXI7YtLh.js",
     "name": "_plugin-vue_export-helper"
   },
-  "_ionic-KXdFhEAd.js": {
-    "file": "assets/ionic-KXdFhEAd.js",
+  "_ionic-GHA3wq_y.js": {
+    "file": "assets/ionic-GHA3wq_y.js",
     "name": "ionic",
     "isDynamicEntry": true,
     "imports": [
-      "_vendor-CjSOND1d.js"
+      "_vendor-DcQkTNkg.js"
     ],
     "dynamicImports": [
       "node_modules/@ionic/core/components/swipe-back.js",
@@ -21,12 +21,12 @@
       "node_modules/@ionic/core/components/input-shims.js"
     ]
   },
-  "_ionic-legacy-CGcOrMzG.js": {
-    "file": "assets/ionic-legacy-CGcOrMzG.js",
+  "_ionic-legacy-DR1m-lCA.js": {
+    "file": "assets/ionic-legacy-DR1m-lCA.js",
     "name": "ionic",
     "isDynamicEntry": true,
     "imports": [
-      "_vendor-legacy-BtzkBSpK.js"
+      "_vendor-legacy-KI3bjCrV.js"
     ],
     "dynamicImports": [
       "node_modules/@ionic/core/components/swipe-back-legacy.js",
@@ -35,131 +35,152 @@
       "node_modules/@ionic/core/components/input-shims-legacy.js"
     ]
   },
-  "_useStatsAutoRefresh-D_tBvBdu.js": {
-    "file": "assets/useStatsAutoRefresh-D_tBvBdu.js",
+  "_useStatsAutoRefresh-D7rRAsKP.js": {
+    "file": "assets/useStatsAutoRefresh-D7rRAsKP.js",
     "name": "useStatsAutoRefresh",
     "imports": [
       "resources/js/mobile/main.ts",
-      "_vendor-CjSOND1d.js"
+      "_vendor-DcQkTNkg.js"
     ]
   },
-  "_useStatsAutoRefresh-legacy-D0rVMr7w.js": {
-    "file": "assets/useStatsAutoRefresh-legacy-D0rVMr7w.js",
+  "_useStatsAutoRefresh-legacy-C4fEyqM4.js": {
+    "file": "assets/useStatsAutoRefresh-legacy-C4fEyqM4.js",
     "name": "useStatsAutoRefresh",
     "imports": [
       "resources/js/mobile/main-legacy.ts",
-      "_vendor-legacy-BtzkBSpK.js"
+      "_vendor-legacy-KI3bjCrV.js"
     ]
   },
-  "_vendor-CjSOND1d.js": {
-    "file": "assets/vendor-CjSOND1d.js",
+  "_vendor-DcQkTNkg.js": {
+    "file": "assets/vendor-DcQkTNkg.js",
     "name": "vendor"
   },
-  "_vendor-legacy-BtzkBSpK.js": {
-    "file": "assets/vendor-legacy-BtzkBSpK.js",
+  "_vendor-legacy-KI3bjCrV.js": {
+    "file": "assets/vendor-legacy-KI3bjCrV.js",
     "name": "vendor"
   },
   "node_modules/@ionic/core/components/index7-legacy.js": {
-    "file": "assets/index7-legacy-EHSTrAuO.js",
+    "file": "assets/index7-legacy-BlwckfMy.js",
     "name": "index7",
     "src": "node_modules/@ionic/core/components/index7-legacy.js",
     "isDynamicEntry": true,
     "imports": [
-      "_ionic-legacy-CGcOrMzG.js",
-      "_vendor-legacy-BtzkBSpK.js"
+      "_ionic-legacy-DR1m-lCA.js",
+      "_vendor-legacy-KI3bjCrV.js"
     ]
   },
   "node_modules/@ionic/core/components/index7.js": {
-    "file": "assets/index7-BYXqkRqt.js",
+    "file": "assets/index7-DCR1Gi1B.js",
     "name": "index7",
     "src": "node_modules/@ionic/core/components/index7.js",
     "isDynamicEntry": true,
     "imports": [
-      "_ionic-KXdFhEAd.js",
-      "_vendor-CjSOND1d.js"
+      "_ionic-GHA3wq_y.js",
+      "_vendor-DcQkTNkg.js"
     ]
   },
   "node_modules/@ionic/core/components/input-shims-legacy.js": {
-    "file": "assets/input-shims-legacy-BQ9cdkKZ.js",
+    "file": "assets/input-shims-legacy-BzP8CaDm.js",
     "name": "input-shims",
     "src": "node_modules/@ionic/core/components/input-shims-legacy.js",
     "isDynamicEntry": true,
     "imports": [
-      "_ionic-legacy-CGcOrMzG.js",
-      "_vendor-legacy-BtzkBSpK.js"
+      "_ionic-legacy-DR1m-lCA.js",
+      "_vendor-legacy-KI3bjCrV.js"
     ]
   },
   "node_modules/@ionic/core/components/input-shims.js": {
-    "file": "assets/input-shims-akGWUa8l.js",
+    "file": "assets/input-shims-Du4Ssl6K.js",
     "name": "input-shims",
     "src": "node_modules/@ionic/core/components/input-shims.js",
     "isDynamicEntry": true,
     "imports": [
-      "_ionic-KXdFhEAd.js",
-      "_vendor-CjSOND1d.js"
+      "_ionic-GHA3wq_y.js",
+      "_vendor-DcQkTNkg.js"
     ]
   },
   "node_modules/@ionic/core/components/status-tap-legacy.js": {
-    "file": "assets/status-tap-legacy-B0hQHXGP.js",
+    "file": "assets/status-tap-legacy-bCuTXmIR.js",
     "name": "status-tap",
     "src": "node_modules/@ionic/core/components/status-tap-legacy.js",
     "isDynamicEntry": true,
     "imports": [
-      "_ionic-legacy-CGcOrMzG.js",
-      "_vendor-legacy-BtzkBSpK.js"
+      "_ionic-legacy-DR1m-lCA.js",
+      "_vendor-legacy-KI3bjCrV.js"
     ]
   },
   "node_modules/@ionic/core/components/status-tap.js": {
-    "file": "assets/status-tap-CrO7qU6T.js",
+    "file": "assets/status-tap-D6bCDVTM.js",
     "name": "status-tap",
     "src": "node_modules/@ionic/core/components/status-tap.js",
     "isDynamicEntry": true,
     "imports": [
-      "_ionic-KXdFhEAd.js",
-      "_vendor-CjSOND1d.js"
+      "_ionic-GHA3wq_y.js",
+      "_vendor-DcQkTNkg.js"
     ]
   },
   "node_modules/@ionic/core/components/swipe-back-legacy.js": {
-    "file": "assets/swipe-back-legacy-a4fFe1XQ.js",
+    "file": "assets/swipe-back-legacy-DC3MR3T5.js",
     "name": "swipe-back",
     "src": "node_modules/@ionic/core/components/swipe-back-legacy.js",
     "isDynamicEntry": true,
     "imports": [
-      "_ionic-legacy-CGcOrMzG.js",
-      "_vendor-legacy-BtzkBSpK.js"
+      "_ionic-legacy-DR1m-lCA.js",
+      "_vendor-legacy-KI3bjCrV.js"
     ]
   },
   "node_modules/@ionic/core/components/swipe-back.js": {
-    "file": "assets/swipe-back-DEFgSecY.js",
+    "file": "assets/swipe-back-D33L_enb.js",
     "name": "swipe-back",
     "src": "node_modules/@ionic/core/components/swipe-back.js",
     "isDynamicEntry": true,
     "imports": [
-      "_ionic-KXdFhEAd.js",
-      "_vendor-CjSOND1d.js"
+      "_ionic-GHA3wq_y.js",
+      "_vendor-DcQkTNkg.js"
     ]
   },
   "resources/css/app-legacy.css": {
-    "file": "assets/app-legacy-D_XUCGDr.js",
+    "file": "assets/app-legacy-B_j7wi2D.js",
     "name": "app",
     "src": "resources/css/app-legacy.css",
     "isEntry": true
   },
   "resources/css/app.css": {
-    "file": "assets/app-SlKsy6vs.css",
+    "file": "assets/app-DjzVJgmm.css",
     "src": "resources/css/app.css",
     "isEntry": true
   },
+  "resources/js/mobile/composables/useSessionHandler-legacy.ts": {
+    "file": "assets/useSessionHandler-legacy-DN-PPsv2.js",
+    "name": "useSessionHandler",
+    "src": "resources/js/mobile/composables/useSessionHandler-legacy.ts",
+    "isDynamicEntry": true,
+    "imports": [
+      "_ionic-legacy-DR1m-lCA.js",
+      "_vendor-legacy-KI3bjCrV.js"
+    ]
+  },
+  "resources/js/mobile/composables/useSessionHandler.ts": {
+    "file": "assets/useSessionHandler-DLuHMSqo.js",
+    "name": "useSessionHandler",
+    "src": "resources/js/mobile/composables/useSessionHandler.ts",
+    "isDynamicEntry": true,
+    "imports": [
+      "_ionic-GHA3wq_y.js",
+      "_vendor-DcQkTNkg.js"
+    ]
+  },
   "resources/js/mobile/main-legacy.ts": {
-    "file": "assets/main-legacy-aoogfQRb.js",
+    "file": "assets/main-legacy-D1i3QUGA.js",
     "name": "main",
     "src": "resources/js/mobile/main-legacy.ts",
     "isEntry": true,
     "imports": [
-      "_vendor-legacy-BtzkBSpK.js",
-      "_ionic-legacy-CGcOrMzG.js"
+      "_vendor-legacy-KI3bjCrV.js",
+      "_ionic-legacy-DR1m-lCA.js"
     ],
     "dynamicImports": [
+      "resources/js/mobile/composables/useSessionHandler-legacy.ts",
       "resources/js/mobile/views/LoginPage-legacy.vue",
       "resources/js/mobile/views/DashboardPage-legacy.vue",
       "resources/js/mobile/views/ChecklistListPage-legacy.vue",
@@ -175,15 +196,16 @@
     ]
   },
   "resources/js/mobile/main.ts": {
-    "file": "assets/main-BQbpyOA1.js",
+    "file": "assets/main-D751Gqk8.js",
     "name": "main",
     "src": "resources/js/mobile/main.ts",
     "isEntry": true,
     "imports": [
-      "_vendor-CjSOND1d.js",
-      "_ionic-KXdFhEAd.js"
+      "_vendor-DcQkTNkg.js",
+      "_ionic-GHA3wq_y.js"
     ],
     "dynamicImports": [
+      "resources/js/mobile/composables/useSessionHandler.ts",
       "resources/js/mobile/views/LoginPage.vue",
       "resources/js/mobile/views/DashboardPage.vue",
       "resources/js/mobile/views/ChecklistListPage.vue",
@@ -202,54 +224,54 @@
     ]
   },
   "resources/js/mobile/views/ChecklistListPage-legacy.vue": {
-    "file": "assets/ChecklistListPage-legacy-ee06lj7n.js",
+    "file": "assets/ChecklistListPage-legacy-0kabfWcZ.js",
     "name": "ChecklistListPage",
     "src": "resources/js/mobile/views/ChecklistListPage-legacy.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_vendor-legacy-BtzkBSpK.js",
-      "_ionic-legacy-CGcOrMzG.js",
+      "_vendor-legacy-KI3bjCrV.js",
+      "_ionic-legacy-DR1m-lCA.js",
       "__plugin-vue_export-helper-legacy-lXI7YtLh.js",
       "resources/js/mobile/main-legacy.ts",
-      "_useStatsAutoRefresh-legacy-D0rVMr7w.js"
+      "_useStatsAutoRefresh-legacy-C4fEyqM4.js"
     ]
   },
   "resources/js/mobile/views/ChecklistListPage.vue": {
-    "file": "assets/ChecklistListPage-BMx3sEHh.js",
+    "file": "assets/ChecklistListPage-D3Nq06_U.js",
     "name": "ChecklistListPage",
     "src": "resources/js/mobile/views/ChecklistListPage.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_vendor-CjSOND1d.js",
-      "_ionic-KXdFhEAd.js",
+      "_vendor-DcQkTNkg.js",
+      "_ionic-GHA3wq_y.js",
       "__plugin-vue_export-helper-CkaGgE-1.js",
       "resources/js/mobile/main.ts",
-      "_useStatsAutoRefresh-D_tBvBdu.js"
+      "_useStatsAutoRefresh-D7rRAsKP.js"
     ],
     "css": [
       "assets/ChecklistListPage-Bt7_GHXr.css"
     ]
   },
   "resources/js/mobile/views/ChecklistPage-legacy.vue": {
-    "file": "assets/ChecklistPage-legacy-D-9NKygU.js",
+    "file": "assets/ChecklistPage-legacy-KmPCA9oa.js",
     "name": "ChecklistPage",
     "src": "resources/js/mobile/views/ChecklistPage-legacy.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_vendor-legacy-BtzkBSpK.js",
-      "_ionic-legacy-CGcOrMzG.js",
+      "_vendor-legacy-KI3bjCrV.js",
+      "_ionic-legacy-DR1m-lCA.js",
       "__plugin-vue_export-helper-legacy-lXI7YtLh.js",
       "resources/js/mobile/main-legacy.ts"
     ]
   },
   "resources/js/mobile/views/ChecklistPage.vue": {
-    "file": "assets/ChecklistPage-CsUP1QF2.js",
+    "file": "assets/ChecklistPage-CSDbNIf6.js",
     "name": "ChecklistPage",
     "src": "resources/js/mobile/views/ChecklistPage.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_vendor-CjSOND1d.js",
-      "_ionic-KXdFhEAd.js",
+      "_vendor-DcQkTNkg.js",
+      "_ionic-GHA3wq_y.js",
       "__plugin-vue_export-helper-CkaGgE-1.js",
       "resources/js/mobile/main.ts"
     ],
@@ -258,25 +280,25 @@
     ]
   },
   "resources/js/mobile/views/CleaningChecklistNewPage-legacy.vue": {
-    "file": "assets/CleaningChecklistNewPage-legacy-DYEfanBr.js",
+    "file": "assets/CleaningChecklistNewPage-legacy-DP6w5cYZ.js",
     "name": "CleaningChecklistNewPage",
     "src": "resources/js/mobile/views/CleaningChecklistNewPage-legacy.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_vendor-legacy-BtzkBSpK.js",
-      "_ionic-legacy-CGcOrMzG.js",
+      "_vendor-legacy-KI3bjCrV.js",
+      "_ionic-legacy-DR1m-lCA.js",
       "__plugin-vue_export-helper-legacy-lXI7YtLh.js",
       "resources/js/mobile/main-legacy.ts"
     ]
   },
   "resources/js/mobile/views/CleaningChecklistNewPage.vue": {
-    "file": "assets/CleaningChecklistNewPage-DDhysPzF.js",
+    "file": "assets/CleaningChecklistNewPage-DcSFoy5l.js",
     "name": "CleaningChecklistNewPage",
     "src": "resources/js/mobile/views/CleaningChecklistNewPage.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_vendor-CjSOND1d.js",
-      "_ionic-KXdFhEAd.js",
+      "_vendor-DcQkTNkg.js",
+      "_ionic-GHA3wq_y.js",
       "__plugin-vue_export-helper-CkaGgE-1.js",
       "resources/js/mobile/main.ts"
     ],
@@ -285,83 +307,83 @@
     ]
   },
   "resources/js/mobile/views/CleaningControlsPage-legacy.vue": {
-    "file": "assets/CleaningControlsPage-legacy-U34I0WEQ.js",
+    "file": "assets/CleaningControlsPage-legacy-BsAs8fdR.js",
     "name": "CleaningControlsPage",
     "src": "resources/js/mobile/views/CleaningControlsPage-legacy.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_vendor-legacy-BtzkBSpK.js",
-      "_ionic-legacy-CGcOrMzG.js",
+      "_vendor-legacy-KI3bjCrV.js",
+      "_ionic-legacy-DR1m-lCA.js",
       "__plugin-vue_export-helper-legacy-lXI7YtLh.js",
       "resources/js/mobile/main-legacy.ts",
-      "_useStatsAutoRefresh-legacy-D0rVMr7w.js"
+      "_useStatsAutoRefresh-legacy-C4fEyqM4.js"
     ]
   },
   "resources/js/mobile/views/CleaningControlsPage.vue": {
-    "file": "assets/CleaningControlsPage-d40taP6f.js",
+    "file": "assets/CleaningControlsPage-DCQSXMCz.js",
     "name": "CleaningControlsPage",
     "src": "resources/js/mobile/views/CleaningControlsPage.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_vendor-CjSOND1d.js",
-      "_ionic-KXdFhEAd.js",
+      "_vendor-DcQkTNkg.js",
+      "_ionic-GHA3wq_y.js",
       "__plugin-vue_export-helper-CkaGgE-1.js",
       "resources/js/mobile/main.ts",
-      "_useStatsAutoRefresh-D_tBvBdu.js"
+      "_useStatsAutoRefresh-D7rRAsKP.js"
     ],
     "css": [
       "assets/CleaningControlsPage-CGd-2HLL.css"
     ]
   },
   "resources/js/mobile/views/DashboardPage-legacy.vue": {
-    "file": "assets/DashboardPage-legacy-CF_K7CDJ.js",
+    "file": "assets/DashboardPage-legacy-DakEegtF.js",
     "name": "DashboardPage",
     "src": "resources/js/mobile/views/DashboardPage-legacy.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_vendor-legacy-BtzkBSpK.js",
-      "_ionic-legacy-CGcOrMzG.js",
+      "_vendor-legacy-KI3bjCrV.js",
+      "_ionic-legacy-DR1m-lCA.js",
       "__plugin-vue_export-helper-legacy-lXI7YtLh.js",
       "resources/js/mobile/main-legacy.ts",
-      "_useStatsAutoRefresh-legacy-D0rVMr7w.js"
+      "_useStatsAutoRefresh-legacy-C4fEyqM4.js"
     ]
   },
   "resources/js/mobile/views/DashboardPage.vue": {
-    "file": "assets/DashboardPage-nte7-4T5.js",
+    "file": "assets/DashboardPage-6G1Yw2mz.js",
     "name": "DashboardPage",
     "src": "resources/js/mobile/views/DashboardPage.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_vendor-CjSOND1d.js",
-      "_ionic-KXdFhEAd.js",
+      "_vendor-DcQkTNkg.js",
+      "_ionic-GHA3wq_y.js",
       "__plugin-vue_export-helper-CkaGgE-1.js",
       "resources/js/mobile/main.ts",
-      "_useStatsAutoRefresh-D_tBvBdu.js"
+      "_useStatsAutoRefresh-D7rRAsKP.js"
     ],
     "css": [
       "assets/DashboardPage-CnixvaBa.css"
     ]
   },
   "resources/js/mobile/views/LoginPage-legacy.vue": {
-    "file": "assets/LoginPage-legacy-By51GBeH.js",
+    "file": "assets/LoginPage-legacy-DbVYO6of.js",
     "name": "LoginPage",
     "src": "resources/js/mobile/views/LoginPage-legacy.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_vendor-legacy-BtzkBSpK.js",
-      "_ionic-legacy-CGcOrMzG.js",
+      "_vendor-legacy-KI3bjCrV.js",
+      "_ionic-legacy-DR1m-lCA.js",
       "__plugin-vue_export-helper-legacy-lXI7YtLh.js",
       "resources/js/mobile/main-legacy.ts"
     ]
   },
   "resources/js/mobile/views/LoginPage.vue": {
-    "file": "assets/LoginPage-CyOGnagN.js",
+    "file": "assets/LoginPage-BlPOjcjC.js",
     "name": "LoginPage",
     "src": "resources/js/mobile/views/LoginPage.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_vendor-CjSOND1d.js",
-      "_ionic-KXdFhEAd.js",
+      "_vendor-DcQkTNkg.js",
+      "_ionic-GHA3wq_y.js",
       "__plugin-vue_export-helper-CkaGgE-1.js",
       "resources/js/mobile/main.ts"
     ],
@@ -370,24 +392,24 @@
     ]
   },
   "resources/js/mobile/views/MachinesOverviewPage-legacy.vue": {
-    "file": "assets/MachinesOverviewPage-legacy-wMdyLjdF.js",
+    "file": "assets/MachinesOverviewPage-legacy-CGY3i6oF.js",
     "name": "MachinesOverviewPage",
     "src": "resources/js/mobile/views/MachinesOverviewPage-legacy.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_vendor-legacy-BtzkBSpK.js",
-      "_ionic-legacy-CGcOrMzG.js",
+      "_vendor-legacy-KI3bjCrV.js",
+      "_ionic-legacy-DR1m-lCA.js",
       "__plugin-vue_export-helper-legacy-lXI7YtLh.js"
     ]
   },
   "resources/js/mobile/views/MachinesOverviewPage.vue": {
-    "file": "assets/MachinesOverviewPage-C8MXDtN1.js",
+    "file": "assets/MachinesOverviewPage-CcBmKv4W.js",
     "name": "MachinesOverviewPage",
     "src": "resources/js/mobile/views/MachinesOverviewPage.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_vendor-CjSOND1d.js",
-      "_ionic-KXdFhEAd.js",
+      "_vendor-DcQkTNkg.js",
+      "_ionic-GHA3wq_y.js",
       "__plugin-vue_export-helper-CkaGgE-1.js"
     ],
     "css": [
@@ -395,64 +417,64 @@
     ]
   },
   "resources/js/mobile/views/MachinesPage-legacy.vue": {
-    "file": "assets/MachinesPage-legacy-9pwo8Gse.js",
+    "file": "assets/MachinesPage-legacy-_hVCV2lc.js",
     "name": "MachinesPage",
     "src": "resources/js/mobile/views/MachinesPage-legacy.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_ionic-legacy-CGcOrMzG.js",
-      "_vendor-legacy-BtzkBSpK.js",
+      "_ionic-legacy-DR1m-lCA.js",
+      "_vendor-legacy-KI3bjCrV.js",
       "__plugin-vue_export-helper-legacy-lXI7YtLh.js",
       "resources/js/mobile/main-legacy.ts",
-      "_useStatsAutoRefresh-legacy-D0rVMr7w.js"
+      "_useStatsAutoRefresh-legacy-C4fEyqM4.js"
     ],
     "dynamicImports": [
-      "_ionic-legacy-CGcOrMzG.js",
-      "_ionic-legacy-CGcOrMzG.js",
-      "_ionic-legacy-CGcOrMzG.js"
+      "_ionic-legacy-DR1m-lCA.js",
+      "_ionic-legacy-DR1m-lCA.js",
+      "_ionic-legacy-DR1m-lCA.js"
     ]
   },
   "resources/js/mobile/views/MachinesPage.vue": {
-    "file": "assets/MachinesPage-DQ14MytH.js",
+    "file": "assets/MachinesPage-ekAZ_KPB.js",
     "name": "MachinesPage",
     "src": "resources/js/mobile/views/MachinesPage.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_ionic-KXdFhEAd.js",
-      "_vendor-CjSOND1d.js",
+      "_ionic-GHA3wq_y.js",
+      "_vendor-DcQkTNkg.js",
       "__plugin-vue_export-helper-CkaGgE-1.js",
       "resources/js/mobile/main.ts",
-      "_useStatsAutoRefresh-D_tBvBdu.js"
+      "_useStatsAutoRefresh-D7rRAsKP.js"
     ],
     "dynamicImports": [
-      "_ionic-KXdFhEAd.js",
-      "_ionic-KXdFhEAd.js",
-      "_ionic-KXdFhEAd.js"
+      "_ionic-GHA3wq_y.js",
+      "_ionic-GHA3wq_y.js",
+      "_ionic-GHA3wq_y.js"
     ],
     "css": [
       "assets/MachinesPage-wEorDnC6.css"
     ]
   },
   "resources/js/mobile/views/PatientFormPage-legacy.vue": {
-    "file": "assets/PatientFormPage-legacy-DTbJAMIs.js",
+    "file": "assets/PatientFormPage-legacy-DGy2BcjD.js",
     "name": "PatientFormPage",
     "src": "resources/js/mobile/views/PatientFormPage-legacy.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_vendor-legacy-BtzkBSpK.js",
-      "_ionic-legacy-CGcOrMzG.js",
+      "_vendor-legacy-KI3bjCrV.js",
+      "_ionic-legacy-DR1m-lCA.js",
       "__plugin-vue_export-helper-legacy-lXI7YtLh.js",
       "resources/js/mobile/main-legacy.ts"
     ]
   },
   "resources/js/mobile/views/PatientFormPage.vue": {
-    "file": "assets/PatientFormPage-BSuZsIJU.js",
+    "file": "assets/PatientFormPage-Cl9Bkkji.js",
     "name": "PatientFormPage",
     "src": "resources/js/mobile/views/PatientFormPage.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_vendor-CjSOND1d.js",
-      "_ionic-KXdFhEAd.js",
+      "_vendor-DcQkTNkg.js",
+      "_ionic-GHA3wq_y.js",
       "__plugin-vue_export-helper-CkaGgE-1.js",
       "resources/js/mobile/main.ts"
     ],
@@ -461,53 +483,53 @@
     ]
   },
   "resources/js/mobile/views/PatientsPage-legacy.vue": {
-    "file": "assets/PatientsPage-legacy-CCxJ-eAS.js",
+    "file": "assets/PatientsPage-legacy-DaydIuu9.js",
     "name": "PatientsPage",
     "src": "resources/js/mobile/views/PatientsPage-legacy.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_vendor-legacy-BtzkBSpK.js",
-      "_ionic-legacy-CGcOrMzG.js",
+      "_vendor-legacy-KI3bjCrV.js",
+      "_ionic-legacy-DR1m-lCA.js",
       "__plugin-vue_export-helper-legacy-lXI7YtLh.js",
       "resources/js/mobile/main-legacy.ts",
-      "_useStatsAutoRefresh-legacy-D0rVMr7w.js"
+      "_useStatsAutoRefresh-legacy-C4fEyqM4.js"
     ]
   },
   "resources/js/mobile/views/PatientsPage.vue": {
-    "file": "assets/PatientsPage-DnmnCOFZ.js",
+    "file": "assets/PatientsPage-C1ccyPCb.js",
     "name": "PatientsPage",
     "src": "resources/js/mobile/views/PatientsPage.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_vendor-CjSOND1d.js",
-      "_ionic-KXdFhEAd.js",
+      "_vendor-DcQkTNkg.js",
+      "_ionic-GHA3wq_y.js",
       "__plugin-vue_export-helper-CkaGgE-1.js",
       "resources/js/mobile/main.ts",
-      "_useStatsAutoRefresh-D_tBvBdu.js"
+      "_useStatsAutoRefresh-D7rRAsKP.js"
     ],
     "css": [
       "assets/PatientsPage-BAJqtaQC.css"
     ]
   },
   "resources/js/mobile/views/ProfilePage-legacy.vue": {
-    "file": "assets/ProfilePage-legacy-CF0iGzVQ.js",
+    "file": "assets/ProfilePage-legacy-CLIy1w1L.js",
     "name": "ProfilePage",
     "src": "resources/js/mobile/views/ProfilePage-legacy.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_vendor-legacy-BtzkBSpK.js",
-      "_ionic-legacy-CGcOrMzG.js",
+      "_vendor-legacy-KI3bjCrV.js",
+      "_ionic-legacy-DR1m-lCA.js",
       "__plugin-vue_export-helper-legacy-lXI7YtLh.js"
     ]
   },
   "resources/js/mobile/views/ProfilePage.vue": {
-    "file": "assets/ProfilePage-CntS5hHT.js",
+    "file": "assets/ProfilePage-DJKL0eHf.js",
     "name": "ProfilePage",
     "src": "resources/js/mobile/views/ProfilePage.vue",
     "isDynamicEntry": true,
     "imports": [
-      "_vendor-CjSOND1d.js",
-      "_ionic-KXdFhEAd.js",
+      "_vendor-DcQkTNkg.js",
+      "_ionic-GHA3wq_y.js",
       "__plugin-vue_export-helper-CkaGgE-1.js"
     ],
     "css": [
@@ -515,7 +537,7 @@
     ]
   },
   "vite/legacy-polyfills-legacy": {
-    "file": "assets/polyfills-legacy-CizC-J9e.js",
+    "file": "assets/polyfills-legacy-DCAwT3gn.js",
     "name": "polyfills",
     "src": "vite/legacy-polyfills-legacy",
     "isEntry": true
