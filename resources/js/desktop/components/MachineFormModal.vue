@@ -311,6 +311,11 @@ async function handleSubmit() {
   saving.value = true;
 
   try {
+    // Obter CSRF cookie do Sanctum antes de fazer requisições que modificam dados
+    await fetch('/sanctum/csrf-cookie', {
+      credentials: 'include'
+    });
+
     const machineData = {
       name: formData.value.name.trim(),
       identifier: formData.value.identifier.trim(),
@@ -319,35 +324,89 @@ async function handleSubmit() {
       active: formData.value.active
     };
 
-    // TODO: Replace with actual API call
-    // const url = editingMachine.value
-    //   ? `/api/machines/${props.machine.id}`
-    //   : '/api/machines';
-    // const method = editingMachine.value ? 'PUT' : 'POST';
-    //
-    // const response = await fetch(url, {
-    //   method,
-    //   headers: { 'Content-Type': 'application/json' },
-    //   credentials: 'include',
-    //   body: JSON.stringify(machineData)
-    // });
+    // Se está criando, buscar o unit_id do usuário
+    if (!editingMachine.value) {
+      try {
+        const userResponse = await fetch('/api/me', {
+          credentials: 'include'
+        });
+        const userData = await userResponse.json();
+        machineData.unit_id = userData.current_unit_id || userData.unit_id;
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        showErrorToast('Erro ao obter dados do usuário');
+        saving.value = false;
+        return;
+      }
+    }
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const url = editingMachine.value
+      ? `/api/machines/${props.machine.id}`
+      : '/api/machines';
+    const method = editingMachine.value ? 'PUT' : 'POST';
 
-    emit('saved', {
-      id: editingMachine.value ? props.machine.id : Date.now(),
-      ...machineData
+    // Get CSRF token from meta tag
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+
+    const response = await fetch(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-CSRF-TOKEN': csrfToken || ''
+      },
+      credentials: 'include',
+      body: JSON.stringify(machineData)
     });
 
-    resetForm();
-    emit('close');
+    const data = await response.json();
+
+    if (!response.ok) {
+      // Tratamento especial para máquinas com checklist ativo
+      if (data.has_checklist) {
+        showErrorToast(data.message || 'Máquina possui checklist ativo');
+        return;
+      }
+
+      // Outros erros de validação
+      if (data.errors) {
+        const errorMessages = Object.values(data.errors).flat().join('\n');
+        showErrorToast(errorMessages);
+      } else {
+        showErrorToast(data.message || 'Erro ao salvar máquina');
+      }
+      return;
+    }
+
+    if (data.success) {
+      emit('saved', data.machine);
+      resetForm();
+      emit('close');
+    } else {
+      showErrorToast(data.message || 'Erro ao salvar máquina');
+    }
   } catch (error) {
     console.error('Error saving machine:', error);
-    alert('Erro ao salvar máquina. Tente novamente.');
+    showErrorToast('Erro ao salvar máquina. Verifique sua conexão.');
   } finally {
     saving.value = false;
   }
+}
+
+function showErrorToast(message) {
+  const toast = document.createElement('div');
+  toast.className = 'fixed top-4 right-4 z-[100] px-6 py-4 bg-red-600 text-white rounded-lg shadow-lg flex items-center gap-3 animate-slide-in-right';
+  toast.innerHTML = `
+    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+    </svg>
+    <span class="font-medium whitespace-pre-line">${message}</span>
+  `;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.animation = 'slide-out-right 0.3s ease-out forwards';
+    setTimeout(() => toast.remove(), 300);
+  }, 4000);
 }
 
 function handleBackdropClick() {
@@ -388,5 +447,34 @@ function handleClose() {
 .modal-leave-to .relative {
   transform: scale(0.95);
   opacity: 0;
+}
+</style>
+
+<style>
+/* Toast animations - must be global to work with dynamically created elements */
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-out-right {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s ease-out forwards;
 }
 </style>

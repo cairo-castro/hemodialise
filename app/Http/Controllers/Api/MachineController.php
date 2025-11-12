@@ -150,10 +150,13 @@ class MachineController extends Controller
                         ->ignore($machine->id)
                 ],
                 'description' => 'nullable|string|max:500',
+                'status' => 'nullable|in:available,occupied,maintenance,reserved',
+                'active' => 'nullable|boolean',
             ], [
                 'name.required' => 'O nome da máquina é obrigatório.',
                 'identifier.required' => 'O identificador é obrigatório.',
                 'identifier.unique' => 'Já existe uma máquina com este identificador nesta unidade.',
+                'status.in' => 'Status inválido.',
             ]);
 
             if ($validator->fails()) {
@@ -173,13 +176,53 @@ class MachineController extends Controller
                 ], 403);
             }
 
+            // Verificar se há checklist ativo (inclusive pausado, mas não concluído)
+            // O método getCurrentChecklist() já filtra apenas checklists não concluídos
+            $currentChecklist = $machine->getCurrentChecklist();
+
+            if ($currentChecklist) {
+                // Se está tentando mudar status ou desativar máquina
+                if ($request->has('status') && $request->input('status') !== $machine->status) {
+                    $patientName = $currentChecklist->patient ? $currentChecklist->patient->full_name : 'Paciente desconhecido';
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Não é possível alterar o status. Há um checklist ativo para {$patientName}. Finalize ou cancele o checklist primeiro.",
+                        'has_checklist' => true,
+                        'checklist_id' => $currentChecklist->id,
+                        'checklist_phase' => $currentChecklist->current_phase
+                    ], 422);
+                }
+
+                if ($request->has('active') && !$request->input('active') && $machine->active) {
+                    $patientName = $currentChecklist->patient ? $currentChecklist->patient->full_name : 'Paciente desconhecido';
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Não é possível desativar a máquina. Há um checklist ativo para {$patientName}. Finalize ou cancele o checklist primeiro.",
+                        'has_checklist' => true,
+                        'checklist_id' => $currentChecklist->id,
+                        'checklist_phase' => $currentChecklist->current_phase
+                    ], 422);
+                }
+            }
+
             $oldData = $machine->toArray();
 
-            $machine->update([
+            // Atualizar campos
+            $updateData = [
                 'name' => $request->input('name'),
                 'identifier' => $request->input('identifier'),
                 'description' => $request->input('description'),
-            ]);
+            ];
+
+            if ($request->has('status')) {
+                $updateData['status'] = $request->input('status');
+            }
+
+            if ($request->has('active')) {
+                $updateData['active'] = $request->input('active');
+            }
+
+            $machine->update($updateData);
 
             Log::info("Máquina atualizada", [
                 'machine_id' => $machine->id,
@@ -189,10 +232,35 @@ class MachineController extends Controller
                 'user_name' => $user->name
             ]);
 
+            // Recarregar com relacionamentos
+            $machine->load('unit');
+            $checklistData = null;
+            if ($currentChecklist) {
+                $currentChecklist->load('patient');
+                $checklistData = [
+                    'id' => $currentChecklist->id,
+                    'current_phase' => $currentChecklist->current_phase,
+                    'patient_name' => $currentChecklist->patient->full_name ?? null,
+                    'started_at' => $currentChecklist->created_at,
+                    'is_paused' => method_exists($currentChecklist, 'isPaused') ? $currentChecklist->isPaused() : false,
+                ];
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => 'Máquina atualizada com sucesso.',
-                'machine' => $machine
+                'machine' => [
+                    'id' => $machine->id,
+                    'name' => $machine->name,
+                    'identifier' => $machine->identifier,
+                    'description' => $machine->description,
+                    'status' => $machine->status,
+                    'is_active' => $machine->active,
+                    'is_available' => $machine->isAvailable(),
+                    'is_occupied' => $machine->isOccupied(),
+                    'is_reserved' => $machine->isReserved(),
+                    'current_checklist' => $checklistData
+                ]
             ]);
         } catch (\Exception $e) {
             return response()->json([

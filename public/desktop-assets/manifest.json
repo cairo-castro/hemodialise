@@ -17,8 +17,8 @@
     "file": "assets/ChecklistWizard-CNlLxmVI.css",
     "src": "_ChecklistWizard-!~{00i}~.js"
   },
-  "_ChecklistWizard-RzLNsAIX.js": {
-    "file": "assets/ChecklistWizard-RzLNsAIX.js",
+  "_ChecklistWizard-CcpNj_bG.js": {
+    "file": "assets/ChecklistWizard-CcpNj_bG.js",
     "name": "ChecklistWizard",
     "imports": [
       "_vendor-CiUp6LWl.js",
@@ -34,8 +34,8 @@
     "file": "assets/ConfirmDeleteModal-DviuWcs_.css",
     "src": "_ConfirmDeleteModal-!~{00p}~.js"
   },
-  "_ConfirmDeleteModal-CrZX3s65.js": {
-    "file": "assets/ConfirmDeleteModal-CrZX3s65.js",
+  "_ConfirmDeleteModal-pMHDYv6o.js": {
+    "file": "assets/ConfirmDeleteModal-pMHDYv6o.js",
     "name": "ConfirmDeleteModal",
     "imports": [
       "_vendor-CiUp6LWl.js",
@@ -56,8 +56,8 @@
     "file": "assets/PatientFormModal-Cu7Evbo9.css",
     "src": "_PatientFormModal-!~{00j}~.js"
   },
-  "_PatientFormModal-C6m6N89Y.js": {
-    "file": "assets/PatientFormModal-C6m6N89Y.js",
+  "_PatientFormModal-nCVfrjxr.js": {
+    "file": "assets/PatientFormModal-nCVfrjxr.js",
     "name": "PatientFormModal",
     "imports": [
       "_vendor-CiUp6LWl.js",
@@ -116,7 +116,7 @@
     "isDynamicEntry": true
   },
   "resources/js/desktop.js": {
-    "file": "assets/desktop-BjLRr6hB.js",
+    "file": "assets/desktop-DwRpHKVt.js",
     "name": "desktop",
     "src": "resources/js/desktop.js",
     "isEntry": true,
@@ -136,18 +136,18 @@
       "resources/js/desktop/views/HelpView.vue"
     ],
     "css": [
-      "assets/desktop-Chex0Loy.css"
+      "assets/desktop-CDE5csSo.css"
     ]
   },
   "resources/js/desktop/views/ChecklistsView.vue": {
-    "file": "assets/ChecklistsView-B9_QRwle.js",
+    "file": "assets/ChecklistsView-BE_jfWFg.js",
     "name": "ChecklistsView",
     "src": "resources/js/desktop/views/ChecklistsView.vue",
     "isDynamicEntry": true,
     "imports": [
       "_vendor-CiUp6LWl.js",
-      "_ChecklistWizard-RzLNsAIX.js",
-      "_ConfirmDeleteModal-CrZX3s65.js",
+      "_ChecklistWizard-CcpNj_bG.js",
+      "_ConfirmDeleteModal-pMHDYv6o.js",
       "resources/js/desktop.js",
       "_XMarkIcon-3s64TdeG.js",
       "_CheckIcon-Cz9GaYQ_.js"
@@ -157,21 +157,21 @@
     ]
   },
   "resources/js/desktop/views/CleaningChecklistsView.vue": {
-    "file": "assets/CleaningChecklistsView-CP7bKZuT.js",
+    "file": "assets/CleaningChecklistsView-LH99rieK.js",
     "name": "CleaningChecklistsView",
     "src": "resources/js/desktop/views/CleaningChecklistsView.vue",
     "isDynamicEntry": true,
     "imports": [
       "_vendor-CiUp6LWl.js",
-      "_ConfirmDeleteModal-CrZX3s65.js",
+      "_ConfirmDeleteModal-pMHDYv6o.js",
       "resources/js/desktop.js"
     ],
     "css": [
-      "assets/CleaningChecklistsView-BpGTHB44.css"
+      "assets/CleaningChecklistsView-CRTU9eTI.css"
     ]
   },
   "resources/js/desktop/views/DashboardView.vue": {
-    "file": "assets/DashboardView-DQQbiuk_.js",
+    "file": "assets/DashboardView-C0OppswQ.js",
     "name": "DashboardView",
     "src": "resources/js/desktop/views/DashboardView.vue",
     "isDynamicEntry": true,
@@ -179,8 +179,8 @@
       "_vendor-CiUp6LWl.js",
       "_vue3-apexcharts-I9Crkvqx.js",
       "resources/js/desktop.js",
-      "_ChecklistWizard-RzLNsAIX.js",
-      "_PatientFormModal-C6m6N89Y.js",
+      "_ChecklistWizard-CcpNj_bG.js",
+      "_PatientFormModal-nCVfrjxr.js",
       "_BeakerIcon-YntvKYXv.js",
       "_SparklesIcon-BRH_MWPO.js",
       "_XMarkIcon-3s64TdeG.js",
@@ -192,7 +192,7 @@
     ]
   },
   "resources/js/desktop/views/HelpView.vue": {
-    "file": "assets/HelpView-FcQ9uiIr.js",
+    "file": "assets/HelpView-C4qh7R6u.js",
     "name": "HelpView",
     "src": "resources/js/desktop/views/HelpView.vue",
     "isDynamicEntry": true,
@@ -205,7 +205,7 @@
     ]
   },
   "resources/js/desktop/views/MachinesView.vue": {
-    "file": "assets/MachinesView-o2HAsgBc.js",
+    "file": "assets/MachinesView-C3SAUZc5.js",
     "name": "MachinesView",
     "src": "resources/js/desktop/views/MachinesView.vue",
     "isDynamicEntry": true,
@@ -215,14 +215,14 @@
       "_XMarkIcon-3s64TdeG.js",
       "_CheckIcon-Cz9GaYQ_.js",
       "_DocumentTextIcon-BS4TBxaJ.js",
-      "_ConfirmDeleteModal-CrZX3s65.js"
+      "_ConfirmDeleteModal-pMHDYv6o.js"
     ],
     "css": [
       "assets/MachinesView-6MyM28_N.css"
     ]
   },
   "resources/js/desktop/views/NotificationsView.vue": {
-    "file": "assets/NotificationsView-C8uxubch.js",
+    "file": "assets/NotificationsView-vobKoNCF.js",
     "name": "NotificationsView",
     "src": "resources/js/desktop/views/NotificationsView.vue",
     "isDynamicEntry": true,
@@ -235,14 +235,14 @@
     ]
   },
   "resources/js/desktop/views/PatientsView.vue": {
-    "file": "assets/PatientsView-D2M0kNS-.js",
+    "file": "assets/PatientsView-B8ji6chS.js",
     "name": "PatientsView",
     "src": "resources/js/desktop/views/PatientsView.vue",
     "isDynamicEntry": true,
     "imports": [
       "_vendor-CiUp6LWl.js",
-      "_PatientFormModal-C6m6N89Y.js",
-      "_ConfirmDeleteModal-CrZX3s65.js",
+      "_PatientFormModal-nCVfrjxr.js",
+      "_ConfirmDeleteModal-pMHDYv6o.js",
       "resources/js/desktop.js",
       "_XMarkIcon-3s64TdeG.js",
       "_CheckIcon-Cz9GaYQ_.js",
@@ -254,7 +254,7 @@
     ]
   },
   "resources/js/desktop/views/ProfileView.vue": {
-    "file": "assets/ProfileView-C0HIzU5K.js",
+    "file": "assets/ProfileView-CVbcMu4W.js",
     "name": "ProfileView",
     "src": "resources/js/desktop/views/ProfileView.vue",
     "isDynamicEntry": true,
@@ -267,7 +267,7 @@
     ]
   },
   "resources/js/desktop/views/ReportsView.vue": {
-    "file": "assets/ReportsView-BIxd9kOY.js",
+    "file": "assets/ReportsView-BS_x5P65.js",
     "name": "ReportsView",
     "src": "resources/js/desktop/views/ReportsView.vue",
     "isDynamicEntry": true,
@@ -289,7 +289,7 @@
     ]
   },
   "resources/js/desktop/views/SettingsView.vue": {
-    "file": "assets/SettingsView-CHhHj3bN.js",
+    "file": "assets/SettingsView-DKw8slrA.js",
     "name": "SettingsView",
     "src": "resources/js/desktop/views/SettingsView.vue",
     "isDynamicEntry": true,
