@@ -231,7 +231,11 @@ class ChecklistController extends Controller
     public function active(Request $request)
     {
         // Include both active and paused checklists (all in-progress checklists)
-        $query = SafetyChecklist::whereNotIn('current_phase', ['completed', 'interrupted'])
+        // Also include checklists with NULL current_phase (incomplete checklists)
+        $query = SafetyChecklist::where(function ($q) {
+                $q->whereNotIn('current_phase', ['completed', 'interrupted'])
+                  ->orWhereNull('current_phase');
+            })
             ->where('is_interrupted', false)
             ->with(['machine', 'patient', 'user'])
             ->orderBy('created_at', 'desc');
@@ -252,17 +256,40 @@ class ChecklistController extends Controller
     public function recent(Request $request)
     {
         // Get recent checklists with limit parameter (no time restriction)
+        // Prioritize in-progress checklists (including NULL current_phase)
         $limit = $request->input('limit', 10);
-
-        $query = SafetyChecklist::with(['machine', 'patient', 'user'])
-            ->orderBy('created_at', 'desc')
-            ->limit($limit);
 
         // Filtrar por unidade (todos os usuários respeitam a unidade ativa)
         $scopedUnitId = $request->get('scoped_unit_id');
-        $query->forUnit($scopedUnitId);  // Using query scope
 
-        $recentChecklists = $query->get();
+        // Get in-progress checklists first
+        $inProgressQuery = SafetyChecklist::with(['machine', 'patient', 'user'])
+            ->where(function ($q) {
+                $q->whereNotIn('current_phase', ['completed', 'interrupted'])
+                  ->orWhereNull('current_phase');
+            })
+            ->where('is_interrupted', false)
+            ->orderBy('created_at', 'desc');
+
+        $inProgressQuery->forUnit($scopedUnitId);
+        $inProgressChecklists = $inProgressQuery->get();
+
+        // If we don't have enough, get completed/interrupted ones
+        $remaining = $limit - $inProgressChecklists->count();
+
+        if ($remaining > 0) {
+            $completedQuery = SafetyChecklist::with(['machine', 'patient', 'user'])
+                ->whereIn('current_phase', ['completed', 'interrupted'])
+                ->orderBy('created_at', 'desc')
+                ->limit($remaining);
+
+            $completedQuery->forUnit($scopedUnitId);
+            $completedChecklists = $completedQuery->get();
+
+            $recentChecklists = $inProgressChecklists->concat($completedChecklists);
+        } else {
+            $recentChecklists = $inProgressChecklists->take($limit);
+        }
 
         return response()->json([
             'success' => true,
