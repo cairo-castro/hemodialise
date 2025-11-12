@@ -285,6 +285,7 @@ import {
   ExclamationTriangleIcon,
   DocumentTextIcon,
 } from '@heroicons/vue/24/outline';
+import api from '../utils/api';
 
 const props = defineProps({
   isOpen: {
@@ -414,28 +415,26 @@ async function handleSubmit() {
       active: formData.value.status === 'ativo' // Backward compatibility
     };
 
-    // TODO: Replace with actual API call
-    // const url = editingPatient.value
-    //   ? `/api/patients/${props.patient.id}`
-    //   : '/api/patients';
-    // const method = editingPatient.value ? 'PUT' : 'POST';
-    //
-    // const response = await fetch(url, {
-    //   method,
-    //   headers: { 'Content-Type': 'application/json' },
-    //   credentials: 'include',
-    //   body: JSON.stringify(patientData)
-    // });
-    //
-    // const result = await response.json();
+    // Call actual API
+    const url = editingPatient.value
+      ? `/api/patients/${props.patient.id}`
+      : '/api/patients';
+    const method = editingPatient.value ? 'PUT' : 'POST';
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    const response = await api[method.toLowerCase()](url, patientData);
 
-    emit('saved', {
-      id: editingPatient.value ? props.patient.id : Date.now(),
-      ...patientData
-    });
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Erro ao salvar paciente');
+    }
+
+    const result = await response.json();
+
+    if (!result.success) {
+      throw new Error(result.message || 'Erro ao salvar paciente');
+    }
+
+    emit('saved', result.patient || result.data);
 
     resetForm();
     emit('close');
