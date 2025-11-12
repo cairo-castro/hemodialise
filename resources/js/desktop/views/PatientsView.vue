@@ -496,20 +496,49 @@ function openDeleteConfirm(patient) {
 }
 
 async function handleDeleteConfirm() {
-  // Reset the delete modal state
-  deleteModalRef.value?.resetDeletingState();
+  if (!patientToDelete.value) {
+    deleteModalRef.value?.resetDeletingState();
+    showDeleteConfirm.value = false;
+    return;
+  }
 
-  // Close the delete confirmation modal
-  showDeleteConfirm.value = false;
+  try {
+    // Make the DELETE API call
+    const response = await api.delete(`/api/patients/${patientToDelete.value.id}`);
 
-  // Show success toast
-  showSuccessToast('Paciente excluído com sucesso!');
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Erro ao excluir paciente');
+    }
 
-  // Reload patients from API
-  await loadPatients();
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error(result.message || 'Erro ao excluir paciente');
+    }
 
-  // Clear the patient to delete
-  patientToDelete.value = null;
+    // Reset the delete modal state
+    deleteModalRef.value?.resetDeletingState();
+
+    // Close the delete confirmation modal
+    showDeleteConfirm.value = false;
+
+    // Show success toast
+    showSuccessToast('Paciente excluído com sucesso!');
+
+    // Reload patients from API
+    await loadPatients();
+
+    // Clear the patient to delete
+    patientToDelete.value = null;
+  } catch (error) {
+    console.error('Erro ao excluir paciente:', error);
+
+    // Reset deleting state to allow retry
+    deleteModalRef.value?.resetDeletingState();
+
+    // Show error toast
+    showErrorToast(error.message || 'Erro ao excluir paciente. Tente novamente.');
+  }
 }
 
 function showSuccessToast(message) {

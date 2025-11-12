@@ -237,6 +237,7 @@ import {
   WrenchScrewdriverIcon,
   ShieldExclamationIcon,
 } from '@heroicons/vue/24/solid';
+import api from '../utils/api';
 
 const props = defineProps({
   isOpen: {
@@ -311,11 +312,6 @@ async function handleSubmit() {
   saving.value = true;
 
   try {
-    // Obter CSRF cookie do Sanctum antes de fazer requisições que modificam dados
-    await fetch('/sanctum/csrf-cookie', {
-      credentials: 'include'
-    });
-
     const machineData = {
       name: formData.value.name.trim(),
       identifier: formData.value.identifier.trim(),
@@ -327,37 +323,28 @@ async function handleSubmit() {
     // Se está criando, buscar o unit_id do usuário
     if (!editingMachine.value) {
       try {
-        const userResponse = await fetch('/api/me', {
-          credentials: 'include'
-        });
+        const userResponse = await api.get('/api/me');
+        if (!userResponse.ok) {
+          throw new Error('Erro ao buscar dados do usuário');
+        }
         const userData = await userResponse.json();
         machineData.unit_id = userData.current_unit_id || userData.unit_id;
+
+        if (!machineData.unit_id) {
+          throw new Error('Usuário não possui unidade associada');
+        }
       } catch (error) {
         console.error('Error fetching user data:', error);
-        showErrorToast('Erro ao obter dados do usuário');
+        showErrorToast(error.message || 'Erro ao obter dados do usuário');
         saving.value = false;
         return;
       }
     }
 
-    const url = editingMachine.value
-      ? `/api/machines/${props.machine.id}`
-      : '/api/machines';
-    const method = editingMachine.value ? 'PUT' : 'POST';
-
-    // Get CSRF token from meta tag
-    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-
-    const response = await fetch(url, {
-      method,
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest',
-        'X-CSRF-TOKEN': csrfToken || ''
-      },
-      credentials: 'include',
-      body: JSON.stringify(machineData)
-    });
+    // Use api utility for proper CSRF handling
+    const response = editingMachine.value
+      ? await api.put(`/api/machines/${props.machine.id}`, machineData)
+      : await api.post('/api/machines', machineData);
 
     const data = await response.json();
 
