@@ -41,7 +41,10 @@ export async function apiRequest(url, options = {}) {
     'Accept': 'application/json',
     'Content-Type': 'application/json',
     'X-Requested-With': 'XMLHttpRequest',
-    ...(csrfToken && { 'X-XSRF-TOKEN': csrfToken }),
+    ...(csrfToken && {
+      'X-XSRF-TOKEN': csrfToken,
+      'X-CSRF-TOKEN': csrfToken  // Add both headers for compatibility
+    }),
     ...options.headers
   };
 
@@ -106,6 +109,12 @@ function getCsrfToken() {
   const cookieMatch = document.cookie.match(/XSRF-TOKEN=([^;]+)/);
   if (cookieMatch) {
     return decodeURIComponent(cookieMatch[1]);
+  }
+
+  // Try to get from X-CSRF-TOKEN cookie (Laravel default)
+  const csrfCookieMatch = document.cookie.match(/X-CSRF-TOKEN=([^;]+)/);
+  if (csrfCookieMatch) {
+    return decodeURIComponent(csrfCookieMatch[1]);
   }
 
   // Fallback to meta tag

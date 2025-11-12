@@ -322,13 +322,6 @@ const searchingPatients = ref(false);
 const selectedPatient = ref(null);
 const filteredPatients = ref([]);
 
-// Mock patients data (will be replaced with API call)
-const mockPatients = [
-  { id: 1, full_name: 'Maria Silva Santos', cpf: '123.456.789-00' },
-  { id: 2, full_name: 'João Pedro Oliveira', cpf: '987.654.321-00' },
-  { id: 3, full_name: 'Ana Carolina Souza', cpf: '456.789.123-00' },
-];
-
 // Step 2: Machine and Shift
 const selectedMachine = ref(null);
 const selectedShift = ref(null);
@@ -344,13 +337,8 @@ const minDate = ref(() => {
 
 const maxDate = ref(new Date().toISOString().split('T')[0]);
 
-const machines = ref([
-  { id: 1, name: 'Máquina 01', identifier: 'HD-001' },
-  { id: 2, name: 'Máquina 02', identifier: 'HD-002' },
-  { id: 3, name: 'Máquina 03', identifier: 'HD-003' },
-  { id: 4, name: 'Máquina 04', identifier: 'HD-004' },
-  { id: 5, name: 'Máquina 05', identifier: 'HD-005' },
-]);
+const machines = ref([]);
+const loadingMachines = ref(false);
 
 const shifts = [
   { value: 'morning', label: 'Matutino', icon: SunIcon },
@@ -437,19 +425,58 @@ const canProceed = computed(() => {
 });
 
 // Methods
-function searchPatients() {
-  searchingPatients.value = true;
-  setTimeout(() => {
-    if (patientSearch.value.length >= 2) {
-      filteredPatients.value = mockPatients.filter(p =>
-        p.full_name.toLowerCase().includes(patientSearch.value.toLowerCase()) ||
-        p.cpf.includes(patientSearch.value)
-      );
-    } else {
-      filteredPatients.value = mockPatients;
+async function loadMachines() {
+  loadingMachines.value = true;
+
+  try {
+    const response = await api.get('/api/machines/available');
+
+    if (!response.ok) {
+      throw new Error('Erro ao carregar máquinas');
     }
+
+    const data = await response.json();
+
+    if (data.success && data.machines) {
+      machines.value = data.machines;
+    } else {
+      machines.value = [];
+    }
+  } catch (error) {
+    console.error('Erro ao carregar máquinas:', error);
+    machines.value = [];
+  } finally {
+    loadingMachines.value = false;
+  }
+}
+
+async function searchPatients() {
+  searchingPatients.value = true;
+
+  try {
+    if (patientSearch.value.length >= 2) {
+      const response = await api.get(`/api/patients?search=${encodeURIComponent(patientSearch.value)}&per_page=20&include_inactive=false`);
+
+      if (!response.ok) {
+        throw new Error('Erro ao buscar pacientes');
+      }
+
+      const data = await response.json();
+
+      if (data.success && data.patients) {
+        filteredPatients.value = data.patients;
+      } else {
+        filteredPatients.value = [];
+      }
+    } else {
+      filteredPatients.value = [];
+    }
+  } catch (error) {
+    console.error('Erro ao buscar pacientes:', error);
+    filteredPatients.value = [];
+  } finally {
     searchingPatients.value = false;
-  }, 300);
+  }
 }
 
 function selectPatient(patient) {
@@ -490,25 +517,24 @@ async function saveChecklist() {
       post_dialysis: checklistData.value.post_dialysis,
     };
 
-    // TODO: Replace with actual API call
-    // const response = await fetch('/api/checklists', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   credentials: 'include',
-    //   body: JSON.stringify(payload)
-    // });
-    //
-    // if (!response.ok) {
-    //   throw new Error('Erro ao salvar checklist');
-    // }
+    // Save checklist via API
+    const response = await api.post('/api/checklists', payload);
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Erro ao salvar checklist');
+    }
+
+    const result = await response.json();
+
+    if (!result.success) {
+      throw new Error(result.message || 'Erro ao salvar checklist');
+    }
 
     // Show success toast
     showToast('success', 'Checklist salvo com sucesso!');
 
-    emit('checklist-created', payload);
+    emit('saved', result.checklist || result.data);
     handleClose();
   } catch (error) {
     console.error('Error saving checklist:', error);
@@ -579,9 +605,10 @@ function handleClose() {
 }
 
 // Auto-search on mount
-watch(() => props.isOpen, (isOpen) => {
-  if (isOpen && mockPatients.length > 0) {
-    filteredPatients.value = mockPatients;
+watch(() => props.isOpen, async (isOpen) => {
+  if (isOpen) {
+    // Load machines when wizard opens
+    await loadMachines();
   }
 });
 </script>
