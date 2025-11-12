@@ -316,6 +316,16 @@ class SafetyChecklist extends Model
 
     protected static function booted()
     {
+        // Ensure current_phase is always set before creating
+        static::creating(function ($checklist) {
+            if (empty($checklist->current_phase)) {
+                $checklist->current_phase = 'pre_dialysis';
+            }
+            if (empty($checklist->pre_dialysis_started_at)) {
+                $checklist->pre_dialysis_started_at = now();
+            }
+        });
+
         static::created(function ($checklist) {
             // Marcar máquina como reservada quando checklist é criado
             $checklist->machine->markAsReserved();
