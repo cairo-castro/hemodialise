@@ -122,11 +122,12 @@ class Patient extends Model
     }
 
     /**
-     * Check if patient status is terminal
+     * Check if patient status is terminal (only óbito is truly terminal)
+     * Alta is no longer considered terminal as patients can return
      */
     public function isTerminal(): bool
     {
-        return in_array($this->status, [PatientStatus::ALTA, PatientStatus::OBITO]);
+        return $this->status === PatientStatus::OBITO;
     }
 
     /**

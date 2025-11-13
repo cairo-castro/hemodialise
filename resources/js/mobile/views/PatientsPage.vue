@@ -464,19 +464,18 @@
                     placeholder="Selecione o status"
                     interface="action-sheet"
                     class="select-dash"
-                    :disabled="isTerminalStatus(selectedPatientDetails.status)"
                   >
                     <ion-select-option value="ativo">✅ Ativo - Pode realizar sessões</ion-select-option>
                     <ion-select-option value="inativo">⏸️ Inativo - Temporariamente suspenso</ion-select-option>
                     <ion-select-option value="transferido">🔄 Transferido - Outra unidade</ion-select-option>
-                    <ion-select-option value="alta">⬆️ Alta Médica - Permanente (irreversível)</ion-select-option>
-                    <ion-select-option value="obito">❌ Óbito - Falecimento (irreversível)</ion-select-option>
+                    <ion-select-option value="alta">⬆️ Alta Médica</ion-select-option>
+                    <ion-select-option value="obito">❌ Óbito - Falecimento</ion-select-option>
                   </ion-select>
-                  <span class="detail-hint" v-if="selectedStatus !== selectedPatientDetails.status && (selectedStatus === 'alta' || selectedStatus === 'obito')">
-                    ⚠️ Status terminal não pode ser revertido
+                  <span class="detail-hint" v-if="selectedPatientDetails.status === 'alta' && selectedStatus === 'ativo'">
+                    ℹ️ Paciente retornou à unidade após alta
                   </span>
-                  <span class="detail-hint terminal-hint" v-if="isTerminalStatus(selectedPatientDetails.status)">
-                    🔒 Status terminal bloqueado para edição
+                  <span class="detail-hint" v-if="selectedPatientDetails.status === 'obito'">
+                    ⚠️ Paciente com status de óbito
                   </span>
                 </div>
               </div>

@@ -373,11 +373,12 @@ class PatientController extends Controller
             if (isset($validated['status'])) {
                 $newStatus = PatientStatus::from($validated['status']);
 
-                // Não permite reverter status terminal
-                if ($patient->isTerminal() && $newStatus !== $patient->status) {
+                // Permite mudança de status de ALTA para qualquer outro
+                // Mas mantém restrição para ÓBITO (status realmente terminal)
+                if ($patient->status === PatientStatus::OBITO && $newStatus !== $patient->status) {
                     return response()->json([
                         'success' => false,
-                        'message' => 'Não é possível alterar o status de um paciente com alta ou óbito registrado.'
+                        'message' => 'Não é possível alterar o status de um paciente com óbito registrado.'
                     ], 422);
                 }
 
@@ -512,11 +513,12 @@ class PatientController extends Controller
             // Valida se é uma mudança válida
             $newStatus = PatientStatus::from($validated['status']);
 
-            // Não permite reverter status terminal (alta, óbito)
-            if ($patient->isTerminal() && $newStatus !== $patient->status) {
+            // Permite mudança de status de ALTA para qualquer outro
+            // Mas mantém restrição para ÓBITO (status realmente terminal)
+            if ($patient->status === PatientStatus::OBITO && $newStatus !== $patient->status) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Não é possível alterar o status de um paciente com alta ou óbito registrado.'
+                    'message' => 'Não é possível alterar o status de um paciente com óbito registrado.'
                 ], 422);
             }
 
